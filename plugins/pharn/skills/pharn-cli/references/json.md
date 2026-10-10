@@ -76,9 +76,11 @@ Inside `plan`:
 | `recordsNote` | Why `pharn.records.json` was unusable (then every difference is `unverifiable`), else `null`. |
 
 To show the person what a real update does: list `writes`, then `skipped`
-(their edits, left alone), then what `--force` would back up. For the last,
-run `pharn update --dry-run --force --json` and read `backups` and `forced`;
-that is a preview only, never consent to run `--force`.
+(their edits, left alone), then what `--force` would do: it overwrites
+exactly the `skipped` files after backing each one up, plus `pharn.config.json`
+when the `models` block was kept (`models.label` is `modified`, `unrecorded` or
+`unverifiable`). That comes from the one plain dry run; no separate
+`--dry-run --force` run is needed, and none of it is consent to run `--force`.
 
 ## `pharn list --json`
 

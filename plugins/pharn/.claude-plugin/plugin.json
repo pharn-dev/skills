@@ -1,6 +1,6 @@
 {
   "name": "pharn",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Skills for operating the PHARN CLI and the PHARN installation in a project: check, update, add and remove capabilities safely.",
   "author": {
     "name": "pharn-dev",

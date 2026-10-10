@@ -6,6 +6,15 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-11
+
+### Fixed
+
+- `pharn-cli` runs `pharn update --dry-run --json` once per request and reuses
+  it, instead of repeating it before `update --yes` and running an extra
+  `--dry-run --force` preview; `--force` overwrites exactly `plan.skipped`.
+  A `single-dry-run` grader pins it in three eval cases.
+
 ## [0.2.0] - 2026-10-11
 
 ### Added
