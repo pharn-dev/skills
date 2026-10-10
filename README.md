@@ -5,7 +5,7 @@ open-source tools.
 
 | Plugin | Skills | For |
 | ------ | ------ | --- |
-| `pharn` | `pharn-cli` | The [PHARN CLI](https://github.com/pharn-dev/pharn-cli) (`@pharn-dev/pharn`, written for 0.9.0) and the PHARN installation in a project |
+| `pharn` | `pharn-cli` | The [PHARN CLI](https://github.com/pharn-dev/pharn-cli) (`@pharn-dev/pharn`, written for 0.10.0, with a fallback for older CLIs) and the PHARN installation in a project |
 
 ## Install
 
@@ -47,7 +47,7 @@ them locally before merging.
 
 Each eval case builds a throwaway project with a stub `pharn` executable
 (`scaffold.sh`, which is why `--scaffold` is needed). The stub prints canned
-0.9.0-shaped output, logs its calls and needs no network, so the real CLI is
+0.10.0-shaped output, logs its calls and needs no network, so the real CLI is
 never invoked. `--allow-tools Bash` is needed because the cases drive the stub
 through Bash. A stub cannot test how the skill finds a real CLI on `PATH`; the
 prompts name the stub's path instead.

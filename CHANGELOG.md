@@ -6,6 +6,26 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-11
+
+### Added
+
+- `pharn-cli` v1, written for `@pharn-dev/pharn` CLI 0.10.0: checks the CLI
+  version, then reads `pharn status --json` and `pharn list --json`, and
+  previews every update with `pharn update --dry-run --json` before applying
+  with `pharn update --yes` on request.
+- Fallback to the text flow on CLIs older than 0.10.0, suggesting an upgrade
+  without installing anything.
+- `references/json.md` (report fields) and `references/text-flow.md`.
+- Evals `update-preview` and `old-cli-text-flow`; the eval stub CLI now
+  answers `--version` with 0.10.0 and serves `status --json` and
+  `update --dry-run --json` objects.
+
+### Changed
+
+- `pharn-cli` description and guardrails cover the preview step; all v0
+  guardrails are kept.
+
 ## [0.1.0] - 2026-10-10
 
 ### Added
@@ -16,5 +36,6 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 - Evals for `pharn-cli`.
 - CI: `claude plugin validate --strict` and markdownlint.
 
-[Unreleased]: https://github.com/pharn-dev/skills/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/pharn-dev/skills/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/pharn-dev/skills/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pharn-dev/skills/releases/tag/v0.1.0
