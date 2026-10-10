@@ -53,9 +53,19 @@ about `pharn init` (section 5). Quote the relevant fields in your answer.
 
 ## 3. Preview, then update (only when the person asks)
 
-Run `pharn update --dry-run --json` **once** per request. It writes nothing.
-Reuse that one output for everything below, including the decision to apply:
-do not run it again before `pharn update --yes`, and do not run a separate
+Run the dry run **once** per request. It writes nothing. Its JSON lists every
+installed file in `plan.files` (often 100 KB or more), which is too large to
+read from the terminal, so save it to a file and print it without that list:
+
+```bash
+pharn update --dry-run --json > "${TMPDIR:-/tmp}/pharn-dry-run.json"; echo "exit $?"
+node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));if(j.plan)delete j.plan.files;console.log(JSON.stringify(j,null,1))' "${TMPDIR:-/tmp}/pharn-dry-run.json"
+```
+
+On a non-zero exit the error is on stderr and the file is empty. To look up
+one file's action, query `plan.files` in that same saved file. Reuse this one
+result for everything below, including the decision to apply: do not run the
+dry run again before `pharn update --yes`, and do not run a separate
 `--dry-run --force` preview. Branch on `status`:
 
 - `up-to-date` / `ahead-of-release`: nothing to apply; say so.

@@ -6,6 +6,15 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-11
+
+### Fixed
+
+- `pharn-cli` saves `pharn update --dry-run --json` to a temp file and prints
+  it without `plan.files`. On a real project that list is ~70 KB of the ~100 KB
+  report, which overflowed the terminal output and made the model run the dry
+  run a second time just to filter it.
+
 ## [0.2.1] - 2026-10-11
 
 ### Fixed
