@@ -53,14 +53,16 @@ about `pharn init` (section 5). Quote the relevant fields in your answer.
 
 ## 3. Preview, then update (only when the person asks)
 
-Before any update run `pharn update --dry-run --json`. It writes nothing.
-Branch on `status`:
+Run `pharn update --dry-run --json` **once** per request. It writes nothing.
+Reuse that one output for everything below, including the decision to apply:
+do not run it again before `pharn update --yes`, and do not run a separate
+`--dry-run --force` preview. Branch on `status`:
 
 - `up-to-date` / `ahead-of-release`: nothing to apply; say so.
 - `planned`: show the person what would be **written** (`plan.writes`), what
-  would be **SKIPPED** (`plan.skipped`: their edits, left alone), and what
-  `--force` would back up (from `pharn update --dry-run --force --json`, read
-  only). Mention `plan.hooks` when hooks are not wired.
+  would be **SKIPPED** (`plan.skipped`: their edits, left alone), and that
+  `--force` would overwrite exactly those skipped files after backing them up.
+  Mention `plan.hooks` when hooks are not wired.
 
 Apply only when the person asks: `pharn update --yes`. Off a TTY the CLI
 refuses to prompt; `--yes` skips only that confirm. `update --json` without
