@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: init-refused
+context:
+  scaffold_script: scaffold.sh

@@ -1,0 +1,17 @@
+{
+  "name": "pharn-dev",
+  "owner": {
+    "name": "pharn-dev",
+    "url": "https://github.com/pharn-dev"
+  },
+  "metadata": {
+    "description": "Agent skills for operating pharn-dev's open-source tools."
+  },
+  "plugins": [
+    {
+      "name": "pharn",
+      "source": "./plugins/pharn",
+      "description": "Skills for operating the PHARN CLI and the PHARN installation in a project."
+    }
+  ]
+}

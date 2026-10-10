@@ -1,0 +1,12 @@
+{
+  "name": "pharn",
+  "version": "0.1.0",
+  "description": "Skills for operating the PHARN CLI and the PHARN installation in a project: check, update, add and remove capabilities safely.",
+  "author": {
+    "name": "pharn-dev",
+    "url": "https://github.com/pharn-dev"
+  },
+  "license": "Apache-2.0",
+  "repository": "https://github.com/pharn-dev/skills",
+  "homepage": "https://github.com/pharn-dev/skills/tree/main/plugins/pharn"
+}
