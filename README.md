@@ -16,10 +16,11 @@ open-source tools.
 
 ## Where a skill lives
 
-- Skills that operate a tool **from outside** live here.
-- Skills that are part of the PHARN methodology and need its floor ship with
-  [pharn-oss](https://github.com/pharn-dev/pharn-oss), for example
-  `/pharn-configure`.
+- Agent skills for operating pharn-dev's tools live here, one plugin per
+  product.
+- The PHARN methodology's own commands (`/pharn-plan`, `/pharn-ship`, ...) are
+  not skills from this repo: the `pharn` CLI installs them into a project from
+  [pharn-oss](https://github.com/pharn-dev/pharn-oss).
 
 ## Codex
 

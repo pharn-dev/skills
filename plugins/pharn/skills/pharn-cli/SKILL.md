@@ -78,8 +78,10 @@ only that confirm.
 - Run `--force`, `init`, or any download without the consent described above.
 - Commit or push.
 
-For configuration changes (models, stages) point to `/pharn-configure`
-(shipped with pharn-oss 6.56.0+); this skill does not edit configuration.
+This skill does not edit configuration. For changes to `pharn.config.json`
+(models, seam, test results), point the person to the configuration
+reference:
+<https://github.com/pharn-dev/pharn-cli/blob/main/docs/reference/pharn-config.md>.
 
 ## Exit codes
 
