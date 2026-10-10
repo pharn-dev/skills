@@ -1,20 +1,21 @@
-# pharn 0.9.0 command notes
+# pharn command notes (0.9.0 baseline)
 
-Source: the CLI's own README and `docs/commands/*` at 0.9.0. Describe only what
-is listed here.
+Source: the CLI's own README and `docs/commands/*` at 0.9.0. Where 0.10.0
+changes a command (`status --json`, `update --dry-run`, `update --json`), see
+[json.md](json.md); the rest below still holds.
 
 ## Command surface
 
 | Command | Options it takes | Writes |
 | ------- | ---------------- | ------ |
 | `pharn list` | `--json` | never |
-| `pharn status` | `--strict`, `--no-drift` | never |
-| `pharn update` | `--yes`/`-y`, `--force`, `--ref latest\|main` | yes |
+| `pharn status` | `--strict`, `--no-drift`, `--json` (0.10.0+) | never |
+| `pharn update` | `--yes`/`-y`, `--force`, `--ref latest\|main`, `--dry-run`, `--json` (0.10.0+, only with `--dry-run`) | yes, never with `--dry-run` |
 | `pharn add [name]` | none | yes |
 | `pharn remove [name]` | none | yes |
 | `pharn init` | `--ref` | yes, interactive only |
 
-Any other option is refused: ``Unsupported option for `status`: "--json"`` on
+Any other option is refused (on 0.9.0 that includes `status --json`): ``Unsupported option for `status`: "--json"`` on
 stderr, usage text, exit 1.
 
 `init`, `add`, `remove` and `update` take an advisory lock at `.pharn.lock`; a
