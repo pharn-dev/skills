@@ -102,8 +102,8 @@ npx markdownlint-cli2 "**/*.md"
 claude plugin eval plugins/pharn --scaffold --allow-tools Bash --trust-plugin --no-publish
 ```
 
-Evals need model credentials, so CI does not run them. The coordinator runs
-them locally before merging.
+Evals need model credentials, so CI does not run them. For behavior changes,
+the coordinator runs them locally before merging; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Each eval case builds a throwaway project with a stub `pharn` executable
 (`scaffold.sh`, which is why `--scaffold` is needed). The stub prints canned
@@ -152,6 +152,16 @@ npm run eval && npm run check:evals    # model gate: 8 cases in Codex and in Cla
 
 See [src/argus/README.md](src/argus/README.md) and
 [src/argus/evals/README.md](src/argus/evals/README.md).
+
+## Community and security
+
+For bugs and proposals, use the [issue forms](https://github.com/pharn-dev/skills/issues/new/choose).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development and review requirements,
+and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+Read [LIMITS.md](LIMITS.md) for tested compatibility and operational limits,
+and [THREAT-MODEL.md](THREAT-MODEL.md) for trust boundaries and safeguards.
 
 ## License
 
