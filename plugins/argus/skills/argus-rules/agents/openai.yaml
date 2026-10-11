@@ -1,4 +1,0 @@
-interface:
-  display_name: 'Argus Rules'
-  short_description: 'Build and replay alerts and sandboxed diagnostic rules'
-  default_prompt: 'Use $argus-rules for this Argus workflow.'

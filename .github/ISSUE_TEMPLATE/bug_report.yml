@@ -13,7 +13,7 @@ body:
     attributes:
       label: Skill or plugin
       description: Name the skill or plugin, or write repository/workflow if applicable.
-      placeholder: argus-memory
+      placeholder: phargus-memory
     validations:
       required: true
   - type: input
@@ -29,14 +29,14 @@ body:
     attributes:
       label: Installation method and revision
       description: Include the install command, project/global scope, and plugin version or commit. Say unknown if you cannot determine the revision.
-      placeholder: npx skills add pharn-dev/skills --skill argus-memory --agent codex
+      placeholder: npx skills add pharn-dev/skills --skill phargus-memory --agent codex
     validations:
       required: true
   - type: textarea
     id: environment
     attributes:
       label: Tool versions and environment
-      description: Include the PHARN CLI or Argus version/revision, Node.js, npm, OS, and relevant configuration. Use N/A where unrelated.
+      description: Include the PHARN CLI or Phargus version/revision, Node.js, npm, OS, and relevant configuration. Use N/A where unrelated.
     validations:
       required: true
   - type: textarea

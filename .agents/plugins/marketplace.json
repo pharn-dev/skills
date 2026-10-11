@@ -5,10 +5,10 @@
   },
   "plugins": [
     {
-      "name": "argus",
+      "name": "phargus",
       "source": {
         "source": "local",
-        "path": "./plugins/argus"
+        "path": "./plugins/phargus"
       },
       "category": "Developer Tools"
     }

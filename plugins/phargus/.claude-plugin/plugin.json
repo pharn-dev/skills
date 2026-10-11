@@ -1,0 +1,11 @@
+{
+  "name": "phargus",
+  "version": "0.1.0",
+  "description": "Phargus diagnostics workflows for Node.js applications.",
+  "author": {
+    "name": "Przemek Galarowicz"
+  },
+  "homepage": "https://github.com/pharn-dev/skills/tree/main/plugins/phargus",
+  "repository": "https://github.com/pharn-dev/skills",
+  "license": "Apache-2.0"
+}

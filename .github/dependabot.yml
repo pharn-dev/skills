@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: npm
-    directory: /src/argus
+    directory: /src/phargus
     schedule:
       interval: weekly
       day: monday
