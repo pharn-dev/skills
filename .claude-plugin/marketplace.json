@@ -12,6 +12,11 @@
       "name": "pharn",
       "source": "./plugins/pharn",
       "description": "Skills for operating the PHARN CLI and the PHARN installation in a project."
+    },
+    {
+      "name": "argus",
+      "source": "./plugins/argus",
+      "description": "Skills for setting up Argus and diagnosing Node.js applications with it: runtime incidents, fix verification, memory growth and alert rules."
     }
   ]
 }

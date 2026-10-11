@@ -23,6 +23,8 @@ jobs:
         run: claude plugin validate --strict .
       - name: Validate plugin pharn
         run: claude plugin validate --strict plugins/pharn
+      - name: Validate plugin argus
+        run: claude plugin validate --strict plugins/argus
 
   markdown-lint:
     name: Markdown lint
@@ -34,3 +36,39 @@ jobs:
           node-version: 24
       - name: Lint Markdown
         run: npx --yes markdownlint-cli2@0.23.3 "**/*.md"
+
+  argus:
+    name: Argus (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22.18.0', '24']
+    defaults:
+      run:
+        working-directory: src/argus
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: src/argus/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run check:generated
+      - run: npm run check:skills
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: pharn-dev/argus
+          ref: a69d644383efe19c82fb3cfdee83a0ad1dd5e0f9
+          path: src/argus/.cache/argus-source
+          persist-credentials: false
+      - run: npm run prepare:integration -- --source .cache/argus-source
+      - run: npm run test:integration
+      - run: npm run check:package

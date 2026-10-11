@@ -6,6 +6,15 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 
 ## [Unreleased]
 
+### Added
+
+- Plugin `argus` 0.1.0 with the skills `argus-setup`, `argus-diagnose`,
+  `argus-verify`, `argus-memory` and `argus-rules`, moved from
+  pharn-dev/argus-ai@dc371ee and renamed from `argus-ai`. Skill content is
+  unchanged. Its sources, tests and evals live in `src/argus/`.
+- Codex marketplace (`.agents/plugins/marketplace.json`) listing `argus`.
+- CI job `Argus` and validation of `plugins/argus`.
+
 ## [0.3.0] - 2026-10-11
 
 ### Changed
