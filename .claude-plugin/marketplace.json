@@ -5,13 +5,13 @@
     "url": "https://github.com/pharn-dev"
   },
   "metadata": {
-    "description": "Agent skills for operating pharn-dev's open-source tools."
+    "description": "Skills for PHARN, which gets features shipped right with Claude Code, and for Argus."
   },
   "plugins": [
     {
       "name": "pharn",
       "source": "./plugins/pharn",
-      "description": "Skills for operating the PHARN CLI and the PHARN installation in a project."
+      "description": "Skills for keeping PHARN, which gets features shipped right with Claude Code, current in a project."
     },
     {
       "name": "argus",

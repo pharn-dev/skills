@@ -1,7 +1,9 @@
 # pharn-dev/skills
 
-A Claude Code plugin marketplace holding agent skills for operating pharn-dev's
-open-source tools.
+A Claude Code plugin marketplace from pharn-dev. PHARN gets features shipped
+right with Claude Code, and its spec, plan and checks stay in Git, so months
+later you can answer "what was done and why?". The `pharn` plugin here keeps a
+project's PHARN installation current; `argus` adds Node.js runtime diagnosis.
 
 | Plugin | Skills | For |
 | ------ | ------ | --- |
