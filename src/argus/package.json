@@ -1,0 +1,44 @@
+{
+  "name": "argus-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent skills for Codex and Claude Code: Argus setup, Node.js runtime diagnostics, memory analysis, fix verification, and alert rules.",
+  "type": "module",
+  "author": "Przemek Galarowicz",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pharn-dev/skills.git",
+    "directory": "src/argus"
+  },
+  "engines": {
+    "node": ">=22.18.0",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "build": "node scripts/generate.mjs",
+    "check:generated": "node scripts/generate.mjs --check",
+    "check:skills": "node scripts/validate.mjs",
+    "check:package": "node scripts/package.mjs --check",
+    "package": "node scripts/package.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write --config .prettierrc.json . ../../plugins/argus",
+    "format:check": "prettier --check --config .prettierrc.json . ../../plugins/argus",
+    "test": "node --test test/*.test.mjs",
+    "test:integration": "node --test test/integration/*.test.mjs",
+    "prepare:integration": "node scripts/prepare-integration.mjs",
+    "eval": "node evals/run.mjs",
+    "check:evals": "node scripts/check-evals.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.18.0",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.0",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.0",
+    "typescript": "~5.9.0",
+    "yaml": "^2.8.0"
+  }
+}

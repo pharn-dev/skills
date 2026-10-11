@@ -3,3 +3,6 @@ node_modules/
 evals/results/
 plugins/*/evals/results/
 *.log
+src/*/.cache/
+src/*/dist/
+src/*/evals/results/

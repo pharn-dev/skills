@@ -6,5 +6,10 @@
     "MD033": false,
     "MD041": false
   },
-  "ignores": ["node_modules/**", "**/evals/results/**"]
+  "ignores": [
+    "**/node_modules/**",
+    "**/.cache/**",
+    "**/dist/**",
+    "**/evals/results/**"
+  ]
 }

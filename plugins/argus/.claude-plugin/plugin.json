@@ -1,0 +1,11 @@
+{
+  "name": "argus",
+  "version": "0.1.0",
+  "description": "Argus diagnostics workflows for Node.js applications.",
+  "author": {
+    "name": "Przemek Galarowicz"
+  },
+  "homepage": "https://github.com/pharn-dev/skills/tree/main/plugins/argus",
+  "repository": "https://github.com/pharn-dev/skills",
+  "license": "Apache-2.0"
+}

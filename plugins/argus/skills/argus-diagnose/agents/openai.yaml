@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Argus Diagnose'
+  short_description: 'Investigate runtime incidents with Argus evidence'
+  default_prompt: 'Use $argus-diagnose for this Argus workflow.'

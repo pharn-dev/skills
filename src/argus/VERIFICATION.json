@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.0",
+  "reviewedAt": "2026-10-10T22:45:17.068Z",
+  "reviewer": "Claude Code (claude-opus-5-5), delegated by the maintainer",
+  "behaviorFingerprint": "10632511e051078d54e1d8da812396e7e8248d3165c90eb151c4d27fa274d90d",
+  "sourceCommit": "d681208",
+  "compatibility": {
+    "schemaVersion": 1,
+    "repository": "https://github.com/pharn-dev/argus",
+    "commit": "a69d644383efe19c82fb3cfdee83a0ad1dd5e0f9",
+    "packageName": "argus",
+    "packageVersion": "0.0.1",
+    "published": false,
+    "minimumNode": "22.18.0"
+  },
+  "deterministic": {
+    "nodeVersions": ["22.18.0", "24"],
+    "unitTestsPerNode": 32,
+    "integrationTestsPerNode": 15,
+    "skipped": 0,
+    "ci": "GitHub Actions on main"
+  },
+  "modelConfigurations": {
+    "codex": "built-in default with --clean-codex; the configured gpt-6.1-sol alias is rejected for a ChatGPT account",
+    "claude": "configured default; tool allowlist includes process-start commands for the setup case"
+  },
+  "timeoutMs": 360000,
+  "results": [
+    {
+      "client": "codex",
+      "case": "setup",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/codex-setup",
+      "note": "Connected with an app-owned .argus/tools recipe at a 250 ms interval: 17 windows (67 samples) and 5 incoming GET / spans, then a restart from the saved scripts with 16 windows and 5 spans. A final ps check was sandbox-blocked; managed sessions exited."
+    },
+    {
+      "client": "codex",
+      "case": "diagnose",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final-codex-diagnose-rerun/codex-diagnose",
+      "note": "Rerun. The first trial in release-0.1.0-final wrote its own report to tool-result.json and the raw helper summary to summary.json, failing the artifact contract; its analysis was sound. The rerun saved the helper summary and ranked request-level waiting above event-loop, GC and backpressure using the per-route breakdown."
+    },
+    {
+      "client": "codex",
+      "case": "verify",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/codex-verify",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    },
+    {
+      "client": "codex",
+      "case": "memory",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/codex-memory",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    },
+    {
+      "client": "codex",
+      "case": "rules",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/codex-rules",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    },
+    {
+      "client": "codex",
+      "case": "missing",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/codex-missing",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    },
+    {
+      "client": "codex",
+      "case": "sse",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/codex-sse",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    },
+    {
+      "client": "codex",
+      "case": "percentile",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/codex-percentile",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    },
+    {
+      "client": "claude",
+      "case": "setup",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/claude-setup",
+      "note": "Connected with app-owned scripts: 9 windows and 20 incoming spans across GET / and GET /health in requests.routes, then a restart from the same recipe with the same shape. pgrep found no leftover processes."
+    },
+    {
+      "client": "claude",
+      "case": "diagnose",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/claude-diagnose",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    },
+    {
+      "client": "claude",
+      "case": "verify",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/claude-verify",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    },
+    {
+      "client": "claude",
+      "case": "memory",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/claude-memory",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    },
+    {
+      "client": "claude",
+      "case": "rules",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/claude-rules",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    },
+    {
+      "client": "claude",
+      "case": "missing",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/claude-missing",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    },
+    {
+      "client": "claude",
+      "case": "sse",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/claude-sse",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    },
+    {
+      "client": "claude",
+      "case": "percentile",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/release-0.1.0-final/claude-percentile",
+      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+    }
+  ]
+}
