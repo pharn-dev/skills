@@ -348,7 +348,7 @@ for (const client of clients) {
       join(project, '.agents/skills', scenario.skill),
       { recursive: true },
     );
-    const cleanup = await fixtures(project, scenario.id);
+    /** @type {() => Promise<void>} */ let cleanup = async () => {};
     const invocation =
       client === 'codex' ? '$' + scenario.skill : '/' + catalog.name + ':' + scenario.skill;
     const prompt =
@@ -364,6 +364,8 @@ for (const client of clients) {
     await writeFile(join(resultDir, 'prompt.txt'), prompt);
     process.stdout.write(client + ' / ' + scenario.id + ': running\n');
     try {
+      // A fixture failure is recorded as a failed trial instead of aborting the whole run.
+      cleanup = await fixtures(project, scenario.id);
       const executed = await execute(client, project, prompt, resultDir);
       if (executed.code !== 0 || executed.timedOut)
         throw new Error(

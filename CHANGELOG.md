@@ -15,6 +15,29 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 - Codex marketplace (`.agents/plugins/marketplace.json`) listing `argus`.
 - CI job `Argus` and validation of `plugins/argus`.
 
+### Fixed
+
+- `argus` runtime: `collect` no longer hangs until `--duration-ms` when the
+  `--alerts` or `--sinks` file is invalid; `capture` removes the empty
+  `manifest.json` it reserved when `events.ndjson` already exists; records
+  dropped after a loss-counter reset count toward `loss.delta`; SSE messages
+  without an `event:` field are classified by their payload; `rules --mode` is
+  validated before any input is read; `collect --follow` reuses one read
+  buffer (#7).
+- `argus` tooling: the eval behavior fingerprint hashes only tracked files in
+  a locale- and platform-independent order; `npm run build` removes, and
+  `check:generated` reports, generated files that no longer have a source;
+  `release.json` lists only the artifacts of the current run; `check:skills`
+  verifies that `compatibility.json`, the runtime contract, `.nvmrc`,
+  `engines.node` and the CI Argus checkout agree (#8). The recorded
+  fingerprint in `VERIFICATION.json` needs a new behavioral review.
+- `argus` eval runner records a fixture failure as a failed trial instead of
+  aborting the run.
+- `pharn-cli` 0.3.1: the CLI 0.10.x dry run is saved to a private `mktemp`
+  file that is deleted afterwards, instead of a fixed path in `/tmp`. The
+  `no-init` and `no-install` eval graders catch `pharn init 2>&1` and
+  `npx -y @pharn-dev/pharn` (#9).
+
 ## [0.3.0] - 2026-10-11
 
 ### Changed
@@ -72,6 +95,9 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 - Evals for `pharn-cli`.
 - CI: `claude plugin validate --strict` and markdownlint.
 
-[Unreleased]: https://github.com/pharn-dev/skills/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/pharn-dev/skills/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/pharn-dev/skills/compare/v0.2.2...v0.3.0
+[0.2.2]: https://github.com/pharn-dev/skills/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/pharn-dev/skills/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pharn-dev/skills/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pharn-dev/skills/releases/tag/v0.1.0
