@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Builds a fake PHARN project in the empty eval workspace. The stub CLI replays
 # canned 0.11.0-shaped output, needs no network, and logs each call.
+# Keep this file identical in update-preview, update-yes, force-asks and
+# status-readonly: claude plugin eval only runs a scaffold inside its own case
+# directory, so the copies cannot share one file. CI compares them.
 set -eu
 mkdir -p bin
 git init -q . 2>/dev/null || true

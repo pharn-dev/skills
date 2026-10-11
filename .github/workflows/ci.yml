@@ -25,6 +25,13 @@ jobs:
         run: claude plugin validate --strict plugins/pharn
       - name: Validate plugin argus
         run: claude plugin validate --strict plugins/argus
+      # claude plugin eval only runs a scaffold inside its own case directory,
+      # so these four cases carry copies of one script. Keep them identical.
+      - name: Check shared pharn eval scaffolds
+        run: |
+          for case in update-yes force-asks status-readonly; do
+            cmp plugins/pharn/evals/update-preview/scaffold.sh "plugins/pharn/evals/$case/scaffold.sh"
+          done
 
   markdown-lint:
     name: Markdown lint
