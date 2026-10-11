@@ -51,7 +51,9 @@ test('tracks gaps and counter reset as separate evidence problems', async () => 
   const raw = [
     sample(0, { dropped: { samples: 10, spans: 20 } }),
     sample(1000, { dropped: { samples: 12, spans: 23 } }),
-    sample(3000, { dropped: { samples: 0, spans: 0 } }),
+    // Counters restarted: records dropped since the restart (4, 5) still count as loss.
+    sample(3000, { dropped: { samples: 4, spans: 5 } }),
+    sample(4000, { dropped: { samples: 5, spans: 7 } }),
   ];
   async function* events() {
     for (const value of raw) {
@@ -62,7 +64,7 @@ test('tracks gaps and counter reset as separate evidence problems', async () => 
   }
   const result = await summarizeEvents(events(), 'fixture', quality());
   assert.deepEqual(result.quality.loss.initial, { samples: 10, spans: 20 });
-  assert.deepEqual(result.quality.loss.delta, { samples: 2, spans: 3 });
+  assert.deepEqual(result.quality.loss.delta, { samples: 2 + 4 + 1, spans: 3 + 5 + 2 });
   assert.equal(result.quality.loss.resets, 1);
   assert.equal(result.quality.gaps, 1);
 });

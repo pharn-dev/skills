@@ -239,18 +239,20 @@ export function qualityTracker(status, intervalMs) {
           withLoss += 1;
           status.loss.initial ??= { ...dropped };
           if (previousLoss) {
-            if (dropped.samples < previousLoss.samples || dropped.spans < previousLoss.spans)
-              status.loss.resets += 1;
-            else {
-              status.loss.delta.samples = Math.min(
-                Number.MAX_SAFE_INTEGER,
-                status.loss.delta.samples + dropped.samples - previousLoss.samples,
-              );
-              status.loss.delta.spans = Math.min(
-                Number.MAX_SAFE_INTEGER,
-                status.loss.delta.spans + dropped.spans - previousLoss.spans,
-              );
-            }
+            // After a counter reset the producer restarted from 0, so its current counters are
+            // all records dropped since the restart.
+            const reset =
+              dropped.samples < previousLoss.samples || dropped.spans < previousLoss.spans;
+            if (reset) status.loss.resets += 1;
+            const base = reset ? { samples: 0, spans: 0 } : previousLoss;
+            status.loss.delta.samples = Math.min(
+              Number.MAX_SAFE_INTEGER,
+              status.loss.delta.samples + dropped.samples - base.samples,
+            );
+            status.loss.delta.spans = Math.min(
+              Number.MAX_SAFE_INTEGER,
+              status.loss.delta.spans + dropped.spans - base.spans,
+            );
           }
           previousLoss = dropped;
         }
