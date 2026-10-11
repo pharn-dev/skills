@@ -220,14 +220,35 @@ async function execute(client, project, prompt, resultDir) {
           JSON.stringify(schema),
           '--permission-mode',
           'acceptEdits',
+          // Parity with Codex's workspace-write sandbox: every Bash command runs in Claude
+          // Code's OS sandbox (Seatbelt on macOS, bubblewrap on Linux), which confines writes
+          // to the trial project and denies outbound network except loopback, so the setup
+          // case can start the app and collector on 127.0.0.1 and curl them. Sandboxed
+          // commands are auto-approved, the dangerouslyDisableSandbox escape is refused and
+          // a missing sandbox fails the trial instead of running commands unconfined.
+          // Codex additionally has outbound network; no case needs it. Signals reach only
+          // processes of the same sandboxed command, so a process started by an earlier
+          // Bash call is stopped with TaskStop (Bash run_in_background) or in one command.
+          '--settings',
+          JSON.stringify({
+            sandbox: {
+              enabled: true,
+              failIfUnavailable: true,
+              autoAllowBashIfSandboxed: true,
+              allowUnsandboxedCommands: false,
+              network: { allowLocalBinding: true },
+            },
+          }),
           '--allowedTools',
           [
             'Read',
             'Write',
             'Edit',
+            'TaskStop',
+            // Explicit approvals for the commands the trials use, so a static check that
+            // defers auto-approval cannot stall them. They still run inside the sandbox.
             'Bash(node *)',
             'Bash(' + process.execPath + ' *)',
-            // Inspection and file layout.
             'Bash(ls *)',
             'Bash(cat *)',
             'Bash(head *)',
@@ -240,19 +261,11 @@ async function execute(client, project, prompt, resultDir) {
             'Bash(sed *)',
             'Bash(printf *)',
             'Bash(echo *)',
-            // Starting, exercising and stopping the temporary application in the setup case.
-            // Codex gets the same through its workspace-write sandbox with network access.
             'Bash(npm *)',
-            'Bash(sh *)',
-            'Bash(bash *)',
-            'Bash(export *)',
-            'Bash(env *)',
             'Bash(nohup *)',
             'Bash(sleep *)',
             'Bash(curl *)',
             'Bash(kill *)',
-            'Bash(pkill *)',
-            'Bash(pgrep *)',
             'Bash(rm -f .argus/*)',
           ].join(','),
           '--strict-mcp-config',
