@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
+      - name: Test skills.sh change detection
+        run: node --test .github/scripts/changed-skills.test.mjs
       - name: Install Claude Code
         run: npm install --global @anthropic-ai/claude-code@2.1.295
       - name: Validate marketplace

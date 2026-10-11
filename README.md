@@ -1,9 +1,10 @@
 # pharn-dev/skills
 
-A Claude Code plugin marketplace from pharn-dev. PHARN gets features shipped
-right with Claude Code, and its spec, plan and checks stay in Git, so months
-later you can answer "what was done and why?". The `pharn` plugin here keeps a
-project's PHARN installation current; `argus` adds Node.js runtime diagnosis.
+Agent skills and a Claude Code plugin marketplace from pharn-dev. PHARN gets
+features shipped right with Claude Code, and its spec, plan and checks stay in
+Git, so months later you can answer "what was done and why?". The `pharn` plugin
+here keeps a project's PHARN installation current; `argus` adds Node.js runtime
+diagnosis.
 
 | Plugin | Skills | For |
 | ------ | ------ | --- |
@@ -11,6 +12,43 @@ project's PHARN installation current; `argus` adds Node.js runtime diagnosis.
 | `argus` | `argus-setup`, `argus-diagnose`, `argus-verify`, `argus-memory`, `argus-rules` | [Argus](https://github.com/pharn-dev/argus) in a Node.js application: setup, runtime diagnosis, fix verification, memory analysis and alert rules |
 
 ## Install
+
+### Skills CLI (`npx skills`)
+
+With Node.js and npm installed, run the [Skills CLI](https://github.com/vercel-labs/skills)
+to choose skills and the agent to install them for:
+
+```bash
+npx skills add pharn-dev/skills
+```
+
+You can also list the available skills or select them explicitly:
+
+```bash
+# List all available skills without installing
+npx skills add pharn-dev/skills --list
+
+# Install all available skills for Claude Code
+npx skills add pharn-dev/skills --skill '*' --agent claude-code
+
+# Install only the PHARN CLI skill for Claude Code
+npx skills add pharn-dev/skills --skill pharn-cli --agent claude-code
+
+# Install an Argus skill for Codex
+npx skills add pharn-dev/skills --skill argus-diagnose --agent codex
+```
+
+Installs apply to the current project by default. Add `-g` to make the skill
+available across projects:
+
+```bash
+npx skills add pharn-dev/skills --skill pharn-cli --agent claude-code -g
+```
+
+The CLI installs each skill with its bundled references and scripts. For a full
+plugin installation, use the marketplace commands below.
+
+### Plugin marketplaces
 
 Claude Code:
 
@@ -73,6 +111,27 @@ Each eval case builds a throwaway project with a stub `pharn` executable
 never invoked. `--allow-tools Bash` is needed because the cases drive the stub
 through Bash. A stub cannot test how the skill finds a real CLI on `PATH`; the
 prompts name the stub's path instead.
+
+### skills.sh synchronization
+
+The `Sync skills.sh` GitHub Actions workflow runs after relevant pushes to `main`,
+including PR merges. It installs new and changed skill directories from that
+push's commit in a temporary runner directory with Skills CLI telemetry enabled.
+Changes to supporting references and scripts also select their parent skill.
+Unchanged and deleted skills are skipped; this workflow does not remove old
+listings from skills.sh.
+
+Changes to plugin manifests, `skills.sh.json`, or the sync implementation select
+all current skills. To seed the existing catalog or retry, run `Sync skills.sh`
+manually from the Actions tab on `main`; manual runs select all current skills.
+The workflow requires a public repository and uses the built-in `GITHUB_TOKEN`
+with read-only permissions. No additional secret is required.
+
+[skills.sh discovers skills through CLI install telemetry](https://skills.sh/docs/faq).
+The CLI marks these installs as CI activity. This is a best-effort indexing
+request: a successful run confirms installation, but the CLI does not confirm
+telemetry delivery or that skills.sh has added or refreshed a listing. Indexing
+and page refresh timing remain under skills.sh's control.
 
 ### argus
 
