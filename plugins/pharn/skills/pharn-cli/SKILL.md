@@ -61,15 +61,20 @@ from the terminal:
 - **CLI >= 0.11.0**: `pharn update --dry-run --json --compact`. It leaves the
   unchanged files out of `plan.files` (`compact: true`,
   `plan.filesOmitted.count` says how many); everything else is complete.
-- **CLI 0.10.x** (no `--compact`): save it and print it without that list:
+- **CLI 0.10.x** (no `--compact`): save it to a private temp file, print it
+  without that list, and delete the file. Run the block as **one** command
+  (one Bash call): the file's path lives only in the `f` variable.
 
 ```bash
-pharn update --dry-run --json > "${TMPDIR:-/tmp}/pharn-dry-run.json"; echo "exit $?"
-node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));if(j.plan)delete j.plan.files;console.log(JSON.stringify(j,null,1))' "${TMPDIR:-/tmp}/pharn-dry-run.json"
+f=$(mktemp "${TMPDIR:-/tmp}/pharn-dry-run.XXXXXX") && {
+  pharn update --dry-run --json > "$f"; rc=$?; echo "exit $rc"
+  [ "$rc" -eq 0 ] && node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));if(j.plan)delete j.plan.files;console.log(JSON.stringify(j,null,1))' "$f"
+  rm -f "$f"
+}
 ```
 
 On a non-zero exit the error is on stderr and stdout is empty. Reuse this one
-result for everything below, including the decision to apply: do not run the
+printed result for everything below, including the decision to apply: do not run the
 dry run again before `pharn update --yes`, and do not run a separate
 `--dry-run --force` preview. Branch on `status`:
 
