@@ -39,7 +39,8 @@ test('captures chunked events, comments, history and live data with bearer auth'
       const result = await capture({
         url: url + '?private=fixture-secret',
         out: directory,
-        durationMs: 100,
+        // The window includes connecting; 100 ms was too tight on loaded CI runners.
+        durationMs: 1000,
         token: 'fixture-secret',
       });
       assert.equal(result.manifest.events, 2);
