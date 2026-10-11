@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { capture } from '../runtime/capture.mjs';
 import { summarizeFile } from '../runtime/summary.mjs';
-import { window } from './fixtures.mjs';
+import { window, sample, span } from './fixtures.mjs';
 
 /** @param {(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void} handler @param {(url: string, dir: string) => Promise<void>} run */
 async function withServer(handler, run) {
@@ -132,4 +132,51 @@ test('invalid bearer values fail without disclosing the credential', async () =>
       return true;
     },
   );
+});
+
+test('classifies SSE messages without an event field by their payload', async () => {
+  await withServer(
+    (_req, res) => {
+      res.writeHead(200, { 'content-type': 'text/event-stream' });
+      res.write(
+        'data: ' +
+          JSON.stringify(window(Date.now())) +
+          '\n\ndata: ' +
+          JSON.stringify({ event: 'span', data: span(Date.now()) }) +
+          '\n\ndata: ' +
+          JSON.stringify(sample(Date.now())) +
+          '\n\n',
+      );
+    },
+    async (url, directory) => {
+      const result = await capture({ url, out: directory, durationMs: 100 });
+      assert.equal(result.manifest.events, 2);
+      // Raw samples over SSE stay invalid, with or without an event field.
+      assert.equal(result.manifest.quality.invalidRecords, 1);
+      const events = (await readFile(result.eventsPath, 'utf8'))
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line).event);
+      assert.deepEqual(events, ['window', 'span']);
+    },
+  );
+});
+
+test('an existing events file does not leave an empty manifest behind', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'argus-capture-'));
+  try {
+    const input = join(directory, 'input.ndjson');
+    const out = join(directory, 'out');
+    await writeFile(input, JSON.stringify(window(0)) + '\n');
+    await capture({ file: input, out });
+    await rm(join(out, 'manifest.json'));
+    await assert.rejects(capture({ file: input, out }), /EEXIST/);
+    await assert.rejects(access(join(out, 'manifest.json')), /ENOENT/);
+    // A pre-existing manifest is never removed by a failed reservation.
+    await writeFile(join(out, 'manifest.json'), 'previous');
+    await assert.rejects(capture({ file: input, out }), /EEXIST/);
+    assert.equal(await readFile(join(out, 'manifest.json'), 'utf8'), 'previous');
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });

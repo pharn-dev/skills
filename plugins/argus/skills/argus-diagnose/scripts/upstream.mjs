@@ -9,10 +9,16 @@ export const contract = {
   minimumNode: '22.18.0',
 };
 
-/** @param {string} version */
+/** Compare major.minor.patch against contract.minimumNode. @param {string} version */
 export function supportedNode(version) {
-  const [major, minor, patch] = version.split('.').map(Number);
-  return major > 22 || (major === 22 && (minor > 18 || (minor === 18 && patch >= 0)));
+  const current = version.split('.').map(Number);
+  const minimum = contract.minimumNode.split('.').map(Number);
+  for (let index = 0; index < 3; index++) {
+    const actual = current[index] ?? 0;
+    const required = minimum[index] ?? 0;
+    if (actual !== required) return actual > required;
+  }
+  return true;
 }
 
 /** @param {string} project @param {string} [packageName] */

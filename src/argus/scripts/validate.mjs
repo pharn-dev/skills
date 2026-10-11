@@ -3,6 +3,7 @@ import { parse } from 'yaml';
 import { readFile, access, readdir, lstat } from 'node:fs/promises';
 import { join, normalize } from 'node:path';
 import { catalog, root, repoRoot, generate, pluginDir, pluginPath } from './generate.mjs';
+import { contract } from '../runtime/upstream.mjs';
 
 await generate(true);
 for (const skill of catalog.skills) {
@@ -62,7 +63,46 @@ const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
 assert.equal(pkg.version, catalog.version);
 assert.equal(pkg.private, true);
 assert.equal(pkg.dependencies, undefined);
-assert.equal((await readFile(join(root, '.nvmrc'), 'utf8')).trim(), '22.18.0');
+// The pinned upstream contract is repeated where compatibility.json cannot be read (the runtime
+// is copied into standalone skills; CI and npm need literals). Keep every copy in agreement.
+const compatibility = JSON.parse(await readFile(join(root, 'compatibility.json'), 'utf8'));
+assert.deepEqual(
+  contract,
+  {
+    commit: compatibility.commit,
+    packageVersion: compatibility.packageVersion,
+    minimumNode: compatibility.minimumNode,
+  },
+  'runtime/upstream.mjs contract must match compatibility.json',
+);
+assert.equal(
+  (await readFile(join(root, '.nvmrc'), 'utf8')).trim(),
+  compatibility.minimumNode,
+  '.nvmrc must match compatibility.json minimumNode',
+);
+assert.equal(
+  pkg.engines?.node,
+  '>=' + compatibility.minimumNode,
+  'package.json engines.node must match compatibility.json minimumNode',
+);
+const ci = parse(await readFile(join(repoRoot, '.github/workflows/ci.yml'), 'utf8'));
+/** @type {{uses?: string, with?: {repository?: string, ref?: string}}[]} */
+const ciSteps = Object.values(ci.jobs ?? {}).flatMap((job) => job.steps ?? []);
+const upstreamCheckouts = ciSteps.filter(
+  (step) =>
+    step.uses?.startsWith('actions/checkout@') && step.with?.repository === 'pharn-dev/argus',
+);
+assert(upstreamCheckouts.length > 0, 'ci.yml has no pharn-dev/argus checkout');
+for (const step of upstreamCheckouts)
+  assert.equal(
+    step.with?.ref,
+    compatibility.commit,
+    'ci.yml pharn-dev/argus checkout ref must match compatibility.json commit',
+  );
+assert(
+  ci.jobs?.argus?.strategy?.matrix?.node?.map(String).includes(compatibility.minimumNode),
+  'ci.yml argus job must test compatibility.json minimumNode',
+);
 assert(
   (await readFile(join(root, 'LICENSE'), 'utf8')).startsWith('Copyright 2026 Przemek Galarowicz'),
 );
