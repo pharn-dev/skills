@@ -1,6 +1,6 @@
-import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, rm, rmdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { join } from 'node:path';
+import { dirname, join, sep } from 'node:path';
 import prettier from 'prettier';
 
 /** Sources and tooling live here; the shipped plugin and the marketplaces are at the repository root. */
@@ -85,10 +85,76 @@ export async function generatedFiles() {
   return files;
 }
 
+// Locations owned by the generator: every file in them must come from generatedFiles().
+const ownedSkillDirectories = ['agents', 'scripts', 'references'];
+const ownedPluginDirectories = ['.claude-plugin'];
+
+/** @param {string} path @returns {Promise<string[]>} POSIX paths relative to path; [] if absent */
+async function listFiles(path) {
+  let entries;
+  try {
+    entries = await readdir(path, { withFileTypes: true });
+  } catch (error) {
+    if (/** @type {NodeJS.ErrnoException} */ (error).code === 'ENOENT') return [];
+    throw error;
+  }
+  const files = [];
+  for (const entry of entries) {
+    if (entry.isDirectory())
+      for (const file of await listFiles(join(path, entry.name)))
+        files.push(entry.name + '/' + file);
+    else files.push(entry.name);
+  }
+  return files;
+}
+
+/**
+ * Find files in generator-owned locations that the generator no longer produces (for example a
+ * removed runtime module or catalog reference), and skill directories missing from the catalog.
+ * Hand-written SKILL.md files are never owned.
+ * @param {Map<string, string>} files
+ */
+async function staleOutputs(files) {
+  /** @type {string[]} */ const stale = [];
+  /** @type {string[]} */ const uncatalogued = [];
+  const catalogued = new Set(catalog.skills.map((skill) => skill.name));
+  /** @param {string} relative */
+  async function collect(relative) {
+    for (const file of await listFiles(join(repoRoot, relative)))
+      if (!files.has(relative + '/' + file)) stale.push(relative + '/' + file);
+  }
+  for (const directory of ownedPluginDirectories) await collect(pluginDir + '/' + directory);
+  for (const entry of await readdir(join(pluginPath, 'skills'), { withFileTypes: true }).catch(
+    () => [],
+  )) {
+    if (!entry.isDirectory()) continue;
+    const skill = pluginDir + '/skills/' + entry.name;
+    if (!catalogued.has(entry.name)) uncatalogued.push(skill + '/');
+    else for (const directory of ownedSkillDirectories) await collect(skill + '/' + directory);
+  }
+  const order = (/** @type {string} */ a, /** @type {string} */ b) => (a < b ? -1 : a > b ? 1 : 0);
+  return { stale: stale.sort(order), uncatalogued: uncatalogued.sort(order) };
+}
+
+/** Remove directory and its empty ancestors up to (not including) stop. @param {string} directory @param {string} stop */
+async function pruneEmpty(directory, stop) {
+  while (directory.startsWith(stop + sep) && (await readdir(directory)).length === 0) {
+    await rmdir(directory);
+    directory = dirname(directory);
+  }
+}
+
 /** @param {boolean} check */
 export async function generate(check) {
   const files = await generatedFiles();
-  const mismatches = [];
+  const { stale, uncatalogued } = await staleOutputs(files);
+  /** @type {string[]} */ const mismatches = [];
+  if (check) mismatches.push(...stale.map((path) => path + ' (no longer generated)'));
+  else
+    for (const path of stale) {
+      await rm(join(repoRoot, path));
+      await pruneEmpty(dirname(join(repoRoot, path)), join(pluginPath, 'skills'));
+    }
   for (const [path, content] of files) {
     const target = join(repoRoot, path);
     if (check) {
@@ -106,6 +172,12 @@ export async function generate(check) {
   }
   if (mismatches.length)
     throw new Error('Generated resources are stale; run npm run build: ' + mismatches.join(', '));
+  // A skill directory without a catalog entry may hold hand-written work: report it, never delete.
+  if (uncatalogued.length)
+    throw new Error(
+      'Skill directories missing from catalog.json; add them to catalog.json or remove them: ' +
+        uncatalogued.join(', '),
+    );
   return files;
 }
 

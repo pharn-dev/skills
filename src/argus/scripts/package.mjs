@@ -10,6 +10,8 @@ await generate(true);
 const temporary = await mkdtemp(join(tmpdir(), catalog.name + '-package-'));
 const dist = join(root, 'dist');
 if (!check) await mkdir(dist, { recursive: true });
+/** Archives written by this run; older versions left in dist/ are not part of this release. */
+/** @type {string[]} */ const artifacts = [];
 /** @param {string} path */
 async function normalizeTimes(path) {
   const entries = await readdir(path, { withFileTypes: true });
@@ -33,9 +35,11 @@ try {
   if (help.commands.length !== 7) throw new Error('copied plugin helper cannot run');
   if (!check) {
     await normalizeTimes(plugin);
-    const target = join(dist, catalog.name + '-' + catalog.version + '.zip');
+    const name = catalog.name + '-' + catalog.version + '.zip';
+    const target = join(dist, name);
     await rm(target, { force: true });
     execFileSync('zip', ['-q', '-X', '-r', target, '.'], { cwd: plugin });
+    artifacts.push(name);
   }
   for (const skill of catalog.skills) {
     const copied = join(temporary, skill.name);
@@ -50,9 +54,11 @@ try {
     if (output.schemaVersion !== 1) throw new Error('standalone skill cannot run: ' + skill.name);
     if (!check) {
       await normalizeTimes(copied);
-      const target = join(dist, skill.name + '-' + catalog.version + '.zip');
+      const name = skill.name + '-' + catalog.version + '.zip';
+      const target = join(dist, name);
       await rm(target, { force: true });
       execFileSync('zip', ['-q', '-X', '-r', target, '.'], { cwd: copied });
+      artifacts.push(name);
     }
   }
   if (!check)
@@ -65,7 +71,7 @@ try {
           version: catalog.version,
           author: catalog.author,
           compatibility: JSON.parse(await readFile(join(root, 'compatibility.json'), 'utf8')),
-          artifacts: (await readdir(dist)).filter((name) => name.endsWith('.zip')).sort(),
+          artifacts: artifacts.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
           behavioralGate: await evaluationGate(),
         },
         null,
