@@ -1,0 +1,63 @@
+name: Sync skills.sh
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "plugins/*/skills/**"
+      - "plugins/*/.claude-plugin/plugin.json"
+      - ".claude-plugin/marketplace.json"
+      - "skills.sh.json"
+      - ".github/scripts/changed-skills.mjs"
+      - ".github/workflows/skills-sh.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Install changed skills with telemetry
+    if: github.ref == 'refs/heads/main' && github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Detect added and changed skills
+        id: skills
+        run: node .github/scripts/changed-skills.mjs
+      - name: Install selected skills through the official CLI
+        if: steps.skills.outputs.names != '[]'
+        env:
+          SKILL_NAMES: ${{ steps.skills.outputs.names }}
+          SKILL_SOURCE: https://github.com/${{ github.repository }}/tree/${{ github.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+          DISABLE_TELEMETRY: ""
+          DO_NOT_TRACK: ""
+        # Keep the CI environment: the CLI marks automated telemetry with ci=1.
+        run: |
+          mapfile -t skills < <(node -e 'JSON.parse(process.env.SKILL_NAMES).forEach(name => console.log(name))')
+          install_dir="$(mktemp -d "$RUNNER_TEMP/skills-sh.XXXXXX")"
+          trap 'rm -rf "$install_dir"' EXIT
+          cd "$install_dir"
+          npx --yes skills@1.7.2 add "$SKILL_SOURCE" \
+            --skill "${skills[@]}" --agent codex --copy --yes --json > result.json
+          cat result.json
+          for skill in "${skills[@]}"; do
+            test -f ".agents/skills/$skill/SKILL.md"
+          done
+          {
+            printf 'Installed with skills CLI telemetry enabled:\n\n'
+            printf -- '- `%s`\n' "${skills[@]}"
+            printf '\nVisibility and refresh timing on skills.sh are controlled by its indexer.\n'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: No skills to sync
+        if: steps.skills.outputs.names == '[]'
+        run: echo 'No added or changed skill directories in this push.' >> "$GITHUB_STEP_SUMMARY"
