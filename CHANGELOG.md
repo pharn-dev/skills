@@ -38,6 +38,14 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
   `no-init` and `no-install` eval graders catch `pharn init 2>&1` and
   `npx -y @pharn-dev/pharn` (#9).
 
+### Changed
+
+- `argus` eval runner runs Claude Code's Bash commands in its OS sandbox
+  (writes confined to the trial project, loopback-only network), like Codex's
+  workspace-write sandbox, and drops the `bash`, `sh`, `env` and `export`
+  allowlist entries. A new sixteen-trial behavioral review records the current
+  fingerprint in `VERIFICATION.json`.
+
 ## [0.3.0] - 2026-10-11
 
 ### Changed

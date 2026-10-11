@@ -11,10 +11,13 @@ claude selects one client; --case ID reruns a case after a supported correction.
 under ignored evals/results/. Authentication/model availability failures are explicit
 blocked cases, not passes. A client failure stops its subsequent repeated attempts.
 
-Codex trials run in its workspace-write sandbox with network access. Claude trials use
-an explicit tool allowlist that also permits starting, exercising and stopping the
-temporary application (npm, sh, curl, sleep, kill and similar), so the setup case is
-testable on equal terms. Without those commands Claude cannot reach a connected verdict.
+Codex trials run in its workspace-write sandbox with network access. Claude trials run
+every Bash command in Claude Code's OS sandbox (passed with --settings): writes are
+confined to the temporary project, outbound network is denied except loopback, so the
+setup case can start the application and collector on 127.0.0.1 and exercise them.
+Sandboxed commands are auto-approved, the sandbox cannot be disabled per command, and a
+missing sandbox fails the trial. A sandboxed command can only signal its own processes;
+Claude stops a process from an earlier call with TaskStop. No case needs outbound network.
 
 --clean-codex opts into Codex's built-in default model/configuration without changing
 saved user settings. It disables unrelated plugins for that trial while preserving

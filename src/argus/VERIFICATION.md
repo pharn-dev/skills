@@ -1,11 +1,67 @@
 # Verification — 0.1.0
 
-Current status: verified on 2026-10-11 as plugin `argus` in pharn-dev/skills (shipped in
-plugins/argus, sources in src/argus), at commit e8b870c. Deterministic checks, plugin
-installation in both clients and the sixteen-case behavioral gate pass, and
+Current status: re-verified on 2026-10-11 in pharn-dev/skills at 56ea8be, after the
+runtime fixes of #7 and #8 changed the behavior fingerprint, with the Claude eval client
+now sandboxed. Deterministic checks and the sixteen-case behavioral gate pass, and
 npm run check:evals reports releaseReady: true for the fingerprint in VERIFICATION.json.
 Semantic review was performed by Claude Code (claude-opus-5-5), delegated by the
 maintainer, against the rubric in evals/README.md.
+
+## Sandboxed Claude client and review of 56ea8be
+
+The Claude client no longer relies on a permissive allowlist (it allowed bash, sh, env
+and export, so nothing confined Claude to the trial project). Every Bash command now runs
+in Claude Code 2.1.295's OS sandbox, passed with --settings: writes are confined to the
+temporary project, outbound network is denied except loopback (allowLocalBinding lets the
+setup case bind the app and collector on 127.0.0.1), sandboxed commands are auto-approved,
+the per-command dangerouslyDisableSandbox escape is refused and failIfUnavailable stops a
+trial rather than running commands unconfined. Probes confirmed a write to the home
+directory and a request to example.com are denied, also with dangerouslyDisableSandbox,
+while starting a server, curling it on 127.0.0.1 and writing in the project work. This
+matches Codex's workspace-write sandbox, which additionally has outbound network; no case
+needs it. The shell-escape entries and pkill/pgrep (process listing is blocked in the
+sandbox) were removed from the allowlist; TaskStop was added. A sandboxed command can
+signal only processes of its own sandbox, so a process started by an earlier Bash call
+is stopped with TaskStop or started and stopped in one command.
+
+Deterministic checks on Node 24.13.1: 37 unit and 15 integration tests passed with none
+skipped; format, lint, typecheck, generated files, skill metadata and the package check
+pass. The Argus tarball rebuilt from a69d644 has the SHA-256 recorded below.
+
+| Scenario                | Codex            | Claude Code      |
+| ----------------------- | ---------------- | ---------------- |
+| Setup and restart       | Passed, reviewed | Passed, reviewed |
+| Incident diagnosis      | Passed, reviewed | Passed, reviewed |
+| Fix verification        | Passed, reviewed | Passed, reviewed |
+| Memory growth           | Passed, reviewed | Passed, reviewed |
+| Rules and replay        | Passed, reviewed | Passed, reviewed |
+| Missing data            | Passed, reviewed | Passed, reviewed |
+| Incomplete SSE evidence | Passed, reviewed | Passed, reviewed |
+| Percentile semantics    | Passed, reviewed | Passed, reviewed |
+
+All sixteen trials passed on the first attempt, with no reruns and no skill or runtime
+changes: Codex with its built-in default model and --clean-codex, Claude Code with its
+configured default (claude-sonnet-5-5), a 360-second bound per trial, sequentially on
+Node 24.13.1.
+
+Semantic review found no critical failures. Both setup trials left app-owned recipes over
+tools copied into .argus/tools, with no plugin path in package.json or the saved scripts,
+verified dashboard windows and incoming spans and verified again after a restart from the
+saved recipe. Under the sandbox, Claude's setup started, exercised and stopped the app and
+collector inside one verification script; Codex confirmed cleanup by closed ports because
+ps was blocked. Diagnosis kept the 400 ms tail as hypotheses without attributing it to CPU
+or a dependency. Verification named the 100 versus 60 request and duration mismatches
+and stayed inconclusive. Memory separated flat heap from external and array-buffer growth
+without calling it a leak. Rules used strict > 50,000,000 ns for two windows, fired at
+3000-4000, resolved at 4000-5000 and stayed silent on normal data. Missing data stayed
+insufficient evidence with a capture recipe. SSE kept loss unknown and call sites and
+external memory unavailable. Percentile reported 100 ms and 90 ms and refused a global
+p99. Minor, non-critical: Claude's diagnosis loosely described a sample p99 as a maximum
+of sub-samples in one limitation.
+
+Raw transcripts are local under evals/results/release-0.1.0-sandbox/, excluded from
+archives. A preceding single Claude setup trial used to check the sandbox
+(evals/results/sandbox-probe-claude-setup) also passed.
 
 ## Move to pharn-dev/skills
 
