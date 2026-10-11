@@ -1,7 +1,7 @@
 {
   "name": "pharn",
   "version": "0.3.1",
-  "description": "Skills for operating the PHARN CLI and the PHARN installation in a project: check, update, add and remove capabilities safely.",
+  "description": "Skills for keeping PHARN, which gets features shipped right with Claude Code, current in a project: check, update, add and remove capabilities safely.",
   "author": {
     "name": "pharn-dev",
     "url": "https://github.com/pharn-dev"
