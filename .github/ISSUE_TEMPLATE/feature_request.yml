@@ -1,0 +1,38 @@
+name: Feature or skill proposal
+description: Propose a skill or improve an existing workflow.
+title: "[feat] "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe a concrete use case for this repository's tool-operating skills. PHARN methodology capabilities live in [pharn-oss](https://github.com/pharn-dev/pharn-oss).
+        Keep credentials and private diagnostic data out of the proposal.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is difficult or missing in your current workflow?
+    validations:
+      required: true
+  - type: textarea
+    id: scenario
+    attributes:
+      label: Concrete use case
+      description: Name the tool, skill or proposed skill, agent, and a representative prompt or task.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Desired behavior
+      description: What should the agent produce or do, and what would demonstrate success?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe an existing skill, tool command, or workaround, or explain why none fits.
+    validations:
+      required: true

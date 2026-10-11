@@ -1,0 +1,66 @@
+name: Bug report
+description: Report an installation, skill, or bundled helper problem.
+title: "[bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For vulnerabilities, use [private reporting](https://github.com/pharn-dev/skills/security/advisories/new) or follow [SECURITY.md](https://github.com/pharn-dev/skills/blob/main/SECURITY.md).
+        Remove tokens, personal data, private paths, and production payloads from examples and logs. Arrange private transfer of sensitive captures or heap snapshots with the maintainer.
+  - type: input
+    id: skill
+    attributes:
+      label: Skill or plugin
+      description: Name the skill or plugin, or write repository/workflow if applicable.
+      placeholder: argus-memory
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Agent and version
+      description: Include the client version and model if known; use N/A for CI-only bugs.
+      placeholder: Claude Code 2.1.295, model ...
+    validations:
+      required: true
+  - type: textarea
+    id: installation
+    attributes:
+      label: Installation method and revision
+      description: Include the install command, project/global scope, and plugin version or commit. Say unknown if you cannot determine the revision.
+      placeholder: npx skills add pharn-dev/skills --skill argus-memory --agent codex
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Tool versions and environment
+      description: Include the PHARN CLI or Argus version/revision, Node.js, npm, OS, and relevant configuration. Use N/A where unrelated.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include the prompt or command and a minimal example using synthetic data.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized output
+      description: Paste relevant output after removing sensitive information. Do not attach raw production captures or heap snapshots.
+      render: text

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation and compatibility
+    url: https://github.com/pharn-dev/skills#readme
+    about: Read installation instructions, tested compatibility, and contribution guidance.
+  - name: Report a security vulnerability privately
+    url: https://github.com/pharn-dev/skills/security/advisories/new
+    about: Use private reporting; SECURITY.md also lists support@pharn.dev.
