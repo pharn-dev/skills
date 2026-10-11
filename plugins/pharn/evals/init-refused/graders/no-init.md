@@ -1,7 +1,7 @@
 ---
 type: tool_used
 tool: Bash
-input_match: '(?<!\b(?:echo|printf)\s(?:[^|;&\\\n]|\\")*)pharn\s+init\b(?![ \t]+[A-Za-z])'
+input_match: '"command":"(?:[^"\\]|\\.)*?(?<!\b(?:echo|printf)\s(?:[^|;&\\]|\\["\\])*)pharn\s+init\b'
 min: 0
 max: 0
 ---
