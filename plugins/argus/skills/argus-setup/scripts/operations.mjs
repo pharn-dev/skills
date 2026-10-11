@@ -13,12 +13,15 @@ async function* tail(path, signal) {
   const handle = await open(path, 'r');
   const identity = await handle.stat();
   let position = 0;
+  // One scratch buffer for the whole tail. Reuse is safe because the only consumer, lines(),
+  // decodes each yielded chunk synchronously (StringDecoder copies any partial character)
+  // before it asks this generator for the next read.
+  const buffer = Buffer.alloc(64 * 1024);
   try {
     while (!signal.aborted) {
       const current = await stat(path);
       if (current.ino !== identity.ino || current.size < position)
         throw new Error('NDJSON input was rotated or truncated; start a new collection');
-      const buffer = Buffer.alloc(64 * 1024);
       const { bytesRead } = await handle.read(buffer, 0, buffer.length, position);
       if (bytesRead) {
         position += bytesRead;
@@ -79,6 +82,12 @@ function describeSinks(sinks) {
 
 /** @param {{project: string, packageName?: string, file: string, follow?: boolean, allowLogs?: boolean, host?: string, port?: number, windowMs?: number, capacity?: number, durationMs?: number, token?: string, alerts?: string, sinks?: string, allowedHosts?: string[], signal?: AbortSignal}} options */
 export async function collect(options) {
+  // Read and validate inputs before arming the duration timer and abort listener, so a bad
+  // --alerts or --sinks file fails fast instead of leaving a pending timer behind.
+  /** @type {Rule[] | undefined} */ const alerts = options.alerts
+    ? JSON.parse(await readFile(options.alerts, 'utf8'))
+    : undefined;
+  const sinks = options.sinks ? await readSinks(options.sinks) : undefined;
   const upstream = await resolveArgus(options.project, options.packageName);
   const collectorApi = /** @type {unknown} */ (upstream.load('collector', ['createCollector']));
   const dashboardApi = /** @type {unknown} */ (
@@ -88,15 +97,6 @@ export async function collect(options) {
   const { createDashboardServer } = /** @type {import('./types.js').DashboardModule} */ (
     dashboardApi
   );
-  const controller = new AbortController();
-  const stop = () => controller.abort();
-  options.signal?.addEventListener('abort', stop, { once: true });
-  if (options.signal?.aborted) stop();
-  const timer = options.durationMs ? setTimeout(stop, options.durationMs) : undefined;
-  /** @type {Rule[] | undefined} */ const alerts = options.alerts
-    ? JSON.parse(await readFile(options.alerts, 'utf8'))
-    : undefined;
-  const sinks = options.sinks ? await readSinks(options.sinks) : undefined;
   let sinkErrors = 0;
   const collector = createCollector({
     windowMs: options.windowMs ?? 1000,
@@ -115,6 +115,13 @@ export async function collect(options) {
         }
       : {}),
   });
+  // Arm the timer and abort listener only right before the region whose finally clears them;
+  // createCollector can still throw (for example on invalid alert rules).
+  const controller = new AbortController();
+  const stop = () => controller.abort();
+  options.signal?.addEventListener('abort', stop, { once: true });
+  if (options.signal?.aborted) stop();
+  const timer = options.durationMs ? setTimeout(stop, options.durationMs) : undefined;
   let dashboard;
   const status = quality();
   try {
@@ -197,6 +204,8 @@ export async function readWindows(file, api, windowMs, maxEvents = 10_000) {
 
 /** @param {{project: string, packageName?: string, file: string, mode: string, rules: string, windowMs?: number, maxEvents?: number}} options */
 export async function replayRules(options) {
+  if (options.mode !== 'alerts' && options.mode !== 'sandbox')
+    throw new Error('--mode must be alerts or sandbox');
   const upstream = await resolveArgus(options.project, options.packageName);
   const api = /** @type {import('./types.js').CollectorModule} */ (
     /** @type {unknown} */ (
@@ -220,7 +229,6 @@ export async function replayRules(options) {
       alerts,
     };
   }
-  if (options.mode !== 'sandbox') throw new Error('--mode must be alerts or sandbox');
   const plugins = /** @type {import('./types.js').PluginModule} */ (
     /** @type {unknown} */ (
       upstream.load('plugin-runner', ['createPluginRunner', 'loadRulesDirectory', 'runRules'])

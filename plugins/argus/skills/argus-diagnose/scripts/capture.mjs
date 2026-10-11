@@ -1,4 +1,4 @@
-import { mkdir, open, readFile } from 'node:fs/promises';
+import { mkdir, open, readFile, unlink } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import {
   lines,
@@ -87,7 +87,8 @@ export async function* sseEvents(source, manifest, options) {
         } catch {
           payload = null;
         }
-        const record = parseRecord({ event, data: payload });
+        // An SSE message without an event field has type "message": classify the payload itself.
+        const record = parseRecord(event ? { event, data: payload } : payload);
         event = '';
         data = [];
         if (!record || record.event === 'sample') {
@@ -154,6 +155,8 @@ export async function capture(options) {
     output = await open(eventsPath, 'wx', 0o600);
   } catch (error) {
     await manifestHandle.close();
+    // Remove only the empty manifest reserved above so a retry is not blocked by it.
+    await unlink(manifestPath);
     throw error;
   }
   /** @type {CaptureManifest} */ const manifest = {
