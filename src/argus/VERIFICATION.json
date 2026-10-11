@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "version": "0.1.0",
-  "reviewedAt": "2026-10-10T22:45:17.068Z",
+  "reviewedAt": "2026-10-11T00:41:01.910Z",
   "reviewer": "Claude Code (claude-opus-5-5), delegated by the maintainer",
-  "behaviorFingerprint": "10632511e051078d54e1d8da812396e7e8248d3165c90eb151c4d27fa274d90d",
-  "sourceCommit": "d681208",
+  "behaviorFingerprint": "5212474bdc79a8a9999681031f726ba815804959dbb8e51736cda2e6b9e72274",
+  "sourceCommit": "e8b870c (pharn-dev/skills, plugin renamed to argus)",
   "compatibility": {
     "schemaVersion": 1,
     "repository": "https://github.com/pharn-dev/argus",
@@ -22,7 +22,7 @@
     "ci": "GitHub Actions on main"
   },
   "modelConfigurations": {
-    "codex": "built-in default with --clean-codex; the configured gpt-6.1-sol alias is rejected for a ChatGPT account",
+    "codex": "built-in default with --clean-codex; the saved user model setting is not available for this account",
     "claude": "configured default; tool allowlist includes process-start commands for the setup case"
   },
   "timeoutMs": 360000,
@@ -32,128 +32,128 @@
       "case": "setup",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/codex-setup",
-      "note": "Connected with an app-owned .argus/tools recipe at a 250 ms interval: 17 windows (67 samples) and 5 incoming GET / spans, then a restart from the saved scripts with 16 windows and 5 spans. A final ps check was sandbox-blocked; managed sessions exited."
+      "evidence": "evals/results/release-0.1.0-argus/codex-setup",
+      "note": "Connected with an app-owned npm start recipe (ARGUS_OUTPUT to .argus/raw.ndjson) and an argus:collector script over tools copied into .argus/tools: 20 windows and 8 incoming GET / spans, then a restart from the saved recipe with 19 windows and 5 spans; the raw capture had 26 samples. A ps check was sandbox-blocked; owned sessions were terminated."
     },
     {
       "client": "codex",
       "case": "diagnose",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final-codex-diagnose-rerun/codex-diagnose",
-      "note": "Rerun. The first trial in release-0.1.0-final wrote its own report to tool-result.json and the raw helper summary to summary.json, failing the artifact contract; its analysis was sound. The rerun saved the helper summary and ranked request-level waiting above event-loop, GC and backpressure using the per-route breakdown."
+      "evidence": "evals/results/release-0.1.0-argus/codex-diagnose",
+      "note": "GET /work p50 10 ms, p99/max 400 ms; event loop max 100 ms, GC 12 ms total, backpressure 18 ms total at /app/stream.js:12:3, flat memory. Ranked untraced waiting first and did not attribute the tail to CPU or a dependency; proposed a bounded reproduction with handler timing and a CPU profile."
     },
     {
       "client": "codex",
       "case": "verify",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/codex-verify",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus/codex-verify",
+      "note": "Named the 100 vs 60 request mismatch and the 3000 ms declared vs 6000 ms recorded duration; compare returned comparable=false; declared no improvement."
     },
     {
       "client": "codex",
       "case": "memory",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/codex-memory",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus/codex-memory",
+      "note": "Flat heapUsed/heapTotal while RSS rose 20 to 70 MiB, matched by external (2 to 52 MiB) and arrayBuffers (1 to 51 MiB). Called it external/ArrayBuffer pressure, not a proven leak; no snapshot taken."
     },
     {
       "client": "codex",
       "case": "rules",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/codex-rules",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus/codex-rules",
+      "note": "eventLoop.max > 50,000,000 ns for 2 windows; the exact 50 ms window does not count. Fired at 3000-4000 (70 ms), resolved at 4000-5000; normal replay had no alerts. Activation recipe mentions sinks for delivery."
     },
     {
       "client": "codex",
       "case": "missing",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/codex-missing",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus/codex-missing",
+      "note": "Empty recording: no measurements or root cause claimed; loss unknown; gave a capture recipe for spans and runtime samples."
     },
     {
       "client": "codex",
       "case": "sse",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/codex-sse",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus/codex-sse",
+      "note": "Captured 500 ms of real dashboard SSE (6 history windows); kept loss unknown and reported backpressure call sites and external/arrayBuffers memory as unavailable from windows."
     },
     {
       "client": "codex",
       "case": "percentile",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/codex-percentile",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus-codex-percentile-rerun/codex-percentile",
+      "note": "Rerun. The first trial reported 100 ms max and 90 ms max sample p99 and refused a global p99, but labelled its verdict connected, so it failed the automatic check (trace kept in evals/results/release-0.1.0-argus/codex-percentile). The single rerun returned inconclusive with the same numbers and reasoning."
     },
     {
       "client": "claude",
       "case": "setup",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/claude-setup",
-      "note": "Connected with app-owned scripts: 9 windows and 20 incoming spans across GET / and GET /health in requests.routes, then a restart from the same recipe with the same shape. pgrep found no leftover processes."
+      "evidence": "evals/results/release-0.1.0-argus/claude-setup",
+      "note": "Connected with app-owned scripts (start:argus, argus:collect over .argus/tools, .argus/verify.mjs): 20 incoming GET / spans, 6 windows, 12 raw samples; a restart from the saved recipe showed 8 windows and 20 spans. Only a one-off copy helper outside the app referred to the plugin; the saved recipe does not."
     },
     {
       "client": "claude",
       "case": "diagnose",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/claude-diagnose",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus/claude-diagnose",
+      "note": "Same measurements as Codex with units; noted the p99 is a single request among 6 and that samples cannot be matched to slow requests; hypotheses only, with a controlled capture as the next experiment."
     },
     {
       "client": "claude",
       "case": "verify",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/claude-verify",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus/claude-verify",
+      "note": "Named the request-count and duration mismatches; all deltas zero; declared the comparison inconclusive, not an improvement or a null result."
     },
     {
       "client": "claude",
       "case": "memory",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/claude-memory",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus/claude-memory",
+      "note": "Separated flat heap from external/arrayBuffers growth matching RSS; no post-GC baseline, so a leak is neither confirmed nor ruled out; proposed repeated cycles with GC between."
     },
     {
       "client": "claude",
       "case": "rules",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/claude-rules",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus/claude-rules",
+      "note": "Strict > 50,000,000 ns for 2 windows; 50 ms equality window not a breach; fired at 3000-4000, resolved at 4000-5000; normal replay silent; activation with a file sink."
     },
     {
       "client": "claude",
       "case": "missing",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/claude-missing",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus/claude-missing",
+      "note": "Empty file: insufficient evidence, no root cause, did not treat absence as health; gave a capture command."
     },
     {
       "client": "claude",
       "case": "sse",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/claude-sse",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus/claude-sse",
+      "note": "Real dashboard SSE, 6 history events and 0 live; loss unknown; no hotspots or external memory in windows, so call sites and external memory are unavailable."
     },
     {
       "client": "claude",
       "case": "percentile",
       "status": "passed",
       "semanticReview": "passed",
-      "evidence": "evals/results/release-0.1.0-final/claude-percentile",
-      "note": "Automatic checks and final response reviewed against the evals/README.md rubric."
+      "evidence": "evals/results/release-0.1.0-argus/claude-percentile",
+      "note": "100 ms event-loop maximum and 90 ms maximum sample p99; refused to treat it as a global p99."
     }
   ]
 }

@@ -1,19 +1,77 @@
 # Verification — 0.1.0
 
-> **Pending rerun.** The plugin moved from pharn-dev/argus-ai@dc371ee into
-> pharn-dev/skills (plugins/argus, sources in src/argus) and was renamed from argus-ai
-> to argus. Skill content, references and helpers are byte-identical; recomputing the
-> fingerprint with the old plugin path reproduces the reviewed value. The rename changes
-> the hashed path and the Claude invocation (/argus:...), so npm run check:evals is
-> blocked until the sixteen trials are rerun and reviewed. Deterministic checks pass in
-> the new location (32 unit, 15 integration, 0 skipped). The record below is for 0.1.0
-> as argus-ai.
+Current status: verified on 2026-10-11 as plugin `argus` in pharn-dev/skills (shipped in
+plugins/argus, sources in src/argus), at commit e8b870c. Deterministic checks, plugin
+installation in both clients and the sixteen-case behavioral gate pass, and
+npm run check:evals reports releaseReady: true for the fingerprint in VERIFICATION.json.
+Semantic review was performed by Claude Code (claude-opus-5-5), delegated by the
+maintainer, against the rubric in evals/README.md.
 
-Verified on 2026-10-10 at pharn-dev/argus-ai commit d681208. Deterministic checks, plugin
-installation in both clients and the sixteen-case behavioral gate pass.
-npm run check:evals reports releaseReady: true for the shipped-content fingerprint in
-VERIFICATION.json. Semantic review was performed by Claude Code (claude-opus-5-5),
-delegated by the maintainer, against the rubric in evals/README.md.
+## Move to pharn-dev/skills
+
+The plugin moved from pharn-dev/argus-ai@dc371ee and was renamed from argus-ai to argus
+(argus@pharn-dev, /argus:argus-*). Skill content, references and helpers are
+byte-identical: recomputing the fingerprint with the old plugin path reproduces the
+value reviewed for argus-ai. Only the plugin manifests changed (name, homepage,
+repository, Codex display name). The rename changes the hashed path and the Claude
+invocation, so all sixteen trials were rerun.
+
+Deterministic checks in the new location: 32 unit and 15 integration tests passed with
+none skipped; format, generated files, skill metadata, lint, typecheck and the package
+check pass; the built Argus tarball has the SHA-256 below. claude plugin validate
+--strict passes for the marketplace and both plugins of the repository.
+
+Installation from the skills checkout into throwaway configuration directories: Claude
+Code installs argus@pharn-dev and pharn@pharn-dev, with all five argus SKILL.md files and
+none of the src/argus tooling. Codex reads .agents/plugins/marketplace.json, installs
+argus@pharn-dev, and codex debug prompt-input lists the five argus:argus-* skills and no
+pharn skill.
+
+### Behavioral rerun
+
+| Scenario                | Codex            | Claude Code      |
+| ----------------------- | ---------------- | ---------------- |
+| Setup and restart       | Passed, reviewed | Passed, reviewed |
+| Incident diagnosis      | Passed, reviewed | Passed, reviewed |
+| Fix verification        | Passed, reviewed | Passed, reviewed |
+| Memory growth           | Passed, reviewed | Passed, reviewed |
+| Rules and replay        | Passed, reviewed | Passed, reviewed |
+| Missing data            | Passed, reviewed | Passed, reviewed |
+| Incomplete SSE evidence | Passed, reviewed | Passed, reviewed |
+| Percentile semantics    | Passed on rerun  | Passed, reviewed |
+
+Same configuration as the argus-ai review: Codex used its built-in default model with
+--clean-codex, Claude Code its configured default, a 360-second bound per trial, run
+sequentially on Node 24.13.1.
+
+The first Codex percentile trial reported the 100 ms maximum and the 90 ms maximum sample
+p99 and refused a global p99, but labelled its verdict connected, the setup case's label.
+That fails the automatic verdict check. A single rerun returned inconclusive with the
+same numbers and reasoning and passed. The failed trace is preserved; no response was
+fabricated or edited.
+
+Semantic review found no critical failures. Both setup trials saved app-owned recipes
+over tools copied into .argus/tools, with no plugin or plugin-cache path in package.json
+or the verification script, verified windows and incoming spans, and restarted from the
+saved recipe. Diagnosis kept the 400 ms tail as hypotheses without attributing it to CPU
+or a dependency. Verification named the 100 versus 60 request mismatch and the duration
+mismatch and stayed inconclusive. Memory separated flat heap from external and
+array-buffer growth without calling it a leak. Rules used strict > 50,000,000 ns for two
+windows, fired at 3000-4000, resolved at 4000-5000 and stayed silent on normal data.
+Missing data stayed insufficient evidence with a capture recipe. SSE kept loss unknown
+and call sites and external memory unavailable.
+
+An additional Claude Code run by the maintainer (evals/results/2026-10-11T00-23-42-150Z)
+also passed all eight automatic checks; its Codex half was blocked because it ran
+without --clean-codex. Raw transcripts are local under
+evals/results/release-0.1.0-argus/ and
+evals/results/release-0.1.0-argus-codex-percentile-rerun/, excluded from archives.
+
+## Earlier record: argus-ai 0.1.0
+
+Verified on 2026-10-10 at pharn-dev/argus-ai commit d681208. The sections below record
+the verification of the same content as argus-ai, before the move. Their result paths
+refer to the argus-ai checkout.
 
 ## Deterministic verification
 
