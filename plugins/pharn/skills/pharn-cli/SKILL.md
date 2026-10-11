@@ -1,12 +1,13 @@
 ---
 name: pharn-cli
-description: Operate the PHARN CLI (@pharn-dev/pharn 0.10.0, with a fallback for 0.9.x) on a project that has PHARN installed. Use when the person asks whether PHARN is up to date, what an update would change, to update it, what is installed, or to add or remove a capability (griller or lens), or when pharn.config.json exists and they mention updating PHARN. Read-only checks and a dry-run preview first; never overwrites their edits.
+description: Operate the PHARN CLI (@pharn-dev/pharn 0.10.0+, best on 0.11.0, with a fallback for 0.9.x) on a project that has PHARN installed. Use when the person asks whether PHARN is up to date, what an update would change, to update it, what is installed, or to add or remove a capability (griller or lens), or when pharn.config.json exists and they mention updating PHARN. Read-only checks and a dry-run preview first; never overwrites their edits.
 ---
 
 # pharn-cli
 
 Operates the PHARN installation in the current project through the `pharn` CLI.
-Written for CLI 0.10.0 (JSON flow); older CLIs use the text flow. Field
+Written for CLI 0.10.0+ (JSON flow, `--compact` from 0.11.0); older CLIs use
+the text flow. Field
 references are in [references/json.md](references/json.md), the old flow in
 [references/text-flow.md](references/text-flow.md), other commands in
 [references/commands.md](references/commands.md).
@@ -53,17 +54,21 @@ about `pharn init` (section 5). Quote the relevant fields in your answer.
 
 ## 3. Preview, then update (only when the person asks)
 
-Run the dry run **once** per request. It writes nothing. Its JSON lists every
-installed file in `plan.files` (often 100 KB or more), which is too large to
-read from the terminal, so save it to a file and print it without that list:
+Run the dry run **once** per request. It writes nothing. Its full JSON lists
+every installed file in `plan.files` (often 100 KB or more), too large to read
+from the terminal:
+
+- **CLI >= 0.11.0**: `pharn update --dry-run --json --compact`. It leaves the
+  unchanged files out of `plan.files` (`compact: true`,
+  `plan.filesOmitted.count` says how many); everything else is complete.
+- **CLI 0.10.x** (no `--compact`): save it and print it without that list:
 
 ```bash
 pharn update --dry-run --json > "${TMPDIR:-/tmp}/pharn-dry-run.json"; echo "exit $?"
 node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));if(j.plan)delete j.plan.files;console.log(JSON.stringify(j,null,1))' "${TMPDIR:-/tmp}/pharn-dry-run.json"
 ```
 
-On a non-zero exit the error is on stderr and the file is empty. To look up
-one file's action, query `plan.files` in that same saved file. Reuse this one
+On a non-zero exit the error is on stderr and stdout is empty. Reuse this one
 result for everything below, including the decision to apply: do not run the
 dry run again before `pharn update --yes`, and do not run a separate
 `--dry-run --force` preview. Branch on `status`:

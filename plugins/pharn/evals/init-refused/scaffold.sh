@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds a fake PHARN project in the empty eval workspace. The stub CLI replays
-# canned 0.10.0-shaped output, needs no network, and logs each call.
+# canned 0.11.0-shaped output, needs no network, and logs each call.
 set -eu
 mkdir -p bin
 git init -q . 2>/dev/null || true
@@ -13,7 +13,7 @@ case "$1" in list|status|update|add|remove)
   echo "No pharn.config.json found. Run pharn init first." >&2; exit 1 ;;
 esac
 case "$1" in
-  --version) echo "0.10.0" ;;
+  --version) echo "0.11.0" ;;
   list) echo '{"mode":"archetype","skillsVersion":"6.50.0","archetypes":["lib"],"capabilities":[{"name":"a11y","role":"griller","source":"auto"}]}' ;;
   status)
     case "$ARGS" in

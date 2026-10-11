@@ -6,6 +6,15 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-11
+
+### Changed
+
+- `pharn-cli` uses `pharn update --dry-run --json --compact` on CLI 0.11.0+,
+  which leaves unchanged files out of `plan.files` at the source; the temp-file
+  and `node -e` filter remain only for CLI 0.10.x. Eval stubs report 0.11.0
+  and a `ran-compact` grader pins the flag.
+
 ## [0.2.2] - 2026-10-11
 
 ### Fixed
