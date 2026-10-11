@@ -25,8 +25,8 @@ jobs:
         run: claude plugin validate --strict .
       - name: Validate plugin pharn
         run: claude plugin validate --strict plugins/pharn
-      - name: Validate plugin argus
-        run: claude plugin validate --strict plugins/argus
+      - name: Validate plugin phargus
+        run: claude plugin validate --strict plugins/phargus
       # claude plugin eval only runs a scaffold inside its own case directory,
       # so these four cases carry copies of one script. Keep them identical.
       - name: Check shared pharn eval scaffolds
@@ -46,8 +46,8 @@ jobs:
       - name: Lint Markdown
         run: npx --yes markdownlint-cli2@0.23.3 "**/*.md"
 
-  argus:
-    name: Argus (Node ${{ matrix.node }})
+  phargus:
+    name: Phargus (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -55,7 +55,7 @@ jobs:
         node: ['22.18.0', '24']
     defaults:
       run:
-        working-directory: src/argus
+        working-directory: src/phargus
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -64,7 +64,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-          cache-dependency-path: src/argus/package-lock.json
+          cache-dependency-path: src/phargus/package-lock.json
       - run: npm ci
       - run: npm run format:check
       - run: npm run check:generated
@@ -74,10 +74,10 @@ jobs:
       - run: npm test
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: pharn-dev/argus
-          ref: a69d644383efe19c82fb3cfdee83a0ad1dd5e0f9
-          path: src/argus/.cache/argus-source
+          repository: pharn-dev/phargus
+          ref: 4219f480cdb436b6af948e321bdd934f7c3d2128
+          path: src/phargus/.cache/phargus-source
           persist-credentials: false
-      - run: npm run prepare:integration -- --source .cache/argus-source
+      - run: npm run prepare:integration -- --source .cache/phargus-source
       - run: npm run test:integration
       - run: npm run check:package

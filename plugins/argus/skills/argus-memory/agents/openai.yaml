@@ -1,4 +1,0 @@
-interface:
-  display_name: 'Argus Memory'
-  short_description: 'Investigate memory growth and compare heap snapshots'
-  default_prompt: 'Use $argus-memory for this Argus workflow.'

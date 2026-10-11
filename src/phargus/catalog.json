@@ -1,0 +1,38 @@
+{
+  "name": "phargus",
+  "version": "0.1.0",
+  "author": "Przemek Galarowicz",
+  "description": "Phargus diagnostics workflows for Node.js applications.",
+  "skills": [
+    {
+      "name": "phargus-setup",
+      "displayName": "Phargus Setup",
+      "shortDescription": "Connect and verify Phargus in a Node.js application",
+      "references": ["compatibility", "data", "tools", "setup"]
+    },
+    {
+      "name": "phargus-diagnose",
+      "displayName": "Phargus Diagnose",
+      "shortDescription": "Investigate runtime incidents with Phargus evidence",
+      "references": ["compatibility", "data", "tools", "diagnosis"]
+    },
+    {
+      "name": "phargus-verify",
+      "displayName": "Phargus Verify",
+      "shortDescription": "Compare runtime measurements before and after a fix",
+      "references": ["compatibility", "data", "tools", "verification"]
+    },
+    {
+      "name": "phargus-memory",
+      "displayName": "Phargus Memory",
+      "shortDescription": "Investigate memory growth and compare heap snapshots",
+      "references": ["compatibility", "data", "tools", "memory"]
+    },
+    {
+      "name": "phargus-rules",
+      "displayName": "Phargus Rules",
+      "shortDescription": "Build and replay alerts and sandboxed diagnostic rules",
+      "references": ["compatibility", "data", "tools", "rules"]
+    }
+  ]
+}

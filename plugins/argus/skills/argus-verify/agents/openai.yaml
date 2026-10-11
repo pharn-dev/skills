@@ -1,4 +1,0 @@
-interface:
-  display_name: 'Argus Verify'
-  short_description: 'Compare runtime measurements before and after a fix'
-  default_prompt: 'Use $argus-verify for this Argus workflow.'

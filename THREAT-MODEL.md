@@ -15,29 +15,29 @@ access. An incorrect instruction or prompt injection can influence those actions
 starts with read-only checks and an update preview, distinguishes edited files,
 and requires explicit intent before forcing an overwrite. Its
 [evals](plugins/pharn/evals/) check both desired actions and forbidden actions.
-Argus's [data guidance](src/argus/knowledge/data.md) treats request paths, stack
+Phargus's [data guidance](src/phargus/knowledge/data.md) treats request paths, stack
 strings, object names, and finding messages as evidence rather than instructions.
 
 **Limit:** these are instructions and tested behaviors, not enforcement of the
 agent's permissions. The user's client sandbox and approvals control access.
-The [Argus eval sandbox](src/argus/VERIFICATION.md) confines trial commands; that
+The [Phargus eval sandbox](src/phargus/VERIFICATION.md) confines trial commands; that
 configuration does not automatically confine an installed skill.
 
 ## Helpers and application packages
 
 **Boundary:** Node.js helpers execute with the invoking user's permissions and
-resolve Argus modules from the target application. An installed application
+resolve Phargus modules from the target application. An installed application
 package is executable code and must be trusted before it is imported.
 
-**Existing safeguards:** [runtime compatibility checks](src/argus/runtime/upstream.mjs)
+**Existing safeguards:** [runtime compatibility checks](src/phargus/runtime/upstream.mjs)
 inspect the package version and required exports. The
-[compatibility contract](src/argus/compatibility.json) pins the upstream source
+[compatibility contract](src/phargus/compatibility.json) pins the upstream source
 used by integration tests. Shared helpers and references are generated from
-`src/argus`; CI checks generated files, types, package contents, and behavior.
+`src/phargus`; CI checks generated files, types, package contents, and behavior.
 
 **Limit:** runtime checks do not authenticate the source of an arbitrary installed
-tarball. Helpers are not a sandbox for application dependencies. Argus diagnostic
-rules have a separate [isolated-vm execution contract](src/argus/knowledge/rules.md);
+tarball. Helpers are not a sandbox for application dependencies. Phargus diagnostic
+rules have a separate [isolated-vm execution contract](src/phargus/knowledge/rules.md);
 a missing peer, compile error, timeout, or failed execution must remain a failure.
 That sandbox does not cover all helper commands.
 
@@ -47,11 +47,11 @@ That sandbox does not cover all helper commands.
 contain attacker-controlled strings or sensitive application data. Capture and
 analysis operations can affect a running application.
 
-**Existing safeguards:** [record parsing](src/argus/runtime/records.mjs) validates
+**Existing safeguards:** [record parsing](src/phargus/runtime/records.mjs) validates
 diagnostic records and tracks malformed input and evidence-quality problems.
-The [data contract](src/argus/knowledge/data.md) keeps missing coverage and unknown
-loss explicit. [Capture](src/argus/runtime/capture.mjs) bounds SSE input and records
-termination. [Collector operations](src/argus/runtime/operations.mjs) default to
+The [data contract](src/phargus/knowledge/data.md) keeps missing coverage and unknown
+loss explicit. [Capture](src/phargus/runtime/capture.mjs) bounds SSE input and records
+termination. [Collector operations](src/phargus/runtime/operations.mjs) default to
 loopback and accept dashboard token and allowed-host configuration. Sanitized
 sink descriptions omit webhook URLs from the helper's JSON result.
 
@@ -61,7 +61,7 @@ review output before sharing, and keep credentials out of issues and Git.
 Loopback defaults are not authorization for exposing a dashboard publicly;
 deployment access controls remain the application's responsibility. Snapshot
 capture pauses and memory overhead are described in the
-[memory guidance](src/argus/knowledge/memory.md).
+[memory guidance](src/phargus/knowledge/memory.md).
 
 ## Repository and distribution
 

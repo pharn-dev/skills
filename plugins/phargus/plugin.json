@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "phargus",
+  "version": "0.1.0",
+  "description": "Phargus diagnostics workflows for Node.js applications.",
+  "author": {
+    "name": "Przemek Galarowicz"
+  },
+  "homepage": "https://github.com/pharn-dev/skills/tree/main/plugins/phargus",
+  "repository": "https://github.com/pharn-dev/skills",
+  "license": "Apache-2.0",
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./skills/phargus-setup/SKILL.md",
+      "interface": {
+        "displayName": "Phargus",
+        "shortDescription": "Phargus diagnostics workflows for Node.js applications.",
+        "developerName": "Przemek Galarowicz",
+        "category": "Developer Tools"
+      }
+    }
+  }
+}

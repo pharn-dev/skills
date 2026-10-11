@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/pharn-dev/phargus",
+  "commit": "4219f480cdb436b6af948e321bdd934f7c3d2128",
+  "packageName": "@pharn-dev/phargus",
+  "packageVersion": "0.0.1",
+  "published": false,
+  "minimumNode": "22.18.0"
+}

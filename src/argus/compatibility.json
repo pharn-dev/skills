@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "repository": "https://github.com/pharn-dev/argus",
-  "commit": "a69d644383efe19c82fb3cfdee83a0ad1dd5e0f9",
-  "packageName": "argus",
-  "packageVersion": "0.0.1",
-  "published": false,
-  "minimumNode": "22.18.0"
-}

@@ -18,6 +18,12 @@ for current enforcement.
 The GitHub Actions checks use application ID `15368`; Socket uses `156372`.
 The post-merge skills.sh job is not a PR requirement.
 
+The Argus rename changes the CI contexts to `Phargus (Node 22.18.0)` and
+`Phargus (Node 24)`. If the live required checks include the old Argus names,
+replace them when the rename PR starts reporting the Phargus checks; otherwise
+GitHub will wait for the obsolete checks. Use the new names when activating this ruleset.
+Changing main.json in Git does not update the live ruleset.
+
 GitHub [applies all matching rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets).
 The review exception therefore does not bypass the separate PR and CI rules.
 GitHub does not allow authors to approve their own PRs. The exception permits
@@ -76,7 +82,7 @@ gh api repos/pharn-dev/skills/actions/permissions \
 
 Keep the default workflow token read-only, workflow review approval disabled,
 and automatic merge disabled. Dependabot's version-update schedule is in
-[dependabot.yml](../dependabot.yml): npm in `/src/argus`, GitHub Actions in `/`,
+[dependabot.yml](../dependabot.yml): npm in `/src/phargus`, GitHub Actions in `/`,
 weekly, with at most five open version-update PRs per ecosystem. Versions
 embedded in commands such as `npx skills@...` are updated deliberately.
 

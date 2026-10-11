@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.0",
+  "status": "verified",
+  "behaviorFingerprint": "f0aa8d4daf785caecefd82ddaad2f7d81a303794199519a7b98850d02999eda2",
+  "reviewedAt": "2026-10-11T17:49:52Z",
+  "reviewer": "Codex assistant in this chat, reviewing final responses and helper artifacts against evals/README.md",
+  "compatibility": {
+    "schemaVersion": 1,
+    "repository": "https://github.com/pharn-dev/phargus",
+    "commit": "4219f480cdb436b6af948e321bdd934f7c3d2128",
+    "packageName": "@pharn-dev/phargus",
+    "packageVersion": "0.0.1",
+    "published": false,
+    "minimumNode": "22.18.0"
+  },
+  "previousVerification": "verification/pre-rename.json",
+  "results": [
+    {
+      "client": "codex",
+      "case": "setup",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "App-owned phargus:start/phargus:collect recipes use copied .phargus/tools; initial capture had 6 windows/8 spans and restart had 6 windows/10 spans. Raw restart summary showed 7 samples/10 spans. Kept SSE loss unknown and sourceCommitVerified false; verified closed app/dashboard connections after cleanup.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/codex-setup"
+    },
+    {
+      "client": "codex",
+      "case": "diagnose",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "Rerun preserved the actual helper JSON in tool-result.json. Correctly contrasted 10 versus 400 ms requests with identical loop/GC/backpressure signals; kept dependency waiting and synchronous work as hypotheses and proposed controlled stream-drain experiments plus per-operation timing.",
+      "evidence": "evals/results/phargus-rename-codex-diagnose-rerun/codex-diagnose"
+    },
+    {
+      "client": "codex",
+      "case": "verify",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "Comparison is inconclusive: 100 vs 60 declared requests and 3000 ms declared duration versus 6000 ms recorded; zero measurement deltas are not evidence of improvement under mismatched conditions.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/codex-verify"
+    },
+    {
+      "client": "codex",
+      "case": "memory",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/phargus-rename-memory-verdict-final/codex-memory",
+      "note": "RSS rose 20 to 70 MiB, external 2 to 52 MiB and arrayBuffers 1 to 51 MiB with heap flat at 1/4 MiB. Identified external/ArrayBuffer pressure without proving a leak or attributing the hotspot as a cause; proposed repeated workload/drain cycles and post-cycle baselines."
+    },
+    {
+      "client": "codex",
+      "case": "rules",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "Executable alert uses eventLoop.max > 50,000,000 ns for 2 windows. The exact 50 ms window is excluded; incident fires at 3000 ms and resolves at 4000 ms, while normal replay has no alerts. Activation includes a delivery sink.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/codex-rules"
+    },
+    {
+      "client": "codex",
+      "case": "missing",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "An empty recording is insufficient evidence, with loss unknown and no root-cause or health claim. Proposed raw captures during slow and normal periods with request spans and matched measurement conditions.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/codex-missing"
+    },
+    {
+      "client": "codex",
+      "case": "sse",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "Real 500 ms dashboard capture produced 6 historical windows and no live updates/spans. Reported SSE loss unknown and backpressure call sites/external/arrayBuffers memory unavailable; proposed raw workload captures instead of attributing a request cause.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/codex-sse"
+    },
+    {
+      "client": "codex",
+      "case": "percentile",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "Reported event-loop maximum 100 ms and maximum sample p99 90 ms, explicitly refusing to reconstruct a global percentile from sample aggregates.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/codex-percentile"
+    },
+    {
+      "client": "claude",
+      "case": "setup",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "App-owned start:phargus/phargus:collect/verify.sh recipes use copied .phargus/tools, @pharn-dev/phargus/agent and PHARGUS_OUTPUT. Initial and restart SSE each contained 8 windows/10 spans. Kept SSE loss unknown; trap stopped processes and dashboard port was closed.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/claude-setup"
+    },
+    {
+      "client": "claude",
+      "case": "diagnose",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "Reported 10 ms median/400 ms request tail, 100 ms event-loop maximum, 2 ms GC and 3 ms backpressure maxima with flat memory. Kept synchronous work and dependency waiting as hypotheses, stated no CPU stacks/outgoing spans, and proposed raw time alignment plus handler timing. Minor: it did not note that fast/slow periods share identical runtime signals.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/claude-diagnose"
+    },
+    {
+      "client": "claude",
+      "case": "verify",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "Kept the comparison inconclusive because requests differ (100 versus 60) and recorded duration/coverage is 6000 ms versus 3000 ms declared; identical latency/other deltas do not establish a controlled improvement.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/claude-verify"
+    },
+    {
+      "client": "claude",
+      "case": "memory",
+      "status": "passed",
+      "semanticReview": "passed",
+      "evidence": "evals/results/phargus-rename-memory-verdict-final/claude-memory",
+      "note": "Identified the same external/ArrayBuffer growth with flat JS heap; kept leak and hotspot causation unproven and proposed controlled cycles. Minor: future heap-diff wording suggests finding owners, beyond this helper's object-count/self-size output and lack of retaining paths."
+    },
+    {
+      "client": "claude",
+      "case": "rules",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "Used strict > 50,000,000 ns for 2 windows; equality did not breach. Incident fired at 3000 ms/resolved at 4000 ms and normal replay stayed empty. Gave collector/helper activation plus file-sink delivery verification.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/claude-rules"
+    },
+    {
+      "client": "claude",
+      "case": "missing",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "Empty input produced no observations of request/runtime health; loss stays unknown. Explicitly refused a cause and requested nonempty slow/normal captures with workload conditions.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/claude-missing"
+    },
+    {
+      "client": "claude",
+      "case": "sse",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "500 ms SSE capture had 6 historical windows and no live updates/spans. Kept loss unknown and hotspots/external/arrayBuffers unavailable. Minor: follow-up wording about enabling memory fields and heap diffs overstates the contract; raw Phargus samples are the appropriate source for those memory categories.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/claude-sse"
+    },
+    {
+      "client": "claude",
+      "case": "percentile",
+      "status": "passed",
+      "semanticReview": "passed",
+      "note": "Reported 100 ms event-loop maximum and 90 ms maximum sample p99; explicitly said a global recording p99 cannot be reconstructed from those aggregates.",
+      "evidence": "evals/results/phargus-rename-2026-10-11/claude-percentile"
+    }
+  ],
+  "deterministic": {
+    "localNode": "24.13.1",
+    "unitTests": 39,
+    "skillsSyncTests": 12,
+    "skipped": 0,
+    "format": "passed",
+    "lint": "passed",
+    "typecheck": "passed",
+    "generated": "passed",
+    "skills": "passed",
+    "package": "passed",
+    "marketplaceValidation": "passed",
+    "markdownFiles": 85,
+    "markdownLint": "passed",
+    "integration": "passed",
+    "integrationTests": 15,
+    "reusedUpstreamDependencies": true
+  },
+  "tarballSha256": "a28d26f65b39acdd09e02687f9b8dead661b91e987a40e3ff7f4658578023ccf",
+  "sourceCommit": "04bfae9 (pharn-dev/skills main) plus the Phargus rename working tree",
+  "modelConfigurations": {
+    "codex": "built-in default with --clean-codex; workspace-write sandbox with network access",
+    "claude": "configured default claude-sonnet-5-5; Claude Code 2.1.295 OS sandbox with trial-project writes and loopback-only network"
+  },
+  "timeoutMs": 360000,
+  "earlierAttempts": [
+    {
+      "client": "codex",
+      "case": "diagnose",
+      "status": "failed-automatic",
+      "evidence": "evals/results/phargus-rename-2026-10-11/codex-diagnose",
+      "reason": "Helper JSON was saved to phargus-summary.json while tool-result.json contained the explanatory report. A fresh rerun preserved the required helper artifact."
+    },
+    {
+      "client": "claude",
+      "case": "memory",
+      "status": "failed-automatic-under-earlier-rubric",
+      "evidence": "evals/results/phargus-rename-2026-10-11/claude-memory",
+      "reason": "Correctly identified external/ArrayBuffer growth and did not prove a leak, but returned hypotheses when the earlier rubric accepted only memory-pressure."
+    },
+    {
+      "client": "claude",
+      "case": "memory",
+      "status": "failed-automatic-under-earlier-rubric",
+      "evidence": "evals/results/phargus-rename-claude-memory-rerun/claude-memory",
+      "reason": "A fresh run repeated the same verdict-label mismatch with correct measurements and uncertainty."
+    },
+    {
+      "client": "codex",
+      "case": "memory",
+      "status": "failed-automatic-under-earlier-rubric",
+      "evidence": "evals/results/phargus-rename-memory-verdict-review/codex-memory",
+      "reason": "Correctly identified pressure but called the leak conclusion inconclusive. The clarified coarse-label rubric now accepts memory-pressure, hypotheses or inconclusive; both clients were rerun with unchanged numeric and semantic requirements."
+    }
+  ]
+}

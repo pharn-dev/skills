@@ -5,7 +5,7 @@
     "url": "https://github.com/pharn-dev"
   },
   "metadata": {
-    "description": "Skills for PHARN, which gets features shipped right with Claude Code, and for Argus."
+    "description": "Skills for PHARN, which gets features shipped right with Claude Code, and for Phargus."
   },
   "plugins": [
     {
@@ -14,9 +14,9 @@
       "description": "Skills for keeping PHARN, which gets features shipped right with Claude Code, current in a project."
     },
     {
-      "name": "argus",
-      "source": "./plugins/argus",
-      "description": "Skills for setting up Argus and diagnosing Node.js applications with it: runtime incidents, fix verification, memory growth and alert rules."
+      "name": "phargus",
+      "source": "./plugins/phargus",
+      "description": "Skills for setting up Phargus and diagnosing Node.js applications with it: runtime incidents, fix verification, memory growth and alert rules."
     }
   ]
 }

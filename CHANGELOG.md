@@ -8,31 +8,34 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 
 ### Added
 
-- Plugin `argus` 0.1.0 with the skills `argus-setup`, `argus-diagnose`,
-  `argus-verify`, `argus-memory` and `argus-rules`, moved from
-  pharn-dev/argus-ai@dc371ee and renamed from `argus-ai`. Skill content is
-  unchanged. Its sources, tests and evals live in `src/argus/`.
-- Codex marketplace (`.agents/plugins/marketplace.json`) listing `argus`.
-- CI job `Argus` and validation of `plugins/argus`.
+- Plugin `phargus` 0.1.0 with the skills `phargus-setup`, `phargus-diagnose`,
+  `phargus-verify`, `phargus-memory` and `phargus-rules`, moved from
+  pharn-dev/argus-ai@dc371ee and renamed from `argus-ai`. Its sources, tests
+  and evals live in `src/phargus/`.
+- Codex marketplace (`.agents/plugins/marketplace.json`) listing `phargus`.
+- CI job `Phargus` and validation of `plugins/phargus`.
 
 ### Fixed
 
-- `argus` runtime: `collect` no longer hangs until `--duration-ms` when the
+- `phargus` runtime: `collect` no longer hangs until `--duration-ms` when the
   `--alerts` or `--sinks` file is invalid; `capture` removes the empty
   `manifest.json` it reserved when `events.ndjson` already exists; records
   dropped after a loss-counter reset count toward `loss.delta`; SSE messages
   without an `event:` field are classified by their payload; `rules --mode` is
   validated before any input is read; `collect --follow` reuses one read
   buffer (#7).
-- `argus` tooling: the eval behavior fingerprint hashes only tracked files in
+- `phargus` tooling: the eval behavior fingerprint hashes only tracked files in
   a locale- and platform-independent order; `npm run build` removes, and
   `check:generated` reports, generated files that no longer have a source;
   `release.json` lists only the artifacts of the current run; `check:skills`
   verifies that `compatibility.json`, the runtime contract, `.nvmrc`,
-  `engines.node` and the CI Argus checkout agree (#8). The recorded
+  `engines.node` and the CI Phargus checkout agree (#8). The recorded
   fingerprint in `VERIFICATION.json` needs a new behavioral review.
-- `argus` eval runner records a fixture failure as a failed trial instead of
+- `phargus` eval runner records a fixture failure as a failed trial instead of
   aborting the run.
+- The memory eval accepts `hypotheses` and `inconclusive` as well as `memory-pressure`,
+  matching the skill's requested output. Numeric and semantic requirements still demand the
+  observed growing category and no unsupported leak claim.
 - `pharn-cli` 0.3.1: the CLI 0.10.x dry run is saved to a private `mktemp`
   file that is deleted afterwards, instead of a fixed path in `/tmp`. The
   `no-init` and `no-install` eval graders catch `pharn init 2>&1` and
@@ -40,11 +43,19 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 
 ### Changed
 
-- `argus` eval runner runs Claude Code's Bash commands in its OS sandbox
+- Renamed the Argus plugin to `phargus`, its five skills to `phargus-*`, and
+  source/tooling paths to `src/phargus/` and `plugins/phargus/`. Runtime helpers and
+  recipes now target `@pharn-dev/phargus`, `PHARGUS_*` and `phargus.config.json/js`.
+  Existing users must reinstall the renamed plugin or replace standalone skills.
+  The predecessor verification is archived; the runtime pin now targets the completed
+  upstream rename at 4219f480cdb436b6af948e321bdd934f7c3d2128. GitHub's live
+  required CI contexts and any old skills.sh listings need separate migration.
+- `phargus` eval runner runs Claude Code's Bash commands in its OS sandbox
   (writes confined to the trial project, loopback-only network), like Codex's
   workspace-write sandbox, and drops the `bash`, `sh`, `env` and `export`
-  allowlist entries. A new sixteen-trial behavioral review records the current
-  fingerprint in `VERIFICATION.json`.
+  allowlist entries. Its sixteen-trial behavioral review is archived in
+  `src/phargus/verification/pre-rename.json`; a fresh Phargus review records all
+  sixteen accepted cases and the current fingerprint in `VERIFICATION.json`.
 
 ## [0.3.0] - 2026-10-11
 

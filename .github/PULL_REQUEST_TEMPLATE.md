@@ -10,8 +10,8 @@ include eval scores and review results. Explain any check that is not applicable
 - [ ] Applicable deterministic checks pass; the required PR checks are green.
 - [ ] Behavior changes have eval coverage and reviewed results, or this change
   only affects documentation/repository configuration.
-- [ ] Argus source changes are regenerated, and its verification record matches
-  shipped behavior when affected, or Argus generated content is unchanged.
+- [ ] Phargus source changes are regenerated, and its verification record matches
+  shipped behavior when affected, or Phargus generated content is unchanged.
 - [ ] Tool-version claims match the tested contract; compatibility limitations
   are documented when affected.
 - [ ] Logs and examples are sanitized; vulnerabilities follow SECURITY.md.

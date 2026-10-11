@@ -25,7 +25,7 @@ Include:
 
 - The affected skill, helper, reference, dependency, or workflow and its path.
 - The installed revision or plugin version, installation method, agent and
-  version, and relevant PHARN CLI, Argus, Node.js, or operating system version.
+  version, and relevant PHARN CLI, Phargus, Node.js, or operating system version.
 - Reproduction steps and a minimal proof of concept, when available.
 - The permissions and configuration needed, expected and observed behavior,
   and potential impact.
@@ -46,7 +46,7 @@ untrusted diagnostic content as instructions or host code.
 For a defect in a tool itself, follow its own reporting policy:
 
 - [PHARN CLI security policy](https://github.com/pharn-dev/pharn-cli/security/policy).
-- [Argus security policy](https://github.com/pharn-dev/argus/security/policy).
+- [Phargus security policy](https://github.com/pharn-dev/phargus/security/policy).
 
 If the boundary is unclear, contact `support@pharn.dev` so maintainers can route
 the report. Ordinary installation failures and incorrect diagnoses without a

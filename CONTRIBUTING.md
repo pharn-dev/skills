@@ -14,16 +14,16 @@ security claims, read [LIMITS.md](LIMITS.md) and [THREAT-MODEL.md](THREAT-MODEL.
 ## Rules
 
 - **One plugin per product.** `plugins/pharn` holds skills for PHARN and
-  `plugins/argus` holds skills for Argus; another tool gets its own plugin and
+  `plugins/phargus` holds skills for Phargus; another tool gets its own plugin and
   its own marketplace entry. The marketplaces in `.claude-plugin/` and
   `.agents/plugins/` are maintained by hand.
-- **Generated plugins keep their sources in `src/<plugin>/`.** For `argus`,
-  only the `SKILL.md` files under `plugins/argus/` are written by hand; edit the
-  rest in `src/argus/` and run `npm run build` there.
+- **Generated plugins keep their sources in `src/<plugin>/`.** For `phargus`,
+  only the `SKILL.md` files under `plugins/phargus/` are written by hand; edit the
+  rest in `src/phargus/` and run `npm run build` there.
 - **Every skill ships evals** under `plugins/<plugin>/evals/`, covering the
   behaviour the skill must get right and the actions it must not take.
-  Exception: `argus` runs the same cases in Codex and Claude Code, which
-  `claude plugin eval` cannot do, so its evals live in `src/argus/evals/`.
+  Exception: `phargus` runs the same cases in Codex and Claude Code, which
+  `claude plugin eval` cannot do, so its evals live in `src/phargus/evals/`.
 - **Placement.** Skills that operate a tool from outside live here. Skills that
   are part of the PHARN methodology and need its floor ship with pharn-oss.
 - Describe only what the tool version named in the skill actually does.
@@ -37,9 +37,9 @@ Pull requests must pass the checks below. The first four run in
 - **Validate**: `claude plugin validate --strict` on the marketplace and on
   each plugin.
 - **Markdown lint**: `markdownlint-cli2` over all Markdown files.
-- **Argus** (Node 22.18.0 and 24): formatting, generated files, skill
+- **Phargus** (Node 22.18.0 and 24): formatting, generated files, skill
   metadata, lint, typecheck, unit tests, integration tests against the pinned
-  Argus commit, and the package check, all from `src/argus`.
+  Phargus commit, and the package check, all from `src/phargus`.
 - **Socket Security: Project Report**: the installed Socket integration's
   dependency report.
 
@@ -48,8 +48,8 @@ instructions, runtime helpers, references, or other behavior-affecting content,
 run the applicable evals locally before merging (see the README) and put the
 scores and review results in the PR. Documentation and repository-configuration
 changes that leave behavior unchanged do not require new model trials.
-For `argus`, also record
-the reviewed results in `src/argus/VERIFICATION.md` and `VERIFICATION.json`;
+For `phargus`, also record
+the reviewed results in `src/phargus/VERIFICATION.md` and `VERIFICATION.json`;
 `npm run check:evals` fails until they match the shipped content.
 
 Pinned versions and action SHAs are bumped deliberately, never with a floating
