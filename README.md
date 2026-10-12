@@ -2,7 +2,7 @@
 
 <img alt="PHARN" src="assets/pharn-mark.svg" width="140">
 
-# pharn-dev skills
+# pharn-dev/skills
 
 **Agent skills that run PHARN and Phargus for you.**
 
