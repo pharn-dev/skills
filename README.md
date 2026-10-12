@@ -40,7 +40,6 @@ npx skills add pharn-dev/skills
 - [Safety model](#safety-model)
 - [Compatibility](#compatibility)
 - [Repository layout](#repository-layout)
-- [Upgrading from Argus](#upgrading-from-argus)
 - [Development](#development)
 - [Community and security](#community-and-security)
 - [License](#license)
@@ -232,27 +231,6 @@ skills/
 
 One plugin per product. A plugin whose files are generated keeps its sources in
 `src/<plugin>/`; see [CONTRIBUTING.md](CONTRIBUTING.md) for the rules.
-
----
-
-## Upgrading from Argus
-
-<details>
-<summary>Moving from <code>argus@pharn-dev</code> or the <code>argus-*</code> skills</summary>
-
-If you added the old `pharn-dev/argus-ai` marketplace, remove it first
-(`claude plugin marketplace remove pharn-dev`, or the `codex` equivalent): it
-used the same marketplace name.
-
-Uninstall `argus@pharn-dev` and install `phargus@pharn-dev`, and replace
-standalone `argus-*` skills with `phargus-*` skills. The runtime rename also
-changes imports to `@pharn-dev/phargus`, environment variables to `PHARGUS_*`,
-configuration files to `phargus.config.json/js`, and local recipes to
-`.phargus/`. The runtime is pinned to the completed upstream rename; see
-[the Phargus verification record](src/phargus/VERIFICATION.md) for release
-checks.
-
-</details>
 
 ---
 
