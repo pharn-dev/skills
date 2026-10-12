@@ -19,6 +19,14 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   field, so description prose cannot trigger it and `pharn init <word>` is
   caught again. CI fails when the four shared eval scaffolds differ (#12).
 
+### Fixed
+
+- `phargus` 0.1.1: the helpers accept the published `@pharn-dev/phargus` 0.1.x
+  (`>=0.1.0 <0.2.0`) instead of only the unreleased 0.0.1, and the tested runtime
+  is pinned to tag v0.1.0 (819a795875fc547e7daeccc0f0b50846ba642286). The setup
+  recipe installs `@pharn-dev/phargus@0.1.0` from npm, with a tag build as the
+  fallback. The 0.1.1 behavioral review is pending, so it is not released yet.
+
 ## [phargus 0.1.0] - 2026-10-13
 
 ### Added
@@ -32,10 +40,6 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
-- `phargus` 0.1.1: the helpers accept the published `@pharn-dev/phargus` 0.1.x
-  (`>=0.1.0 <0.2.0`) instead of only the unreleased 0.0.1, and the tested runtime
-  is pinned to tag v0.1.0 (819a795875fc547e7daeccc0f0b50846ba642286). The setup
-  recipe installs `@pharn-dev/phargus@0.1.0` from npm, with a tag build as the fallback.
 - `phargus` runtime: `collect` no longer hangs until `--duration-ms` when the
   `--alerts` or `--sinks` file is invalid; `capture` removes the empty
   `manifest.json` it reserved when `events.ndjson` already exists; records
