@@ -1,20 +1,28 @@
 # Connect Phargus to an application
 
 Inspect package.json, Node version, actual start command and stdout logging. Run doctor
-if Phargus is already installed. At the pinned unpublished commit, install from source:
+if Phargus is already installed. Otherwise install the tested release from npm:
 
 ```bash
-git clone https://github.com/pharn-dev/phargus.git /chosen/source/phargus
-git -C /chosen/source/phargus checkout 4219f480cdb436b6af948e321bdd934f7c3d2128
+cd /app
+npm install @pharn-dev/phargus@0.1.0
+```
+
+Respect the application's existing package manager and lockfile; for example
+pnpm add @pharn-dev/phargus@0.1.0 or yarn add @pharn-dev/phargus@0.1.0. If the registry
+is unavailable, build the release tag from source and install its tarball:
+
+```bash
+git clone --branch v0.1.0 --depth 1 https://github.com/pharn-dev/phargus.git /chosen/source/phargus
 cd /chosen/source/phargus
 npm ci
 npm pack
 cd /app
-npm install /chosen/source/phargus/pharn-dev-phargus-0.0.1.tgz
+npm install /chosen/source/phargus/pharn-dev-phargus-0.1.0.tgz
 ```
 
-Respect the application's existing package manager and lockfile. The source Phargus
-repository itself uses npm. If the user already supplied the compatible tarball, use it.
+The source Phargus repository itself uses npm. If the user already supplied a compatible
+tarball (version >=0.1.0 <0.2.0), use it.
 
 Load the agent before application code. CommonJS: node --require @pharn-dev/phargus/agent app.cjs.
 ESM: node --import @pharn-dev/phargus/agent app.mjs. These are Node commands, not a nonexistent

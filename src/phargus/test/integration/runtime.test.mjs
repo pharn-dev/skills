@@ -43,7 +43,8 @@ async function ready(child) {
 
 test('doctor resolves exports without auto-starting the agent', async () => {
   const result = await doctor(project);
-  assert.equal(result.package.version, '0.0.1');
+  assert.equal(result.package.version, '0.1.0');
+  assert.equal(result.package.testedCommit, prepared.commit);
   assert.equal(result.package.sourceCommitVerified, false);
   assert.equal(Object.keys(result.exports).length, 6);
   const missing = await mkdtemp(join(scratch, 'missing-'));

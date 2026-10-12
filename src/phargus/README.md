@@ -5,7 +5,7 @@ memory analysis, fix verification, and alert rules. This directory holds the sou
 and tooling for the `phargus` plugin in [pharn-dev/skills](https://github.com/pharn-dev/skills);
 the plugin itself is generated into plugins/phargus/ at the repository root.
 
-Status: 0.1.0 development draft. See [VERIFICATION.md](VERIFICATION.md) for completed
+Status: 0.1.1 development draft. See [VERIFICATION.md](VERIFICATION.md) for completed
 checks and the current state of the behavioral release gate.
 
 Five workflows share one tested Phargus contract. Each skill includes its own references
@@ -93,9 +93,10 @@ Capture artifacts preserve source/quality metadata. SSE history classification i
 event-time estimate, and raw-loss counters remain unknown; it cannot establish a
 complete controlled performance comparison by itself.
 
-Phargus is tested at commit 4219f480cdb436b6af948e321bdd934f7c3d2128, package
-@pharn-dev/phargus version 0.0.1. It is unpublished at that revision; install its
-pinned source tarball. See [the tested contract](knowledge/compatibility.md) and
+Phargus is tested at release tag v0.1.0 (commit 819a795875fc547e7daeccc0f0b50846ba642286),
+package @pharn-dev/phargus version 0.1.0, which is published on npm. Install it in the
+application with npm install @pharn-dev/phargus@0.1.0. The helpers accept installed
+versions >=0.1.0 <0.2.0. See [the tested contract](knowledge/compatibility.md) and
 [verification](VERIFICATION.md).
 doctor, collect, heap and rules resolve the application's package using --project.
 --phargus-package supports an installed alias. summarize, compare and capture need no

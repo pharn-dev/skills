@@ -5,7 +5,14 @@ import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { contract, supportedNode, doctor } from '../runtime/upstream.mjs';
+import {
+  contract,
+  acceptedPackageRange,
+  supportedNode,
+  supportedPackageVersion,
+  doctor,
+  resolvePhargus,
+} from '../runtime/upstream.mjs';
 
 test('supportedNode accepts exactly the contract minimum Node and newer', () => {
   assert.equal(contract.minimumNode, '22.18.0');
@@ -20,8 +27,37 @@ test('supportedNode accepts exactly the contract minimum Node and newer', () => 
   assert.equal(supportedNode('18.20.4'), false);
 });
 
-/** A real Node package resolution fixture; loading its agent would throw. @param {string} packageName */
-async function application(packageName) {
+test('supportedPackageVersion accepts the tested minor and rejects others', () => {
+  assert.equal(contract.packageVersion, '0.1.0');
+  assert.equal(acceptedPackageRange, '>=0.1.0 <0.2.0');
+  for (const version of ['0.1.0', '0.1.1', '0.1.5', '0.1.42'])
+    assert.equal(supportedPackageVersion(version), true, version);
+  for (const version of [
+    '0.0.1',
+    '0.0.99',
+    '0.2.0',
+    '0.10.0',
+    '1.0.0',
+    '0.1.1-beta.1',
+    '0.1.0-rc.1',
+    '0.1.0+build.5',
+    '0.0.0-stage',
+    'v0.1.0',
+    '0.1',
+    '0.01.0',
+    ' 0.1.0',
+    'latest',
+    '',
+    undefined,
+    null,
+    10,
+    ['0.1.0'],
+  ])
+    assert.equal(supportedPackageVersion(version), false, String(version));
+});
+
+/** A real Node package resolution fixture; loading its agent would throw. @param {string} packageName @param {unknown} [version] */
+async function application(packageName, version = contract.packageVersion) {
   const project = await mkdtemp(join(tmpdir(), 'phargus-resolution-'));
   const packageRoot = join(project, 'node_modules', packageName);
   await mkdir(packageRoot, { recursive: true });
@@ -43,7 +79,7 @@ async function application(packageName) {
     join(packageRoot, 'package.json'),
     JSON.stringify({
       name: packageName,
-      version: contract.packageVersion,
+      version,
       exports: { ...exports, './package.json': './package.json' },
     }),
   );
@@ -83,6 +119,48 @@ test('the renamed CLI accepts --phargus-package for an installed package alias',
     assert.equal(result.config.intervalMs, 250);
     const metadata = JSON.parse(await readFile(join(project, 'package.json'), 'utf8'));
     assert.deepEqual(metadata.scripts, { start: 'node app.cjs' });
+  } finally {
+    await rm(project, { recursive: true, force: true });
+  }
+});
+
+test('resolvePhargus accepts published 0.1.x patch releases', async () => {
+  for (const version of ['0.1.0', '0.1.5']) {
+    const project = await application('@pharn-dev/phargus', version);
+    try {
+      const result = await doctor(project);
+      assert.equal(result.package.version, version);
+      assert.equal(result.package.testedVersion, '0.1.0');
+      assert.equal(result.package.acceptedRange, '>=0.1.0 <0.2.0');
+    } finally {
+      await rm(project, { recursive: true, force: true });
+    }
+  }
+});
+
+test('resolvePhargus rejects versions outside the accepted range with the range in the error', async () => {
+  for (const version of ['0.0.1', '0.2.0', '0.1.1-beta.1', 'not-a-version', null]) {
+    const project = await application('@pharn-dev/phargus', version);
+    try {
+      await assert.rejects(resolvePhargus(project), (error) => {
+        assert(error instanceof Error);
+        assert.match(error.message, /expected a version in >=0\.1\.0 <0\.2\.0/);
+        return true;
+      });
+    } finally {
+      await rm(project, { recursive: true, force: true });
+    }
+  }
+});
+
+test('a missing package names the npm install command and accepted range', async () => {
+  const project = await mkdtemp(join(tmpdir(), 'phargus-missing-'));
+  try {
+    await writeFile(join(project, 'package.json'), '{}');
+    await assert.rejects(
+      resolvePhargus(project),
+      /npm install @pharn-dev\/phargus@0\.1\.0 \(helpers accept >=0\.1\.0 <0\.2\.0\)/,
+    );
   } finally {
     await rm(project, { recursive: true, force: true });
   }

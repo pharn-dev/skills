@@ -1,6 +1,6 @@
 {
   "name": "phargus-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Agent skills for Codex and Claude Code: Phargus setup, Node.js runtime diagnostics, memory analysis, fix verification, and alert rules.",
   "type": "module",

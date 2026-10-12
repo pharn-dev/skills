@@ -1,6 +1,6 @@
 {
   "name": "phargus",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Przemek Galarowicz",
   "description": "Phargus diagnostics workflows for Node.js applications.",
   "skills": [

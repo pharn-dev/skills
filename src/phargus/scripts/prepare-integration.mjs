@@ -33,6 +33,28 @@ if (sourcePackage.name !== pinned.packageName || sourcePackage.version !== pinne
       pinned.packageVersion +
       '. Update the pinned contract in compatibility.json, runtime/upstream.mjs and ci.yml before integration or model trials.',
   );
+if (pinned.published === true && sourcePackage.private === true)
+  throw new Error(
+    'Pinned upstream ' +
+      pinned.commit +
+      ' marks its package private; compatibility.json says it is published.',
+  );
+// The documented source fallback clones the release tag, so the pinned commit must be the
+// tag's commit. CI fetches the commit by SHA without tags; a checkout with the tag must agree.
+let taggedCommit;
+try {
+  taggedCommit = execFileSync(
+    'git',
+    ['rev-parse', '--verify', '--quiet', 'refs/tags/' + pinned.tag + '^{commit}'],
+    { cwd: source, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+  ).trim();
+} catch {
+  taggedCommit = undefined;
+}
+if (taggedCommit !== undefined && taggedCommit !== pinned.commit)
+  throw new Error(
+    'Tag ' + pinned.tag + ' in ' + source + ' is ' + taggedCommit + '; expected ' + pinned.commit,
+  );
 const cache = join(root, '.cache');
 const npmEnv = { ...process.env, npm_config_cache: join(cache, 'npm') };
 const build = join(cache, 'phargus-build-' + process.versions.node);
@@ -99,6 +121,8 @@ const manifest = {
   project,
   tarball,
   commit: pinned.commit,
+  tag: pinned.tag,
+  tagVerified: taggedCommit !== undefined,
   nodeVersion: process.versions.node,
   tarballSha256: createHash('sha256')
     .update(await readFile(tarball))

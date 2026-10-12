@@ -1,6 +1,6 @@
 {
   "name": "phargus",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Phargus diagnostics workflows for Node.js applications.",
   "author": {
     "name": "pharn-dev",
