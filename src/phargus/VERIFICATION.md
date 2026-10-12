@@ -1,7 +1,37 @@
-# Verification — Phargus 0.1.0
+# Verification — Phargus
 
-Current status: deterministic checks and all sixteen reviewed behavioral cases
-pass after the full Argus-to-Phargus rename on 2026-10-11.
+## 0.1.1: behavioral review pending
+
+Current status: deterministic checks and integration pass; the behavioral release
+gate is not met. npm run check:evals reports releaseReady: false because the
+shipped helpers and references changed after the 0.1.0 review below. VERIFICATION.json
+still holds that 0.1.0 review unchanged. Run a fresh sixteen-trial review before
+the next release.
+
+0.1.1 repins the tested runtime to the published release: tag v0.1.0, commit
+819a795875fc547e7daeccc0f0b50846ba642286, @pharn-dev/phargus 0.1.0. The helpers
+now accept installed versions >=0.1.0 <0.2.0 instead of exactly 0.0.1, and the setup
+reference installs from npm, with a v0.1.0 tag build as the fallback.
+The old pin 4219f480 has the same tree as the upstream squash merge 3831198.
+From there to v0.1.0, upstream changed only release packaging, workflows and
+documentation, plus the package version and the removal of "private": true.
+Nothing under src/ or test/ changed.
+
+Checked on 2026-10-13 with Node 22.18.0 and 24.13.1:
+
+- 43 unit tests and 15 integration tests passed on each version, with none skipped.
+  The integration build of the tag was verified against the local v0.1.0 tag; its
+  tarball SHA-256 is b6d893d1b8124185f9660a9a00ec9d0205afd3e6e7fd51e5277a43bb02b81f16.
+- The files of @pharn-dev/phargus 0.1.0 installed from npm are byte-identical to
+  that tag build. The 15 integration tests also passed against the npm-installed
+  package on Node 24.13.1.
+- Format, lint, typecheck, generated resources, skill metadata, copied packages,
+  Markdown lint and claude plugin validate --strict passed.
+
+## 0.1.0: reviewed release
+
+Status at 0.1.0: deterministic checks and all sixteen reviewed behavioral cases
+passed after the full Argus-to-Phargus rename on 2026-10-11.
 The prior sixteen model trials verify the predecessor package and identifiers.
 They do not establish compatibility with @pharn-dev/phargus, PHARGUS_* or
 phargus.config.json/js, and their fingerprint has not been reused.

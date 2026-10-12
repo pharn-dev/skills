@@ -1,14 +1,17 @@
 # Tested Phargus contract
 
-Tested against [pharn-dev/phargus](https://github.com/pharn-dev/phargus) commit
-4219f480cdb436b6af948e321bdd934f7c3d2128, package @pharn-dev/phargus version 0.0.1,
-on Node >=22.18.0. The package is private and unpublished at this commit.
-Install the source tarball; do not assume a registry release exists.
+Tested against [pharn-dev/phargus](https://github.com/pharn-dev/phargus) release tag
+v0.1.0 (commit 819a795875fc547e7daeccc0f0b50846ba642286), package @pharn-dev/phargus
+version 0.1.0, on Node >=22.18.0. The package is published on npm. The helpers accept
+installed versions >=0.1.0 <0.2.0; 0.1.0 is the tested release, and a later 0.1.x
+patch is accepted without having been tested here.
 
-Build the pinned source with npm ci and npm pack, then install its tarball in the
-application. The tools take --project pointing to that application and optionally
---phargus-package for an explicitly installed package alias. Resolve modules there,
-not in the skill checkout. Doctor resolves exports without importing @pharn-dev/phargus/agent.
+Install the tested release from npm in the application:
+npm install @pharn-dev/phargus@0.1.0. Without registry access, build the tag from
+source (see setup) and install its tarball. The tools take --project pointing to that
+application and optionally --phargus-package for an explicitly installed package alias.
+Resolve modules there, not in the skill checkout. Doctor resolves exports without
+importing @pharn-dev/phargus/agent.
 
 Phargus exports agent, collector, analyzer, dashboard, plugin-runner and otel.
 Importing @pharn-dev/phargus/agent starts monitoring the importing process. Use it only in the
@@ -30,5 +33,6 @@ sampling and snapshots are library operations inside the monitored process.
 createDeoptParser parses supplied node --trace-deopt output; it does not capture it.
 
 Runtime checks establish version and required exports, not the source commit of an
-arbitrary installed tarball. The report says sourceCommitVerified: false; the release
-integration suite establishes the pinned-source compatibility separately.
+installed package. The report says sourceCommitVerified: false and names the tested
+version, tag and commit; the release integration suite establishes compatibility with
+the tagged source separately.

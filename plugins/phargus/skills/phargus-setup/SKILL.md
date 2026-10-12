@@ -2,7 +2,7 @@
 name: phargus-setup
 description: Install, connect, and verify Phargus diagnostics in a Node.js application. Use when adding Phargus, configuring agent output, or repairing the agent-to-collector-to-dashboard connection.
 license: Apache-2.0
-compatibility: Node.js >=22.18.0; access to the target application and a compatible Phargus tarball or source checkout.
+compatibility: Node.js >=22.18.0; access to the target application and to npm (@pharn-dev/phargus 0.1.x) or the Phargus v0.1.0 source tag.
 ---
 
 # Phargus Setup
@@ -15,9 +15,9 @@ Read [compatibility](references/compatibility.md) before selecting a package and
 1. Inspect the application, its start command, module format, Node version and logging.
    Resolve the absolute directory of this SKILL.md; run scripts/phargus.mjs from that
    directory, with --project pointing to the application.
-2. Use doctor to inspect an existing installation. Install the tested source tarball
-   when needed; the scoped package @pharn-dev/phargus is unpublished at the tested
-   commit, so use its source tarball.
+2. Use doctor to inspect an existing installation. When needed, install the tested
+   release from npm (@pharn-dev/phargus@0.1.0) with the application's package manager;
+   build the v0.1.0 source tag only when the registry is unavailable.
 3. Configure early preload and a dedicated NDJSON file. Create a portable application-side
    collector recipe by copying the bundled scripts directory; save commands using those
    application-owned paths, not plugin-cache paths.

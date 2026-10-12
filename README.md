@@ -25,9 +25,9 @@ npx skills add pharn-dev/skills
 
 </div>
 
-> **Status:** `pharn` is ready to use with Claude Code. `phargus` is a 0.1.0
-> development draft, and the `@pharn-dev/phargus` runtime it targets is not yet
-> published on npm; see [Compatibility](#compatibility).
+> **Status:** `pharn` is ready to use with Claude Code. `phargus` is a 0.1.1
+> development draft for the `@pharn-dev/phargus` 0.1.x runtime published on npm;
+> see [Compatibility](#compatibility).
 
 ---
 
@@ -201,7 +201,7 @@ permissions decide what an agent can actually do. The trust boundaries are in
 | Plugin | Agents | Operates |
 | ------ | ------ | -------- |
 | `pharn` | Claude Code (verified with 2.1.295). Codex not verified. | PHARN CLI `@pharn-dev/pharn` 0.10.0+, best on 0.11.0, text-flow fallback for 0.9.x. |
-| `phargus` | Codex and Claude Code; results in the [verification record](src/phargus/VERIFICATION.md). | `@pharn-dev/phargus` pinned in [compatibility.json](src/phargus/compatibility.json), installed from its source tarball. Node 22.18.0 or later. |
+| `phargus` | Codex and Claude Code; results in the [verification record](src/phargus/VERIFICATION.md). | `@pharn-dev/phargus` 0.1.x from npm (tested: 0.1.0, tag v0.1.0), pinned in [compatibility.json](src/phargus/compatibility.json). Node 22.18.0 or later. |
 
 **Plugin versions and tool versions move separately.** The badges above show
 each plugin's own version. The tool version a plugin was written for is stated

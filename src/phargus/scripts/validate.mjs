@@ -3,7 +3,7 @@ import { parse } from 'yaml';
 import { readFile, access, readdir, lstat } from 'node:fs/promises';
 import { join, normalize } from 'node:path';
 import { catalog, root, repoRoot, generate, pluginDir, pluginPath } from './generate.mjs';
-import { contract } from '../runtime/upstream.mjs';
+import { contract, acceptedPackageRange } from '../runtime/upstream.mjs';
 
 await generate(true);
 for (const skill of catalog.skills) {
@@ -70,10 +70,21 @@ assert.deepEqual(
   contract,
   {
     commit: compatibility.commit,
+    tag: compatibility.tag,
     packageVersion: compatibility.packageVersion,
     minimumNode: compatibility.minimumNode,
   },
   'runtime/upstream.mjs contract must match compatibility.json',
+);
+assert.equal(
+  acceptedPackageRange,
+  compatibility.acceptedVersions,
+  'runtime/upstream.mjs accepted range must match compatibility.json acceptedVersions',
+);
+assert.equal(
+  compatibility.tag,
+  'v' + compatibility.packageVersion,
+  'compatibility.json tag must name the tested package version',
 );
 assert.equal(
   (await readFile(join(root, '.nvmrc'), 'utf8')).trim(),

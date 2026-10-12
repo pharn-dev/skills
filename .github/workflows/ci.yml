@@ -75,7 +75,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: pharn-dev/phargus
-          ref: 4219f480cdb436b6af948e321bdd934f7c3d2128
+          ref: 819a795875fc547e7daeccc0f0b50846ba642286 # v0.1.0
           path: src/phargus/.cache/phargus-source
           persist-credentials: false
       - run: npm run prepare:integration -- --source .cache/phargus-source

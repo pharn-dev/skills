@@ -4,10 +4,38 @@ import { join, resolve } from 'node:path';
 import { object } from './records.mjs';
 
 export const contract = {
-  commit: '4219f480cdb436b6af948e321bdd934f7c3d2128',
-  packageVersion: '0.0.1',
+  commit: '819a795875fc547e7daeccc0f0b50846ba642286',
+  tag: 'v0.1.0',
+  packageVersion: '0.1.0',
   minimumNode: '22.18.0',
 };
+
+/** Parse a plain release version; prerelease/build suffixes and other forms return null. @param {string} version */
+function release(version) {
+  const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(version);
+  return match ? match.slice(1, 4).map(Number) : null;
+}
+
+/** @param {number[]} a @param {number[]} b */
+function compare(a, b) {
+  for (let index = 0; index < 3; index++) if (a[index] !== b[index]) return a[index] - b[index];
+  return 0;
+}
+
+// Accepted package versions run from the tested release up to its next breaking release:
+// the same minor for 0.x, the same major from 1.0.0 (npm's caret range).
+const minimumPackage = /** @type {number[]} */ (release(contract.packageVersion));
+const belowPackage =
+  minimumPackage[0] === 0 ? [0, minimumPackage[1] + 1, 0] : [minimumPackage[0] + 1, 0, 0];
+export const acceptedPackageRange = '>=' + contract.packageVersion + ' <' + belowPackage.join('.');
+
+/** Whether an installed package version is within acceptedPackageRange. @param {unknown} version */
+export function supportedPackageVersion(version) {
+  const actual = typeof version === 'string' ? release(version) : null;
+  return (
+    actual !== null && compare(actual, minimumPackage) >= 0 && compare(actual, belowPackage) < 0
+  );
+}
 
 /** Compare major.minor.patch against contract.minimumNode. @param {string} version */
 export function supportedNode(version) {
@@ -36,22 +64,30 @@ export async function resolvePhargus(project, packageName = '@pharn-dev/phargus'
     throw new Error(
       'Phargus is not installed in ' +
         root +
-        '; install the compatible @pharn-dev/phargus source tarball',
+        '; install the tested release with npm install @pharn-dev/phargus@' +
+        contract.packageVersion +
+        ' (helpers accept ' +
+        acceptedPackageRange +
+        ')',
     );
   }
   /** @type {unknown} */ const metadata = JSON.parse(await readFile(packageFile, 'utf8'));
   if (
     !object(metadata) ||
-    metadata.version !== contract.packageVersion ||
+    !supportedPackageVersion(metadata.version) ||
     !object(metadata.exports) ||
     !['./agent', './collector', './analyzer', './dashboard', './plugin-runner', './otel'].every(
       (key) => Object.hasOwn(/** @type {object} */ (metadata.exports), key),
     )
   )
     throw new Error(
-      'unsupported Phargus package: expected version ' +
-        contract.packageVersion +
-        ' and all six subpath exports',
+      'unsupported Phargus package: expected a version in ' +
+        acceptedPackageRange +
+        ' (found ' +
+        (object(metadata) && typeof metadata.version === 'string'
+          ? metadata.version.slice(0, 64)
+          : 'no version') +
+        ') and all six subpath exports',
     );
   return {
     root,
@@ -97,6 +133,9 @@ export async function doctor(project, packageName) {
     package: {
       name: upstream.packageName,
       version: upstream.version,
+      acceptedRange: acceptedPackageRange,
+      testedVersion: contract.packageVersion,
+      testedTag: contract.tag,
       testedCommit: contract.commit,
       sourceCommitVerified: false,
     },

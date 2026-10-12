@@ -35,8 +35,9 @@ inspect the package version and required exports. The
 used by integration tests. Shared helpers and references are generated from
 `src/phargus`; CI checks generated files, types, package contents, and behavior.
 
-**Limit:** runtime checks do not authenticate the source of an arbitrary installed
-tarball. Helpers are not a sandbox for application dependencies. Phargus diagnostic
+**Limit:** runtime checks do not authenticate the source of an installed package or
+tarball; the npm release of `@pharn-dev/phargus` 0.1.0 carries no provenance
+attestation. Helpers are not a sandbox for application dependencies. Phargus diagnostic
 rules have a separate [isolated-vm execution contract](src/phargus/knowledge/rules.md);
 a missing peer, compile error, timeout, or failed execution must remain a failure.
 That sandbox does not cover all helper commands.
