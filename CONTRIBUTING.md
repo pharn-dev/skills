@@ -45,8 +45,8 @@ Pull requests must pass the checks below. The first four run in
 
 Evals need model credentials, so CI does not run them. For changes to skill
 instructions, runtime helpers, references, or other behavior-affecting content,
-run the applicable evals locally before merging (see the README) and put the
-scores and review results in the PR. Documentation and repository-configuration
+run the applicable evals locally before merging (see [Evals](#evals)) and put
+the scores and review results in the PR. Documentation and repository-configuration
 changes that leave behavior unchanged do not require new model trials.
 For `phargus`, also record
 the reviewed results in `src/phargus/VERIFICATION.md` and `VERIFICATION.json`;
@@ -54,6 +54,44 @@ the reviewed results in `src/phargus/VERIFICATION.md` and `VERIFICATION.json`;
 
 Pinned versions and action SHAs are bumped deliberately, never with a floating
 tag.
+
+## Evals
+
+```bash
+claude plugin eval plugins/pharn --scaffold --allow-tools Bash --trust-plugin --no-publish
+```
+
+Each `pharn` eval case builds a throwaway project with a stub `pharn`
+executable (`scaffold.sh`, which is why `--scaffold` is needed). The stub prints
+canned 0.10.0-shaped output, logs its calls and needs no network, so the real
+CLI is never invoked. `--allow-tools Bash` is needed because the cases drive the
+stub through Bash. A stub cannot test how the skill finds a real CLI on `PATH`;
+the prompts name the stub's path instead.
+
+`phargus` evals run in Codex and in Claude Code from `src/phargus`
+(`npm run eval && npm run check:evals`); see
+[src/phargus/evals/README.md](src/phargus/evals/README.md).
+
+## skills.sh synchronization
+
+The `Sync skills.sh` GitHub Actions workflow runs after relevant pushes to `main`,
+including PR merges. It installs new and changed skill directories from that
+push's commit in a temporary runner directory with Skills CLI telemetry enabled.
+Changes to supporting references and scripts also select their parent skill.
+Unchanged and deleted skills are skipped; this workflow does not remove old
+listings from skills.sh.
+
+Changes to plugin manifests, `skills.sh.json`, or the sync implementation select
+all current skills. To seed the existing catalog or retry, run `Sync skills.sh`
+manually from the Actions tab on `main`; manual runs select all current skills.
+The workflow requires a public repository and uses the built-in `GITHUB_TOKEN`
+with read-only permissions. No additional secret is required.
+
+[skills.sh discovers skills through CLI install telemetry](https://skills.sh/docs/faq).
+The CLI marks these installs as CI activity. This is a best-effort indexing
+request: a successful run confirms installation, but the CLI does not confirm
+telemetry delivery or that skills.sh has added or refreshed a listing. Indexing
+and page refresh timing remain under skills.sh's control.
 
 ## Review and repository settings
 

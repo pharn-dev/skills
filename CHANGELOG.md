@@ -56,6 +56,9 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
   allowlist entries. Its sixteen-trial behavioral review is archived in
   `src/phargus/verification/pre-rename.json`; a fresh Phargus review records all
   sixteen accepted cases and the current fingerprint in `VERIFICATION.json`.
+- README restructured around a logo header, quick start, example prompts per
+  skill, a safety model and compatibility. The eval-stub notes and skills.sh
+  synchronization details moved to `CONTRIBUTING.md`.
 
 ## [0.3.0] - 2026-10-11
 

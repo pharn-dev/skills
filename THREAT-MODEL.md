@@ -59,9 +59,10 @@ sink descriptions omit webhook URLs from the helper's JSON result.
 paths, and upstream errors can expose sensitive data. Choose private storage,
 review output before sharing, and keep credentials out of issues and Git.
 Loopback defaults are not authorization for exposing a dashboard publicly;
-deployment access controls remain the application's responsibility. Snapshot
-capture pauses and memory overhead are described in the
-[memory guidance](src/phargus/knowledge/memory.md).
+deployment access controls remain the application's responsibility. Sampling
+and heap snapshots run inside the monitored process
+([compatibility](src/phargus/knowledge/compatibility.md)), and snapshot capture
+pauses it ([phargus-memory](plugins/phargus/skills/phargus-memory/SKILL.md)).
 
 ## Repository and distribution
 
