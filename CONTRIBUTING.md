@@ -72,6 +72,20 @@ the prompts name the stub's path instead.
 (`npm run eval && npm run check:evals`); see
 [src/phargus/evals/README.md](src/phargus/evals/README.md).
 
+## Releasing
+
+Each plugin is versioned and released on its own; tags are `<plugin>-vX.Y.Z`
+(for example `pharn-v0.3.1`, `phargus-v0.1.0`).
+
+1. In the PR that ships the change, bump the plugin's version and add its
+   section to [CHANGELOG.md](CHANGELOG.md), headed `## [<plugin> X.Y.Z] - <date>`
+   with a link reference to the tag. For `phargus`, bump `version` in
+   `src/phargus/catalog.json` and `package.json`, then run `npm run build`; for
+   `pharn`, edit `plugins/pharn/.claude-plugin/plugin.json`.
+2. For `phargus`, `npm run check:evals` must pass before the release.
+3. After merging, tag the merge commit on `main` and publish one GitHub release
+   per tag whose notes are that plugin's changelog section.
+
 ## skills.sh synchronization
 
 The `Sync skills.sh` GitHub Actions workflow runs after relevant pushes to `main`,

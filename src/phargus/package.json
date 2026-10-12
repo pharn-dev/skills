@@ -4,7 +4,10 @@
   "private": true,
   "description": "Agent skills for Codex and Claude Code: Phargus setup, Node.js runtime diagnostics, memory analysis, fix verification, and alert rules.",
   "type": "module",
-  "author": "Przemek Galarowicz",
+  "author": {
+    "name": "pharn-dev",
+    "url": "https://github.com/pharn-dev"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

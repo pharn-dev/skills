@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "Phargus diagnostics workflows for Node.js applications.",
   "author": {
-    "name": "Przemek Galarowicz"
+    "name": "pharn-dev",
+    "url": "https://github.com/pharn-dev"
   },
   "homepage": "https://github.com/pharn-dev/skills/tree/main/plugins/phargus",
   "repository": "https://github.com/pharn-dev/skills",

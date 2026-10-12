@@ -4,7 +4,22 @@ All notable changes to this repository are documented here. The format is based
 on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Each plugin is versioned and released on its own. A release heading names the
+plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
+`pharn-v0.3.1` or `phargus-v0.1.0`. Releases up to `pharn` 0.3.0 predate
+`phargus` and cover only `pharn`. See [Releasing](CONTRIBUTING.md#releasing).
+
 ## [Unreleased]
+
+### Changed
+
+- `pharn`: the plugin description presents PHARN as the tool that gets features
+  shipped right with Claude Code (#13).
+- `pharn` evals: the `no-init` grader matches only inside the JSON `command`
+  field, so description prose cannot trigger it and `pharn init <word>` is
+  caught again. CI fails when the four shared eval scaffolds differ (#12).
+
+## [phargus 0.1.0] - 2026-10-13
 
 ### Added
 
@@ -29,17 +44,12 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
   `check:generated` reports, generated files that no longer have a source;
   `release.json` lists only the artifacts of the current run; `check:skills`
   verifies that `compatibility.json`, the runtime contract, `.nvmrc`,
-  `engines.node` and the CI Phargus checkout agree (#8). The recorded
-  fingerprint in `VERIFICATION.json` needs a new behavioral review.
+  `engines.node` and the CI Phargus checkout agree (#8).
 - `phargus` eval runner records a fixture failure as a failed trial instead of
   aborting the run.
 - The memory eval accepts `hypotheses` and `inconclusive` as well as `memory-pressure`,
   matching the skill's requested output. Numeric and semantic requirements still demand the
   observed growing category and no unsupported leak claim.
-- `pharn-cli` 0.3.1: the CLI 0.10.x dry run is saved to a private `mktemp`
-  file that is deleted afterwards, instead of a fixed path in `/tmp`. The
-  `no-init` and `no-install` eval graders catch `pharn init 2>&1` and
-  `npx -y @pharn-dev/pharn` (#9).
 
 ### Changed
 
@@ -56,11 +66,25 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
   allowlist entries. Its sixteen-trial behavioral review is archived in
   `src/phargus/verification/pre-rename.json`; a fresh Phargus review records all
   sixteen accepted cases and the current fingerprint in `VERIFICATION.json`.
-- README restructured around a logo header, quick start, example prompts per
-  skill, a safety model and compatibility. The eval-stub notes and skills.sh
-  synchronization details moved to `CONTRIBUTING.md`.
+- `phargus` manifests (Claude Code and Codex) and `release.json` name the
+  publisher `pharn-dev`, as `pharn` and the marketplaces do, instead of a person.
+- Repository: README restructured around a logo header, quick start, example
+  prompts per skill, a safety model and compatibility. The eval-stub notes and
+  skills.sh synchronization details moved to `CONTRIBUTING.md`.
+- Repository: releases are tagged per plugin as `<plugin>-vX.Y.Z`, and this
+  changelog has one section per plugin release. The earlier `v0.x.y` links
+  pointed at tags that were never created.
 
-## [0.3.0] - 2026-10-11
+## [pharn 0.3.1] - 2026-10-11
+
+### Fixed
+
+- `pharn-cli`: the CLI 0.10.x dry run is saved to a private `mktemp` file that
+  is deleted afterwards, instead of a fixed path in `/tmp`. The `no-init` and
+  `no-install` eval graders catch `pharn init 2>&1` and
+  `npx -y @pharn-dev/pharn` (#9).
+
+## [pharn 0.3.0] - 2026-10-11
 
 ### Changed
 
@@ -69,7 +93,7 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
   and `node -e` filter remain only for CLI 0.10.x. Eval stubs report 0.11.0
   and a `ran-compact` grader pins the flag.
 
-## [0.2.2] - 2026-10-11
+## [pharn 0.2.2] - 2026-10-11
 
 ### Fixed
 
@@ -78,7 +102,7 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
   report, which overflowed the terminal output and made the model run the dry
   run a second time just to filter it.
 
-## [0.2.1] - 2026-10-11
+## [pharn 0.2.1] - 2026-10-11
 
 ### Fixed
 
@@ -87,7 +111,7 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
   `--dry-run --force` preview; `--force` overwrites exactly `plan.skipped`.
   A `single-dry-run` grader pins it in three eval cases.
 
-## [0.2.0] - 2026-10-11
+## [pharn 0.2.0] - 2026-10-11
 
 ### Added
 
@@ -107,7 +131,7 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 - `pharn-cli` description and guardrails cover the preview step; all v0
   guardrails are kept.
 
-## [0.1.0] - 2026-10-10
+## [pharn 0.1.0] - 2026-10-10
 
 ### Added
 
@@ -117,9 +141,11 @@ on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and plugins follow
 - Evals for `pharn-cli`.
 - CI: `claude plugin validate --strict` and markdownlint.
 
-[Unreleased]: https://github.com/pharn-dev/skills/compare/v0.3.0...HEAD
-[0.3.0]: https://github.com/pharn-dev/skills/compare/v0.2.2...v0.3.0
-[0.2.2]: https://github.com/pharn-dev/skills/compare/v0.2.1...v0.2.2
-[0.2.1]: https://github.com/pharn-dev/skills/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/pharn-dev/skills/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/pharn-dev/skills/releases/tag/v0.1.0
+[Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.3.1...HEAD
+[phargus 0.1.0]: https://github.com/pharn-dev/skills/releases/tag/phargus-v0.1.0
+[pharn 0.3.1]: https://github.com/pharn-dev/skills/compare/pharn-v0.3.0...pharn-v0.3.1
+[pharn 0.3.0]: https://github.com/pharn-dev/skills/compare/pharn-v0.2.2...pharn-v0.3.0
+[pharn 0.2.2]: https://github.com/pharn-dev/skills/compare/pharn-v0.2.1...pharn-v0.2.2
+[pharn 0.2.1]: https://github.com/pharn-dev/skills/compare/pharn-v0.2.0...pharn-v0.2.1
+[pharn 0.2.0]: https://github.com/pharn-dev/skills/compare/pharn-v0.1.0...pharn-v0.2.0
+[pharn 0.1.0]: https://github.com/pharn-dev/skills/releases/tag/pharn-v0.1.0

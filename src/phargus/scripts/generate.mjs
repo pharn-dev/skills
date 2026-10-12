@@ -15,6 +15,11 @@ export const catalog = JSON.parse(await readFile(join(root, 'catalog.json'), 'ut
  */
 export const pluginDir = 'plugins/' + catalog.name;
 export const pluginPath = join(repoRoot, pluginDir);
+/**
+ * Publisher shared with the other plugins and the marketplaces in this repository. Set here, not
+ * in catalog.json, because catalog.json is part of the behavioral-review fingerprint.
+ */
+export const author = { name: 'pharn-dev', url: 'https://github.com/pharn-dev' };
 // Generated files that are copied verbatim instead of formatted.
 const verbatim = new Set([pluginDir + '/LICENSE']);
 
@@ -25,7 +30,7 @@ export async function generatedFiles() {
     name: catalog.name,
     version: catalog.version,
     description: catalog.description,
-    author: { name: catalog.author },
+    author,
     homepage: 'https://github.com/pharn-dev/skills/tree/main/' + pluginDir,
     repository: 'https://github.com/pharn-dev/skills',
     license: 'Apache-2.0',
@@ -42,7 +47,7 @@ export async function generatedFiles() {
             interface: {
               displayName: 'Phargus',
               shortDescription: catalog.description,
-              developerName: catalog.author,
+              developerName: author.name,
               category: 'Developer Tools',
             },
           },
