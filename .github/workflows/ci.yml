@@ -28,10 +28,10 @@ jobs:
       - name: Validate plugin phargus
         run: claude plugin validate --strict plugins/phargus
       # claude plugin eval only runs a scaffold inside its own case directory,
-      # so these four cases carry copies of one script. Keep them identical.
+      # so these seven cases carry copies of one script. Keep them identical.
       - name: Check shared pharn eval scaffolds
         run: |
-          for case in update-yes force-asks status-readonly; do
+          for case in update-yes force-asks status-readonly status-strict add-refused-behind remove-by-name; do
             cmp plugins/pharn/evals/update-preview/scaffold.sh "plugins/pharn/evals/$case/scaffold.sh"
           done
 

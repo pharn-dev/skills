@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # Builds a fake PHARN project in the empty eval workspace. The stub CLI replays
 # canned 0.11.0-shaped output, needs no network, and logs each call.
-# Keep this file identical in update-preview, update-yes, force-asks and
-# status-readonly: claude plugin eval only runs a scaffold inside its own case
-# directory, so the copies cannot share one file. CI compares them.
+# Keep this file identical in update-preview, update-yes, force-asks,
+# status-readonly, status-strict, add-refused-behind and remove-by-name: claude
+# plugin eval only runs a scaffold inside its own case directory, so the copies
+# cannot share one file. CI compares them.
+# The install is behind (6.50.0, upstream 6.56.0), so `add` refuses as the real
+# CLI does; `remove a11y` succeeds and later `list` calls leave a11y out.
 set -eu
 mkdir -p bin
 git init -q . 2>/dev/null || true
@@ -16,7 +19,10 @@ echo "pharn $*" >> "$(dirname "$0")/../.pharn-calls.log"
 ARGS=" $* "
 case "$1" in
   --version) echo "0.11.0" ;;
-  list) echo '{"mode":"archetype","skillsVersion":"6.50.0","archetypes":["lib"],"capabilities":[{"name":"a11y","role":"griller","source":"auto"}]}' ;;
+  list)
+    C='[{"name":"a11y","role":"griller","source":"auto"}]'
+    [ -f "$(dirname "$0")/../.pharn-removed" ] && C='[]'
+    echo '{"mode":"archetype","skillsVersion":"6.50.0","archetypes":["lib"],"capabilities":'"$C"'}' ;;
   status)
     case "$ARGS" in
       *" --json "*)
@@ -45,6 +51,22 @@ case "$1" in
     echo "Updated 1 file. SKIPPED (modified): pharn/CONSTITUTION.md"
     echo "HOOKS: Stop: {\"type\":\"command\",\"command\":\"node .claude/hooks/require-loop-record.cjs\"}"
     exit 0 ;;
+  add|remove)
+    [ -z "${2:-}" ] && { echo "pharn $1 without a name opens a picker and needs an interactive terminal" >&2; exit 1; }
+    for a in "${@:2}"; do case "$a" in -*) echo "Unsupported option for \`$1\`: \"$a\"" >&2; exit 1 ;; esac; done
+    [ $# -gt 2 ] && { echo "pharn $1 takes one name" >&2; exit 1; }
+    if [ "$1" = add ]; then
+      echo "Cannot add: this install records skills v6.50.0 but upstream is v6.56.0. Run pharn update first." >&2
+      exit 1
+    fi
+    case "$2" in
+      a11y|griller:a11y)
+        [ -f "$(dirname "$0")/../.pharn-removed" ] && { echo "No installed capability named \"$2\"" >&2; exit 1; }
+        touch "$(dirname "$0")/../.pharn-removed"
+        echo "Removed griller a11y (pharn/grillers/a11y)."
+        exit 0 ;;
+      *) echo "No installed capability named \"$2\"" >&2; exit 1 ;;
+    esac ;;
   init) echo "pharn init needs an interactive terminal" >&2; exit 1 ;;
   *) echo "unsupported" >&2; exit 1 ;;
 esac
