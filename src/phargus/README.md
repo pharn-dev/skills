@@ -122,7 +122,8 @@ npm run package
 ```
 
 Run these from src/phargus. Shared reference sources live in knowledge/, helpers in runtime/
-and plugin identity in catalog.json. npm run build copies resources into every standalone
+and plugin identity in catalog.json; the publisher, repository and license are set in
+scripts/generate.mjs. npm run build copies resources into every standalone
 skill under ../../plugins/phargus and generates the plugin manifests. The marketplaces at
 the repository root are maintained by hand and checked by check:skills. Generated files
 are committed; CI rejects stale copies. prepare:integration builds the pinned Phargus
@@ -144,8 +145,9 @@ npm run check:evals fails until all sixteen cases are reviewed as passed. Draft 
 can still be built for inspection; their release.json records the blocked behavioral gate.
 
 Release ZIPs and release.json are produced in ignored dist/. This package is private;
-it is distributed through Git and plugin/skill archives, not npm. Tag and publish only
-after the deterministic checks and the model gate pass.
+it is distributed through Git and plugin/skill archives, not npm. Tag (`phargus-vX.Y.Z`, see
+Releasing in ../../CONTRIBUTING.md) and publish only after the deterministic checks and the
+model gate pass.
 
 ## License
 

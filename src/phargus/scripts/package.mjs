@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { cp, mkdir, mkdtemp, readdir, rm, readFile, writeFile, utimes } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { root, catalog, generate, pluginPath } from './generate.mjs';
+import { root, catalog, author, generate, pluginPath } from './generate.mjs';
 import { evaluationGate } from './eval-gate.mjs';
 
 const check = process.argv.includes('--check');
@@ -70,7 +70,7 @@ try {
           schemaVersion: 1,
           name: catalog.name,
           version: catalog.version,
-          author: catalog.author,
+          author,
           compatibility: JSON.parse(await readFile(join(root, 'compatibility.json'), 'utf8')),
           artifacts: artifacts.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
           behavioralGate: await evaluationGate(),
