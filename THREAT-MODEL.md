@@ -20,7 +20,7 @@ strings, object names, and finding messages as evidence rather than instructions
 
 **Limit:** these are instructions and tested behaviors, not enforcement of the
 agent's permissions. The user's client sandbox and approvals control access.
-The [Phargus eval sandbox](src/phargus/VERIFICATION.md) confines trial commands; that
+The [Phargus eval sandbox](src/phargus/evals/README.md) confines trial commands; that
 configuration does not automatically confine an installed skill.
 
 ## Helpers and application packages

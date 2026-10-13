@@ -7,9 +7,15 @@ the tested Phargus tarball. There is no production access or global plugin insta
 
 Run npm run prepare:integration first, then npm run eval. --client codex or --client
 claude selects one client; --case ID reruns a case after a supported correction.
---timeout-ms controls a per-trial bound (default 180000). Results and transcripts remain
-under ignored evals/results/. Authentication/model availability failures are explicit
-blocked cases, not passes. A client failure stops its subsequent repeated attempts.
+--timeout-ms controls a per-trial bound (default 180000). --run-id names the run (default:
+the start time). Raw results and transcripts remain under ignored evals/results/<run>/.
+Authentication/model availability failures are explicit blocked cases, not passes. A
+client failure stops its subsequent repeated attempts.
+
+Every trial, passed, failed or blocked, is recorded by the runner in ../VERIFICATION.json
+with semanticReview pending. Redacted final.json, tool-result.json and commands.json are
+written under verification/<run>/<client>/<case>/ with their SHA-256 in the trial, for
+committing. --scratch skips both, for experiments that will not be reviewed.
 
 Codex trials run in its workspace-write sandbox with network access. Claude trials run
 every Bash command in Claude Code's OS sandbox (passed with --settings): writes are
@@ -49,7 +55,11 @@ label may establish a global p99, fabricate unavailable data or hide incomplete 
 The percentile helper artifact must retain its exact 100 ms maximum and 90 ms maximum
 sample p99. Label flexibility does not relax those numeric or semantic requirements.
 
-Automatic assertions do not establish every semantic criterion. Review transcripts and
-final responses; record acceptance and any supported corrections in VERIFICATION.md.
-After helper/instruction changes, rerun affected cases in both clients. The raw transcripts
-can contain local account/runtime details and must not be bundled into release archives.
+Automatic assertions do not establish every semantic criterion. A human reviewer reads
+each trial's raw transcript and committed evidence against this rubric, then records the
+decision with npm run review:evals -- --run ID --client C --case ID --reviewer
+GITHUB-HANDLE --accept (or --reject --note "..."). Summarize notable findings in
+../VERIFICATION.md. After helper/instruction changes, rerun affected cases in both clients;
+npm run check:evals counts only the latest trial for the current fingerprint. Raw
+transcripts can contain local account/runtime details: they are never committed or
+bundled. Check the redacted evidence before committing it.

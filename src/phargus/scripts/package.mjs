@@ -28,7 +28,12 @@ try {
   await cp(pluginPath, plugin, { recursive: true });
   for (const path of ['README.md', 'compatibility.json', 'VERIFICATION.md', 'VERIFICATION.json'])
     await cp(join(root, path), join(plugin, path));
-  await cp(join(root, 'verification'), join(plugin, 'verification'), { recursive: true });
+  // Historical records only: per-run trial evidence (verification/<run>/) stays in the
+  // repository, where VERIFICATION.json's paths and hashes resolve, and out of the archive.
+  await mkdir(join(plugin, 'verification'));
+  for (const entry of await readdir(join(root, 'verification'), { withFileTypes: true }))
+    if (entry.isFile() && !entry.name.startsWith('.'))
+      await cp(join(root, 'verification', entry.name), join(plugin, 'verification', entry.name));
   const cli = join(plugin, 'skills', 'phargus-diagnose', 'scripts', 'phargus.mjs');
   const help = JSON.parse(
     execFileSync(process.execPath, [cli, '--help'], { cwd: temporary, encoding: 'utf8' }),

@@ -1,10 +1,19 @@
 import { spawn } from 'node:child_process';
 import { mkdtemp, mkdir, cp, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 import assert from 'node:assert/strict';
-import { root, catalog, pluginPath } from '../scripts/generate.mjs';
+import { root, repoRoot, catalog, pluginPath } from '../scripts/generate.mjs';
+import { behaviorFingerprint } from '../scripts/eval-gate.mjs';
+import { redactionContext, redactText, redactedEvidence } from '../scripts/redact.mjs';
+import {
+  automaticDigest,
+  readReport,
+  runId as runIdPattern,
+  sha256,
+  writeReport,
+} from '../scripts/verification.mjs';
 import { sample, span, window, ndjson, conditions } from '../test/fixtures.mjs';
 import { capture } from '../runtime/capture.mjs';
 import { resolvePhargus } from '../runtime/upstream.mjs';
@@ -15,6 +24,9 @@ const { values } = parseArgs({
     client: { type: 'string', default: 'both' },
     case: { type: 'string' },
     out: { type: 'string' },
+    'run-id': { type: 'string' },
+    // Keep results only under evals/results: no evidence export, no VERIFICATION.json rows.
+    scratch: { type: 'boolean', default: false },
     'timeout-ms': { type: 'string', default: '180000' },
     'clean-codex': { type: 'boolean', default: false },
   },
@@ -29,10 +41,40 @@ if (!selected.length) throw new Error('unknown case');
 const timeoutMs = Number(values['timeout-ms']);
 if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0) throw new Error('invalid timeout');
 const prepared = JSON.parse(await readFile(join(root, '.cache/integration.json'), 'utf8'));
-const output = resolve(
-  values.out ?? join(root, 'evals/results', new Date().toISOString().replace(/[:.]/g, '-')),
-);
+const startedAt = new Date();
+const runId = values['run-id'] ?? startedAt.toISOString().replace(/[:.]/g, '-');
+if (!runIdPattern.test(runId)) throw new Error('invalid --run-id');
+const record = !values.scratch;
+const fingerprint = await behaviorFingerprint();
+const output = resolve(values.out ?? join(root, 'evals/results', runId));
 await mkdir(output, { recursive: true });
+if (record) {
+  // The runner, not a person, writes the automatic result of every trial. Rows start pending;
+  // only npm run review:evals records the semantic review and the reviewer's sign-off.
+  const report = await readReport();
+  if (report.runs.some((run) => run.id === runId)) throw new Error('run ' + runId + ' exists');
+  report.runs.push({
+    id: runId,
+    startedAt: startedAt.toISOString(),
+    behaviorFingerprint: fingerprint,
+    version: catalog.version,
+    node: process.versions.node,
+    platform: process.platform,
+    models: 'client defaults',
+    cleanCodex: values['clean-codex'],
+    timeoutMs,
+    clients,
+    cases: selected.map((scenario) => scenario.id),
+    runtime: {
+      commit: prepared.commit,
+      tag: prepared.tag,
+      tagVerified: prepared.tagVerified,
+      tarballSha256: prepared.tarballSha256,
+      reusedDependencies: prepared.reusedDependencies,
+    },
+  });
+  await writeReport(report);
+}
 const schema = {
   type: 'object',
   additionalProperties: false,
@@ -50,6 +92,74 @@ const schema = {
   required: ['workflow', 'verdict', 'observations', 'limitations', 'nextExperiment', 'artifacts'],
 };
 /** @type {Record<string, unknown>[]} */ const results = [];
+
+/**
+ * Export one trial: redacted final response, helper output and commands under
+ * verification/<run>/<client>/<case>/, and a VERIFICATION.json row with their hashes.
+ * @param {string} client @param {string} scenario @param {string} status @param {string | undefined} reason
+ * @param {{project?: string, finalPath?: string, commands?: string[]}} sources
+ */
+async function recordTrial(client, scenario, status, reason, sources) {
+  if (!record) return;
+  const context = redactionContext({
+    paths: [
+      ...(sources.project
+        ? [/** @type {[string, string]} */ ([sources.project, '<project>'])]
+        : []),
+      [output, '<results>'],
+      [repoRoot, '<repo>'],
+      [process.execPath, '<node>'],
+    ],
+  });
+  const directory = join(root, 'verification', runId, client, scenario);
+  await rm(directory, { recursive: true, force: true });
+  /** @type {[string, unknown][]} */ const files = [];
+  if (sources.commands) {
+    /** @param {string | undefined} path */
+    const parsed = async (path) => {
+      try {
+        return path === undefined ? undefined : JSON.parse(await readFile(path, 'utf8'));
+      } catch {
+        return undefined; // A failed trial may lack the file or have written invalid JSON.
+      }
+    };
+    files.push(
+      ['final.json', await parsed(sources.finalPath)],
+      [
+        'tool-result.json',
+        await parsed(sources.project && join(sources.project, 'tool-result.json')),
+      ],
+      ['commands.json', sources.commands],
+    );
+  }
+  /** @type {{path: string, sha256: string}[]} */ const evidence = [];
+  for (const [name, value] of files) {
+    if (value === undefined) continue;
+    const text = redactedEvidence(value, context);
+    const file = join(directory, name);
+    await mkdir(directory, { recursive: true });
+    await writeFile(file, text);
+    evidence.push({ path: relative(repoRoot, file).split(sep).join('/'), sha256: sha256(text) });
+  }
+  const trial = {
+    run: runId,
+    client,
+    case: scenario,
+    behaviorFingerprint: fingerprint,
+    status,
+    ...(reason === undefined ? {} : { reason: redactText(reason, context) }),
+    evidence,
+    automaticDigest: '',
+    semanticReview: 'pending',
+    signedOffBy: null,
+    signedOffAt: null,
+    reviewNote: null,
+  };
+  trial.automaticDigest = automaticDigest(trial);
+  const report = await readReport();
+  report.trials.push(trial);
+  await writeReport(report);
+}
 
 /** @param {string} path @param {unknown} data */
 async function json(path, data) {
@@ -343,12 +453,9 @@ for (const client of clients) {
   let unavailable = false;
   for (const scenario of selected) {
     if (unavailable) {
-      results.push({
-        client,
-        case: scenario.id,
-        status: 'blocked',
-        reason: 'client access failed in the previous trial',
-      });
+      const reason = 'client access failed in the previous trial';
+      results.push({ client, case: scenario.id, status: 'blocked', reason });
+      await recordTrial(client, scenario.id, 'blocked', reason, {});
       continue;
     }
     const project = await mkdtemp(join(tmpdir(), 'phargus-eval-'));
@@ -362,6 +469,7 @@ for (const client of clients) {
       { recursive: true },
     );
     /** @type {() => Promise<void>} */ let cleanup = async () => {};
+    /** @type {Awaited<ReturnType<typeof execute>> | undefined} */ let executed;
     const invocation =
       client === 'codex' ? '$' + scenario.skill : '/' + catalog.name + ':' + scenario.skill;
     const prompt =
@@ -379,7 +487,7 @@ for (const client of clients) {
     try {
       // A fixture failure is recorded as a failed trial instead of aborting the whole run.
       cleanup = await fixtures(project, scenario.id);
-      const executed = await execute(client, project, prompt, resultDir);
+      executed = await execute(client, project, prompt, resultDir);
       if (executed.code !== 0 || executed.timedOut)
         throw new Error(
           executed.timedOut ? 'client trial timed out' : 'client exited ' + executed.code,
@@ -482,6 +590,12 @@ for (const client of clients) {
     } finally {
       await cleanup();
     }
+    const last = /** @type {{status: string, reason?: string}} */ (results.at(-1));
+    await recordTrial(client, scenario.id, last.status, last.reason, {
+      project,
+      finalPath: executed?.finalPath,
+      commands: executed?.commands,
+    });
     // Preserve fixture workspaces on failure for inspection, remove successful trials.
     if (results.at(-1)?.status === 'passed-automatic')
       await rm(project, { recursive: true, force: true });
@@ -502,4 +616,12 @@ await json(join(output, 'report.json'), {
   results,
 });
 process.stdout.write('Evaluation report: ' + join(output, 'report.json') + '\n');
+if (record)
+  process.stdout.write(
+    'Trials recorded in VERIFICATION.json as run ' +
+      runId +
+      ' with evidence in verification/' +
+      runId +
+      '/; review each with npm run review:evals\n',
+  );
 if (results.some((result) => result.status !== 'passed-automatic')) process.exitCode = 1;

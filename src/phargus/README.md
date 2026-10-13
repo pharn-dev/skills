@@ -5,8 +5,9 @@ memory analysis, fix verification, and alert rules. This directory holds the sou
 and tooling for the `phargus` plugin in [pharn-dev/skills](https://github.com/pharn-dev/skills);
 the plugin itself is generated into plugins/phargus/ at the repository root.
 
-Status: 0.1.1 development draft. See [VERIFICATION.md](VERIFICATION.md) for completed
-checks and the current state of the behavioral release gate.
+Status: 0.1.1 development draft. Deterministic checks pass; no behavioral review is
+recorded for the shipped content, so npm run check:evals fails. See
+[VERIFICATION.md](VERIFICATION.md).
 
 Five workflows share one tested Phargus contract. Each skill includes its own references
 and Node-core-only helpers, so a single copied skill works without this checkout or its
@@ -119,6 +120,7 @@ npm run test:integration
 npm run check:package
 npm run format:check
 npm run eval
+npm run review:evals -- --run ID --client C --case ID --reviewer GITHUB-HANDLE --accept
 npm run check:evals
 npm run package
 ```
@@ -140,11 +142,14 @@ The CLI outputs and artifacts establish execution; semantic judgments use the sa
 Missing client access is a blocked release gate, not a passed or silently skipped evaluation.
 
 Use npm run eval -- --clean-codex only when explicitly choosing Codex's built-in default
-configuration for a trial. It leaves saved user settings unchanged. VERIFICATION.md records
-current outcomes; VERIFICATION.json records the reviewed cases and shipped-content fingerprint. Historical results remain
-in verification/pre-rename.md and verification/pre-rename.json.
-npm run check:evals fails until all sixteen cases are reviewed as passed. Draft archives
-can still be built for inspection; their release.json records the blocked behavioral gate.
+configuration for a trial. It leaves saved user settings unchanged. The runner, not a
+person, writes every trial into VERIFICATION.json with redacted evidence under
+verification/<run>/; a human reviewer signs each trial off with npm run review:evals under
+their GitHub handle. npm run check:evals fails until all sixteen cases have accepted trials
+for the current fingerprint with intact evidence. VERIFICATION.md describes the process
+and current outcomes. The 0.1.0 and pre-rename records in verification/ are self-attested
+history. Draft archives can still be built for inspection; their release.json records the
+blocked behavioral gate. Archives leave out the per-run evidence.
 
 Release ZIPs and release.json are produced in ignored dist/. This package is private;
 it is distributed through Git and plugin/skill archives, not npm. Tag (`phargus-vX.Y.Z`, see

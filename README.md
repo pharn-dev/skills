@@ -190,8 +190,10 @@ scripts, so a single copied skill works without this repository.
   the monitored process and pauses it, so `phargus-memory` works from existing
   samples and prepares a new capture only when they are not enough.
 
-These are instructions and tested behaviour, not a sandbox: your agent client's
-permissions decide what an agent can actually do. The trust boundaries are in
+These are instructions, not a sandbox: your agent client's permissions decide
+what an agent can actually do. The `phargus` model evals check them, but no
+behavioral review is recorded yet for the current `phargus` content; see its
+[verification record](src/phargus/VERIFICATION.md). The trust boundaries are in
 [THREAT-MODEL.md](THREAT-MODEL.md).
 
 ---
@@ -201,7 +203,7 @@ permissions decide what an agent can actually do. The trust boundaries are in
 | Plugin | Agents | Operates |
 | ------ | ------ | -------- |
 | `pharn` | Claude Code (verified with 2.1.295). Codex not verified. | PHARN CLI `@pharn-dev/pharn` 0.10.0+, best on 0.11.0, text-flow fallback for 0.9.x. |
-| `phargus` | Codex and Claude Code; results in the [verification record](src/phargus/VERIFICATION.md). | `@pharn-dev/phargus` 0.1.x from npm (tested: 0.1.0, tag v0.1.0), pinned in [compatibility.json](src/phargus/compatibility.json). Node 22.18.0 or later. |
+| `phargus` | Codex and Claude Code. Behavioral review of 0.1.1 pending; see the [verification record](src/phargus/VERIFICATION.md). | `@pharn-dev/phargus` 0.1.x from npm (tested: 0.1.0, tag v0.1.0), pinned in [compatibility.json](src/phargus/compatibility.json). Node 22.18.0 or later. |
 
 **Plugin versions and tool versions move separately.** The badges above show
 each plugin's own version. The tool version a plugin was written for is stated

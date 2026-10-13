@@ -17,7 +17,12 @@ Before checks run npm run format. Required checks: npm run lint, npm run typeche
 npm test, npm run check:generated, npm run check:skills, npm run check:package,
 npm run format:check. Integration: npm run prepare:integration then
 npm run test:integration. Model trials: npm run eval, using installed/authenticated
-clients; keep raw results in ignored evals/results, not published artifacts.
+clients. The runner writes trial rows to VERIFICATION.json and redacted evidence
+(final.json, tool-result.json, commands.json) to verification/<run>/, which is committed;
+raw transcripts stay in ignored evals/results and out of commits and archives. Never edit
+VERIFICATION.json by hand and never run npm run review:evals: only the named human
+reviewer signs off, with their own GitHub handle. check:evals failing for lack of a
+reviewed run is expected, not something to work around.
 
 Maintain compatibility.json and API references against the tested upstream commit.
 prepare:integration defaults to an Phargus checkout next to the skills repository;

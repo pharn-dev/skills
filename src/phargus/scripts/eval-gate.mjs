@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { access, readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { root, repoRoot, pluginDir } from './generate.mjs';
+import { clients, readReport, schemaVersion, trialProblems } from './verification.mjs';
 
 /** Plain UTF-16 code-unit order, independent of the machine's locale. @param {string} a @param {string} b */
 const byCodeUnit = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -51,7 +52,11 @@ async function shippedFiles(base, directory) {
   return (await walk(directory)).sort(byCodeUnit);
 }
 
-/** Fingerprint the shipped instructions and helper behavior, not ignored trial artifacts. */
+/**
+ * Fingerprint the shipped instructions and helper behavior. VERIFICATION.json and the evidence
+ * under verification/ are deliberately outside it: committing a reviewed run must not change the
+ * fingerprint that run was reviewed against.
+ */
 export async function behaviorFingerprint() {
   const hash = createHash('sha256');
   /** Labels are POSIX paths relative to base, so they do not depend on the checkout or OS.
@@ -70,31 +75,58 @@ export async function behaviorFingerprint() {
   return hash.digest('hex');
 }
 
-export async function evaluationGate() {
-  const fingerprint = await behaviorFingerprint();
+/**
+ * Release gate. For the current fingerprint, the latest trial of every case in each client must
+ * have been written by npm run eval with status passed-automatic, accepted with
+ * npm run review:evals under a GitHub handle, and backed by committed evidence whose SHA-256
+ * still matches. The options let tests point the gate at a fixture checkout.
+ * @param {{root?: string, repoRoot?: string, fingerprint?: string}} [options]
+ */
+export async function evaluationGate(options = {}) {
+  const bases = { root: options.root ?? root, repoRoot: options.repoRoot ?? repoRoot };
+  const fingerprint = options.fingerprint ?? (await behaviorFingerprint());
+  /** @param {string[]} reasons */
+  const result = (reasons) => ({
+    releaseReady: reasons.length === 0,
+    behaviorFingerprint: fingerprint,
+    reasons,
+  });
   let report;
   try {
-    report = JSON.parse(await readFile(join(root, 'VERIFICATION.json'), 'utf8'));
+    report = await readReport(bases.root);
   } catch {
-    return { releaseReady: false, reasons: ['no reviewed model verification report'] };
+    return result(['no verification report: VERIFICATION.json is missing or not JSON']);
   }
-  /** @type {{client: string, case: string, status: string, semanticReview: string, reason?: string}[]} */ const results =
-    report.results ?? [];
-  const cases = JSON.parse(await readFile(join(root, 'evals/cases.json'), 'utf8'));
-  const reasons = [];
-  if (report.status === 'pending') reasons.push(report.reason ?? 'verification is pending');
-  if (report.behaviorFingerprint !== fingerprint)
-    reasons.push('shipped instructions/helpers changed since behavioral review');
-  for (const client of ['codex', 'claude']) {
+  if (report.schemaVersion !== schemaVersion || !Array.isArray(report.trials))
+    return result([
+      'VERIFICATION.json is not a schema ' + schemaVersion + ' report from npm run eval',
+    ]);
+  /** @type {{id: string}[]} */
+  const cases = JSON.parse(await readFile(join(bases.root, 'evals/cases.json'), 'utf8'));
+  const current = report.trials.filter((trial) => trial.behaviorFingerprint === fingerprint);
+  if (!current.length) {
+    const older = new Set(report.trials.map((trial) => trial.behaviorFingerprint)).size;
+    return result([
+      'no reviewed run for fingerprint ' +
+        fingerprint +
+        ': VERIFICATION.json has no trials for the shipped content' +
+        (older ? ' (its ' + older + ' recorded fingerprint(s) are for older content)' : ''),
+    ]);
+  }
+  const reasons = current.some((trial) => trial.semanticReview === 'passed')
+    ? []
+    : ['no reviewed run for fingerprint ' + fingerprint];
+  for (const client of clients) {
     for (const scenario of cases) {
-      const rows = results.filter(
-        (result) => result.client === client && result.case === scenario.id,
+      // A rerun supersedes earlier attempts; earlier rows stay as history.
+      const trial = current.findLast(
+        (candidate) => candidate.client === client && candidate.case === scenario.id,
       );
-      if (rows.length !== 1 || rows[0].status !== 'passed' || rows[0].semanticReview !== 'passed')
-        reasons.push(
-          client + '/' + scenario.id + ': ' + (rows[0]?.reason ?? 'not behaviorally verified'),
-        );
+      const problems = trial
+        ? await trialProblems(trial, bases)
+        : ['no trial for this fingerprint'];
+      for (const problem of problems) reasons.push(client + '/' + scenario.id + ': ' + problem);
     }
   }
-  return { releaseReady: reasons.length === 0, reasons };
+  return result(reasons);
 }

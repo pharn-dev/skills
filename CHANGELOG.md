@@ -27,6 +27,18 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 - `pharn` evals: the `no-init` grader matches only inside the JSON `command`
   field, so description prose cannot trigger it and `pharn init <word>` is
   caught again. CI fails when the four shared eval scaffolds differ (#12).
+- `phargus` tooling (no plugin version change): the behavioral release gate
+  needs checkable evidence and a human sign-off. `npm run eval` records every
+  trial in `VERIFICATION.json` itself, and writes redacted `final.json`,
+  `tool-result.json` and `commands.json` for committing under
+  `src/phargus/verification/<run>/`, with their SHA-256. Only
+  `npm run review:evals` records the semantic review, with the reviewer's
+  GitHub handle and time. `npm run check:evals`
+  requires an accepted trial of every case in both clients for the current
+  fingerprint, with intact evidence. The 0.1.0 review, whose rows were edited by
+  hand, whose reviewer was an AI assistant and whose evidence was never
+  committed, is archived as `verification/0.1.0-self-attested.json`.
+  `check:evals` fails until a reviewed run is committed (#27).
 
 ### Fixed
 
@@ -34,7 +46,8 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   (`>=0.1.0 <0.2.0`) instead of only the unreleased 0.0.1, and the tested runtime
   is pinned to tag v0.1.0 (819a795875fc547e7daeccc0f0b50846ba642286). The setup
   recipe installs `@pharn-dev/phargus@0.1.0` from npm, with a tag build as the
-  fallback. The 0.1.1 behavioral review is pending, so it is not released yet.
+  fallback. No reviewed run is recorded for 0.1.1 under the new gate (see
+  Changed), so it is not released yet.
 - `phargus` 0.1.1: file reads by `capture --file`, `summarize` and `compare`
   have no event-count cap unless `--max-events` is given; live SSE capture and
   `rules` replay keep the 10,000-event default. Before, a 60 s recording at
