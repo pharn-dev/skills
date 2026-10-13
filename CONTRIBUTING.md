@@ -66,7 +66,11 @@ executable (`scaffold.sh`, which is why `--scaffold` is needed). The stub prints
 canned 0.10.0-shaped output, logs its calls and needs no network, so the real
 CLI is never invoked. `--allow-tools Bash` is needed because the cases drive the
 stub through Bash. A stub cannot test how the skill finds a real CLI on `PATH`;
-the prompts name the stub's path instead.
+the prompts name the stub's path instead. The exception is `cli-missing-asks`,
+which builds no CLI at all to check that the skill asks before an `npx`
+download; run it on a machine without `pharn` on `PATH` or a cached
+`@pharn-dev/pharn` that `npx --no-install` could find. Cases sharing one stub
+carry identical copies of its `scaffold.sh`, and CI checks that they match.
 
 `phargus` evals run in Codex and in Claude Code from `src/phargus`
 (`npm run eval && npm run check:evals`); see

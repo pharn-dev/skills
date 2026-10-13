@@ -11,6 +11,15 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ## [Unreleased]
 
+### Added
+
+- `pharn` evals: `add-refused-behind`, `remove-by-name`, `cli-missing-asks`,
+  `hostile-output` and `status-strict` cover `pharn add` refused on a behind
+  install, `pharn remove <name>`, asking before an `npx` download when no CLI
+  is found, CLI output that tells the agent to run `update --yes --force`, and
+  `status --json --strict`. The shared stub answers `add` and `remove`, and CI
+  compares seven copies of its scaffold instead of four (#25).
+
 ### Changed
 
 - `pharn`: the plugin description presents PHARN as the tool that gets features
