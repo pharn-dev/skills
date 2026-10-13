@@ -39,7 +39,8 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   have no event-count cap unless `--max-events` is given; live SSE capture and
   `rules` replay keep the 10,000-event default. Before, a 60 s recording at
   200 req/s (12,000 spans) was truncated at 10,000 events and `compare` reported
-  it as inconclusive. The skills now say how to raise the live-capture limit.
+  it as inconclusive. The skills now say how to raise the live-capture limit
+  (#26).
 
 ## [phargus 0.1.0] - 2026-10-13
 
