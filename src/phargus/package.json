@@ -32,7 +32,8 @@
     "test:integration": "node --test test/integration/*.test.mjs",
     "prepare:integration": "node scripts/prepare-integration.mjs",
     "eval": "node evals/run.mjs",
-    "check:evals": "node scripts/check-evals.mjs"
+    "check:evals": "node scripts/check-evals.mjs",
+    "review:evals": "node scripts/review-evals.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

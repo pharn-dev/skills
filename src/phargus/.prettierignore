@@ -3,3 +3,6 @@ dist
 .cache
 evals/results
 LICENSE
+# Written byte-for-byte by npm run eval and npm run review:evals; the evidence is hashed.
+VERIFICATION.json
+verification/*/

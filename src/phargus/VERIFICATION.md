@@ -1,12 +1,70 @@
 # Verification — Phargus
 
-## 0.1.1: behavioral review pending
+## Current status: no reviewed run
 
-Current status: deterministic checks and integration pass; the behavioral release
-gate is not met. npm run check:evals reports releaseReady: false because the
-shipped helpers and references changed after the 0.1.0 review below. VERIFICATION.json
-still holds that 0.1.0 review unchanged. Run a fresh sixteen-trial review before
-the next release.
+No behavioral review of the shipped content has been recorded under the
+current process. `npm run check:evals` fails with "no reviewed run for
+fingerprint …", and it will keep failing until a reviewed run is committed.
+That is the expected state for 0.1.1. Deterministic checks and integration pass
+(see below). No released version of `phargus` has a reviewed run that anyone
+other than its reviewer can check. The 0.1.0 review is archived as
+[self-attested](#historical-self-attested-records).
+
+## How behavior is verified
+
+[VERIFICATION.json](VERIFICATION.json) is written only by tools. Nobody edits it
+by hand.
+
+1. **The runner writes the rows.** `npm run eval` adds a run (fingerprint,
+   plugin version, Node, client and model settings, tested runtime) and one trial
+   per client and case. Each trial records its status (`passed-automatic`,
+   `failed` or `blocked`) and starts with `semanticReview: "pending"`.
+   An `automaticDigest` covers these fields.
+2. **Redacted evidence is committed.** For every executed trial the runner writes
+   `final.json` (the structured final response), `tool-result.json` (the helper
+   output) and `commands.json` (the shell commands in the trace) under
+   `verification/<run>/<client>/<case>/`. Before writing, it replaces the trial
+   project, repository, Node binary, temp and home paths, the user name, values of
+   secret-named environment variables, and token-like strings with placeholders
+   such as `<project>` or `<redacted>`. It refuses to write evidence that still
+   contains any of them. Each file's repository-relative path and SHA-256 are
+   recorded in the trial. Raw transcripts stay in the ignored `evals/results/<run>/`.
+3. **A human signs off.** The reviewer reads the raw transcript and the committed
+   evidence against the rubric in [evals/README.md](evals/README.md), then records
+   one decision per trial:
+
+   ```bash
+   npm run review:evals -- --run <run> --client <codex|claude> --case <case> \
+     --reviewer <github-handle> --accept [--note "..."]
+   npm run review:evals -- --run <run> --client <codex|claude> --case <case> \
+     --reviewer <github-handle> --reject --note "failed rubric item"
+   ```
+
+   This is the only command that sets `semanticReview`, `signedOffBy` (a GitHub
+   handle), `signedOffAt` and `reviewNote`. It accepts only a pending trial that
+   passed its automatic checks, for the current fingerprint, with intact evidence.
+   Decisions are final: a mistaken or rejected trial is rerun, not edited.
+
+4. **The gate checks the evidence.** `npm run check:evals` passes only if, for the
+   current behavior fingerprint, the latest trial of each case in each client
+   passed its automatic checks and was accepted under a GitHub handle, with
+   unchanged digests, and every evidence file exists with its recorded SHA-256.
+   Earlier attempts stay in the file as history; a rerun supersedes them.
+
+The digests show when someone has edited a runner- or reviewer-written field.
+They are consistency checks, not signatures. The trust comes from the evidence
+committed next to the record and from the sign-off arriving in a pull request
+that the code owner reviews. The person named in `signedOffBy` must be the one
+who ran the review. An agent must not sign off on anyone's behalf.
+
+The behavior fingerprint hashes `runtime/`, `knowledge/`, the shipped skills,
+`catalog.json` and `compatibility.json`. VERIFICATION.json and `verification/`
+are outside it, so committing a reviewed run does not invalidate it. Release
+archives include VERIFICATION.json and the historical records at the top of
+`verification/`, but not the per-run evidence, which stays in the repository at
+the tagged commit.
+
+## 0.1.1: behavioral review pending
 
 0.1.1 repins the tested runtime to the published release: tag v0.1.0, commit
 819a795875fc547e7daeccc0f0b50846ba642286, @pharn-dev/phargus 0.1.0. The helpers
@@ -28,100 +86,24 @@ Checked on 2026-10-13 with Node 22.18.0 and 24.13.1:
 - Format, lint, typecheck, generated resources, skill metadata, copied packages,
   Markdown lint and claude plugin validate --strict passed.
 
-## 0.1.0: reviewed release
+Before release: run all sixteen trials (`npm run prepare:integration`, then
+`npm run eval`), have a maintainer review and sign off each trial with
+`npm run review:evals`, commit VERIFICATION.json and `verification/<run>/`, and
+confirm `npm run check:evals` passes.
 
-Status at 0.1.0: deterministic checks and all sixteen reviewed behavioral cases
-passed after the full Argus-to-Phargus rename on 2026-10-11.
-The prior sixteen model trials verify the predecessor package and identifiers.
-They do not establish compatibility with @pharn-dev/phargus, PHARGUS_* or
-phargus.config.json/js, and their fingerprint has not been reused.
+## Historical, self-attested records
 
-The original records remain unchanged in
-[pre-rename.md](verification/pre-rename.md) and
-[pre-rename.json](verification/pre-rename.json). Old names and paths there identify
-historical evidence, including the raw artifacts in the original checkout.
+These records predate the current process. Their reviewers were AI assistants,
+not named humans. Their rows were edited by hand, and their evidence lived in
+the ignored `evals/results/` of a local checkout, so nobody else can check it.
+They are kept as history and do not count toward the gate.
 
-## Local deterministic verification
-
-Checked on Node 24.13.1 with the dependency versions from main:
-
-- 39 unit tests passed with none skipped, including scoped package resolution,
-  the renamed config filename and the --phargus-package CLI option.
-- 12 skills.sh change-detection tests passed.
-- Format, lint, typecheck, generated resources, skill metadata and copied packages passed.
-- Claude Code validates the marketplace and both plugins; Markdown lint passed on 85 files.
-- The original review files are preserved byte-for-byte. Remaining Argus references
-  identify historical evidence or explain migration from the old installation.
-
-The bundled skill-creator validator rejects the pre-existing compatibility frontmatter
-field; the repository's check:skills accepts and validates that field's skill metadata.
-
-## Upstream integration
-
-compatibility.json, runtime/upstream.mjs and .github/workflows/ci.yml pin the
-completed upstream rename at 4219f480cdb436b6af948e321bdd934f7c3d2128:
-@pharn-dev/phargus 0.0.1 with PHARGUS_* and phargus.config.json/js.
-prepare:integration checks the source package identity and version before building.
-
-All 15 integration tests pass on Node 24.13.1, with none skipped. They cover actual
-CJS/ESM preload, samples and incoming spans, collector/dashboard SSE, bounded
-follow and cleanup, real V8 snapshots/analyzer workers, threshold equality and
-firing/resolved edges, native sandbox rules, missing-peer failures, standalone
-package resolution, alert sinks and dashboard allowed-host behavior.
-
-The tarball SHA-256 is
-a28d26f65b39acdd09e02687f9b8dead661b91e987a40e3ff7f4658578023ccf.
-The local build used --reuse-dependencies from the upstream checkout, with its
-native isolated-vm peer confirmed compatible with Node 24.13.1. CI installs fresh
-dependencies and repeats the suite on Node 22.18.0 and 24.
-
-## Behavioral release gate
-
-All eight cases pass in both Codex and Claude Code, with semantic review by the
-Codex assistant in this chat against evals/README.md. The saved final responses
-and actual helper artifacts were reviewed; VERIFICATION.json records the current
-shipped-content fingerprint and npm run check:evals reports releaseReady: true.
-
-| Scenario                | Codex                                       | Claude Code                                 |
-| ----------------------- | ------------------------------------------- | ------------------------------------------- |
-| Setup and restart       | Passed, reviewed                            | Passed, reviewed                            |
-| Incident diagnosis      | Passed on rerun, reviewed                   | Passed, reviewed                            |
-| Fix verification        | Passed, reviewed                            | Passed, reviewed                            |
-| Memory growth           | Passed after rubric clarification, reviewed | Passed after rubric clarification, reviewed |
-| Rules and replay        | Passed, reviewed                            | Passed, reviewed                            |
-| Missing data            | Passed, reviewed                            | Passed, reviewed                            |
-| Incomplete SSE evidence | Passed, reviewed                            | Passed, reviewed                            |
-| Percentile semantics    | Passed, reviewed                            | Passed, reviewed                            |
-
-Codex used its built-in default with --clean-codex in its workspace-write sandbox;
-Claude used its configured default, claude-sonnet-5-5, with every Bash command in
-Claude Code 2.1.295's OS sandbox. Trials ran sequentially on Node 24.13.1 with a
-360-second bound per trial.
-
-The first Codex diagnosis trial saved the helper summary as phargus-summary.json
-and an explanatory report as tool-result.json, failing the artifact contract.
-A fresh rerun saved the required helper JSON and passed. No failed response was edited.
-
-Two Claude memory attempts returned hypotheses, and one later Codex memory attempt
-returned inconclusive, while correctly identifying external/ArrayBuffer growth and
-keeping a leak unproven. The earlier memory grader rejected those coarse labels.
-The clarified rubric accepts memory-pressure, hypotheses or inconclusive; numeric
-assertions still require flat heapUsed and rising external memory, and semantic
-review still requires the growing category and no unsupported leak claim. Fresh
-memory trials in both clients passed this rubric. All earlier attempts are retained.
-
-Review found no critical rubric failures in the accepted runs. Minor limitations:
-Claude's diagnosis did not explicitly contrast identical signals in fast and slow
-periods; its SSE follow-up overstated enabling memory fields and heap diffs for
-external memory; its memory follow-up suggested finding buffer owners with a heap
-diff. The helper reports object counts and self sizes, without retaining paths or
-owner attribution. These limits remain explicit in the shipped references.
-
-Raw transcripts and artifacts remain ignored under evals/results/phargus-rename-2026-10-11/,
-evals/results/phargus-rename-codex-diagnose-rerun/,
-evals/results/phargus-rename-claude-memory-rerun/,
-evals/results/phargus-rename-memory-verdict-review/ and
-evals/results/phargus-rename-memory-verdict-final/. They are excluded from release archives.
+- phargus 0.1.0, reviewed 2026-10-11 after the Argus-to-Phargus rename:
+  [0.1.0-self-attested.md](verification/0.1.0-self-attested.md) and
+  [0.1.0-self-attested.json](verification/0.1.0-self-attested.json).
+- argus 0.1.0 before the rename:
+  [pre-rename.md](verification/pre-rename.md) and
+  [pre-rename.json](verification/pre-rename.json), preserved byte for byte.
 
 ## Migration outside this checkout
 
