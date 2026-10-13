@@ -38,8 +38,7 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   fingerprint, with intact evidence. The 0.1.0 review, whose rows were edited by
   hand, whose reviewer was an AI assistant and whose evidence was never
   committed, is archived as `verification/0.1.0-self-attested.json`.
-  `check:evals` fails until a reviewed run is committed. Addresses F6 of the
-  2026-10-12 review.
+  `check:evals` fails until a reviewed run is committed (#27).
 
 ### Fixed
 
