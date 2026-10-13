@@ -35,6 +35,11 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   is pinned to tag v0.1.0 (819a795875fc547e7daeccc0f0b50846ba642286). The setup
   recipe installs `@pharn-dev/phargus@0.1.0` from npm, with a tag build as the
   fallback. The 0.1.1 behavioral review is pending, so it is not released yet.
+- `phargus` 0.1.1: file reads by `capture --file`, `summarize` and `compare`
+  have no event-count cap unless `--max-events` is given; live SSE capture and
+  `rules` replay keep the 10,000-event default. Before, a 60 s recording at
+  200 req/s (12,000 spans) was truncated at 10,000 events and `compare` reported
+  it as inconclusive. The skills now say how to raise the live-capture limit.
 
 ## [phargus 0.1.0] - 2026-10-13
 

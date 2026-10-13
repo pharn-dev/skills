@@ -84,7 +84,8 @@ export async function main(args) {
   }
   const packageName = values['phargus-package'];
   const options = {
-    maxEvents: number('max-events', 10_000),
+    // Undefined: live capture and rules replay stop at 10,000 events; other file reads do not.
+    maxEvents: number('max-events', undefined),
     allowLogs: values['allow-logs'],
     // Undefined lets capture/summarize use declared conditions.intervalMs, then 1000.
     intervalMs: number('interval-ms', undefined),

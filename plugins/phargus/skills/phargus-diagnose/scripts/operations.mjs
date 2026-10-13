@@ -180,7 +180,11 @@ export async function collect(options) {
   }
 }
 
-/** @param {string} file @param {import('./types.js').CollectorModule} api @param {number} windowMs @param {number} [maxEvents] @returns {Promise<Window[]>} */
+/**
+ * Unlike summarize, replay buffers every record and may run sandboxed code per window, so it
+ * keeps a 10,000-event default; --max-events raises it.
+ * @param {string} file @param {import('./types.js').CollectorModule} api @param {number} windowMs @param {number} [maxEvents] @returns {Promise<Window[]>}
+ */
 export async function readWindows(file, api, windowMs, maxEvents = 10_000) {
   /** @type {Window[]} */ const windows = [];
   /** @type {import('./types.js').Sample[]} */ const samples = [];

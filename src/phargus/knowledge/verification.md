@@ -7,8 +7,10 @@ post-change trace alone cannot establish improvement.
 
 Use compare with both manifests. A smaller observed latency under a different request
 rate is not a controlled comparison. Missing conditions, missing metrics, dropped data,
-counter resets, gaps or truncation result in an inconclusive comparison. SSE also has
-unknown loss, so use raw capture for a definitive before/after verification.
+counter resets, gaps or truncation result in an inconclusive comparison. Live capture
+stops at 10,000 events by default, so for a high-rate service pass a larger --max-events
+or a shorter --duration-ms. SSE also has unknown loss, so use raw capture for a
+definitive before/after verification.
 
 When comparable, evaluate differences against the stated goal, and inspect collateral
 changes in RSS, heap, GC and backpressure. The helper reports deltas; it does not invent

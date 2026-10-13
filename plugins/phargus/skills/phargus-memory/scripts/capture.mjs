@@ -13,6 +13,9 @@ import {
 /** @typedef {import('./types.js').Event} Event */
 /** @typedef {import('./types.js').CaptureManifest} CaptureManifest */
 
+// Live capture is bounded by the network and memory; file reads have no default event limit.
+export const LIVE_MAX_EVENTS = 10_000;
+
 /** @param {Event} record */
 export function eventEnd(record) {
   switch (record.event) {
@@ -181,7 +184,7 @@ export async function capture(options) {
     const records = options.url
       ? sseEvents(options.url, manifest, {
           durationMs: options.durationMs ?? 30_000,
-          maxEvents: options.maxEvents ?? 10_000,
+          maxEvents: options.maxEvents ?? LIVE_MAX_EVENTS,
           token: options.token,
           signal: options.signal,
         })

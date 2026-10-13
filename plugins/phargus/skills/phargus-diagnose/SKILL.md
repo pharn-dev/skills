@@ -14,7 +14,9 @@ Use [tools](references/tools.md) to capture or summarize the available source.
 1. Establish the affected process, symptom, interval and workload. Resolve the absolute
    directory containing this SKILL.md before invoking its scripts/phargus.mjs.
 2. Capture bounded SSE or read the supplied NDJSON. Run summarize and check invalid
-   records, gaps, loss, resets and truncation before drawing conclusions.
+   records, gaps, loss, resets and truncation before drawing conclusions. Live capture
+   stops at 10,000 events by default (raise --max-events or shorten --duration-ms for a
+   high-rate service); summarize reads files without an event-count cap.
 3. Compare affected and normal periods. Correlate request duration with event loop,
    GC, memory and backpressure. Retrieve raw data if SSE lacks necessary details.
 4. Separate measured observations from hypotheses. Inspect plausible application code

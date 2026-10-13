@@ -172,7 +172,11 @@ export function classifyLine(line) {
   return { kind: looksLikePhargus ? 'invalid' : 'log' };
 }
 
-/** @param {string} path @param {Quality} status @param {{maxEvents?: number, allowLogs?: boolean}} [options] */
+/**
+ * Streams a whole file unless maxEvents is given: a file is already bounded and summarizing
+ * it is fast, so a default cap would only truncate evidence. Live SSE keeps its own limit.
+ * @param {string} path @param {Quality} status @param {{maxEvents?: number, allowLogs?: boolean}} [options]
+ */
 export async function* fileEvents(path, status, options = {}) {
   const stream = createReadStream(path, { highWaterMark: 64 * 1024 });
   let count = 0;
@@ -185,7 +189,7 @@ export async function* fileEvents(path, status, options = {}) {
         else status.invalidRecords += 1;
         continue;
       }
-      if (count >= (options.maxEvents ?? 10_000)) {
+      if (count >= (options.maxEvents ?? Infinity)) {
         status.truncated = true;
         break;
       }
