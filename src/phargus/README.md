@@ -87,7 +87,8 @@ node plugins/phargus/skills/phargus-memory/scripts/phargus.mjs heap --project /p
 ```
 
 Commands emit JSON with schemaVersion: 1. SSE reads default to 30 seconds and 10,000
-events. Provide --token-env PHARGUS_DASHBOARD_TOKEN when authentication is enabled;
+events; summarize and compare read files without an event-count cap unless --max-events
+is given. Provide --token-env PHARGUS_DASHBOARD_TOKEN when authentication is enabled;
 tokens are never embedded in artifact URLs or reported configuration.
 Capture artifacts preserve source/quality metadata. SSE history classification is an
 event-time estimate, and raw-loss counters remain unknown; it cannot establish a

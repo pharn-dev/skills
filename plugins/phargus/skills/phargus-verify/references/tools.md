@@ -26,12 +26,15 @@ Capture refuses redirects. Prefer loopback or the user's authenticated tunnel fo
 remote dashboards; remote binding requires a Phargus dashboard token.
 
 Capture reserves events.ndjson and manifest.json in --out, without overwriting prior
-measurements. SSE defaults to 30 seconds / 10,000 events. File reads also default to
-10,000 events; --max-events raises the bound, and truncation is explicitly reported.
+measurements. File reads by capture --file, summarize and compare have no event-count
+cap unless --max-events is given. Live capture stops at 30 seconds or 10,000 events by
+default; for a high-rate service pass a larger --max-events or a shorter --duration-ms.
+Truncation is reported, and a truncated capture makes compare inconclusive.
 Lines have a 1 MiB cap; SSE responses a 64 MiB cap. --allow-logs allows unrelated log
 lines while continuing to report malformed Phargus records, including recognizable truncated
 Phargus JSON. Collection fails on corrupt data in both file and --follow modes.
-Invalid records are not zeros. rules --max-events also raises the replay input bound.
+Invalid records are not zeros. rules buffers its input, so replay keeps a 10,000-event
+default that rules --max-events raises.
 
 Summarize and compare need no installed Phargus. doctor, collect, heap and rules load
 the target application's tested Phargus installation. Every result is JSON with
