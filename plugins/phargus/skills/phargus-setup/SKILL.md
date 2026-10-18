@@ -25,8 +25,13 @@ Read [compatibility](references/compatibility.md) before selecting a package and
    capture SSE, and inspect actual samples and incoming spans. Read
    [data semantics](references/data.md) when interpreting that verification.
 5. Restart with the saved recipe and verify again. Clean up test processes you started.
+6. When the request names a file for a helper result (for example a summarize result in
+   tool-result.json), write that helper's JSON output to exactly the named path. Resolve
+   a relative name against the application directory itself, not .phargus/ or the
+   capture directory, and confirm the file exists there before finishing.
 
-Return the changed files, reproducible launch commands and observed data proving the
-connection. Report missing requirements or incomplete verification explicitly.
+Return the changed files, reproducible launch commands, the saved result paths and
+observed data proving the connection. Report missing requirements or incomplete
+verification explicitly.
 
 Example request: "Add Phargus to this Express app and show that its dashboard receives data."

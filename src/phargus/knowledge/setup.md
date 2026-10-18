@@ -54,6 +54,13 @@ wait for samples, and capture /events. Check metrics and expected incoming reque
 Restart using the saved recipe and repeat; successful imports alone do not verify setup.
 Stop processes you started and close the collector/dashboard when the test finishes.
 
+Helpers print their JSON result to stdout. When the user names a file for a result, such
+as a summarize result in tool-result.json, redirect it to exactly that path. A relative
+name is relative to the application directory: tool-result.json means /app/tool-result.json,
+not /app/.phargus/tool-result.json or a file in the capture directory. .phargus/ holds raw
+data, captures and copied tools, never a result the user asked for elsewhere. Check that
+the named file exists before reporting setup as verified.
+
 Under the Node permission model, grant the required output file access. Tracing and
 samplers add measurable overhead, especially promise-heavy work on Node 22. Use an
 application workload to quantify it; a successful setup is not a zero-overhead claim.
