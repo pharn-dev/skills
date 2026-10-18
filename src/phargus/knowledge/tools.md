@@ -39,6 +39,9 @@ default that rules --max-events raises.
 Summarize and compare need no installed Phargus. doctor, collect, heap and rules load
 the target application's tested Phargus installation. Every result is JSON with
 schemaVersion: 1; logs/errors are stderr; execution failure has a nonzero exit code.
+Results go to stdout: when the user names a result file, redirect to exactly that path,
+resolving a relative name against the application directory. The .phargus/ paths above
+are capture locations, not result destinations.
 An inconclusive comparison is a valid result, not a command failure.
 
 Doctor lists script names and the known agent configuration fields, without echoing
