@@ -54,6 +54,11 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   200 req/s (12,000 spans) was truncated at 10,000 events and `compare` reported
   it as inconclusive. The skills now say how to raise the live-capture limit
   (#26).
+- `phargus` 0.1.1: `phargus-setup` and the tools reference say that a helper
+  result the person names, such as `tool-result.json`, is written to exactly
+  that path, a relative name resolving against the application directory, and
+  that `.phargus/` holds captures only. Before, the setup eval saved the
+  summarize result to `.phargus/tool-result.json` (#28).
 
 ## [phargus 0.1.0] - 2026-10-13
 
