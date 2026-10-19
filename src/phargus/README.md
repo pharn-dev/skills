@@ -87,7 +87,8 @@ node plugins/phargus/skills/phargus-diagnose/scripts/phargus.mjs capture --url h
 node plugins/phargus/skills/phargus-memory/scripts/phargus.mjs heap --project /path/to/app --before /captures/a.heapsnapshot --after /captures/b.heapsnapshot
 ```
 
-Commands emit JSON with schemaVersion: 1. SSE reads default to 30 seconds and 10,000
+Commands emit JSON with schemaVersion: 1 on stdout; redirect it to the result file you
+need, since .phargus/ holds captures, not results. SSE reads default to 30 seconds and 10,000
 events; summarize and compare read files without an event-count cap unless --max-events
 is given. Provide --token-env PHARGUS_DASHBOARD_TOKEN when authentication is enabled;
 tokens are never embedded in artifact URLs or reported configuration.
