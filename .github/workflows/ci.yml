@@ -70,9 +70,10 @@ jobs:
       run:
         working-directory: src/phargus
     steps:
+      # Full history only on the leg pharn-ci runs on; the other leg keeps a shallow clone.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          fetch-depth: ${{ matrix.node == '24' && '0' || '1' }}
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -85,7 +86,6 @@ jobs:
       - run: npm run check:skills
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm run test:coverage
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: pharn-dev/phargus
@@ -93,16 +93,26 @@ jobs:
           path: src/phargus/.cache/phargus-source
           persist-credentials: false
       - run: npm run prepare:integration -- --source .cache/phargus-source
-      - run: npm run test:integration
+      # Only the node-24 leg's coverage is read by pharn-ci, so only it pays for
+      # instrumentation; the other leg runs the same unit and integration tests uninstrumented.
+      - id: unit-tests
+        if: matrix.node == '24'
+        run: npm run test:coverage
+      - if: matrix.node != '24'
+        run: |
+          npm test
+          npm run test:integration
       - run: npm run check:package
       # pharn-ci needs this leg's coverage and the PR number; a fork PR's token here
       # cannot comment, so pharn-ci-comment.yml posts it from the default branch instead.
+      # `!cancelled()` (rather than a bare condition, which GitHub ANDs with success()) lets
+      # these still run after check:package fails, since the coverage above already succeeded.
       - name: Write PR number for pharn-ci
-        if: matrix.node == '24' && github.event_name == 'pull_request'
+        if: steps.unit-tests.outcome == 'success' && !cancelled() && matrix.node == '24' && github.event_name == 'pull_request'
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: echo "$PR_NUMBER" > pr-number
-      - if: matrix.node == '24' && github.event_name == 'pull_request'
+      - if: steps.unit-tests.outcome == 'success' && !cancelled() && matrix.node == '24' && github.event_name == 'pull_request'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pharn-ci-input
@@ -110,7 +120,7 @@ jobs:
             src/phargus/coverage/lcov.info
             src/phargus/pr-number
       - id: pharn-ci
-        if: matrix.node == '24' && github.event_name == 'pull_request'
+        if: steps.unit-tests.outcome == 'success' && !cancelled() && matrix.node == '24' && github.event_name == 'pull_request'
         uses: pharn-dev/pharn-ci@a88e62a8febf5cd9a77b8e0252cd060c3b94782c # v0.1.0
         timeout-minutes: 5
         with:

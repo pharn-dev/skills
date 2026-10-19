@@ -29,7 +29,7 @@
     "format": "prettier --write --config .prettierrc.json . ../../plugins/phargus",
     "format:check": "prettier --check --config .prettierrc.json . ../../plugins/phargus",
     "test": "node --test test/*.test.mjs",
-    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info test/*.test.mjs",
+    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-exclude='.cache/**' --test-coverage-exclude='test/**' --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info test/*.test.mjs test/integration/*.test.mjs",
     "test:integration": "node --test test/integration/*.test.mjs",
     "prepare:integration": "node scripts/prepare-integration.mjs",
     "eval": "node evals/run.mjs",
