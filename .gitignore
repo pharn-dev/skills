@@ -6,4 +6,5 @@ plugins/*/evals/results/
 src/*/.cache/
 src/*/dist/
 src/*/evals/results/
+src/*/coverage/
 .cache/
