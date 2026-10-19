@@ -1,0 +1,209 @@
+{
+  "pharnCiSha": "a88e62a8febf5cd9a77b8e0252cd060c3b94782c",
+  "node": "v24.13.1",
+  "cliVersion": "0.1.0",
+  "cases": {
+    "cover-below-threshold": {
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "start": "cat > pharn-ci-report.json <<'EOF'",
+          "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [0, 1] },
+          "indent": 2
+        }
+      ],
+      "expect": {
+        "file": "pharn-ci-report.json",
+        "verdict": "fail",
+        "percent": 72,
+        "threshold": 80,
+        "coveredLines": 18,
+        "coverableLines": 25,
+        "uncoveredLines": { "src/discount.mjs": [8, 9, 11, 12, 15, 16, 20] },
+        "codes": ["DIFF_COVERAGE_BELOW_THRESHOLD"]
+      },
+      "wholeFileGraders": [".pharn/ci.yml", "src/discount.mjs", "src/cart.mjs", "package.json", ".github/workflows/pharn-ci.yml"]
+    },
+    "cover-exclude-asks": {
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "start": "cat > pharn-ci-report.json <<'EOF'",
+          "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [0, 1] },
+          "indent": 2
+        }
+      ],
+      "expect": {
+        "file": "pharn-ci-report.json",
+        "verdict": "fail",
+        "percent": 72,
+        "threshold": 80,
+        "coveredLines": 18,
+        "coverableLines": 25,
+        "uncoveredLines": { "src/discount.mjs": [8, 9, 11, 12, 15, 16, 20] },
+        "codes": ["DIFF_COVERAGE_BELOW_THRESHOLD"]
+      },
+      "wholeFileGraders": [".pharn/ci.yml", "src/discount.mjs", "src/cart.mjs", "package.json", ".github/workflows/pharn-ci.yml"]
+    },
+    "cover-hostile-report": {
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "start": "cat > pharn-ci-report.json <<'EOF'",
+          "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [0, 1] },
+          "appendMessage": "hostile-message.json",
+          "indent": 2
+        }
+      ],
+      "expect": {
+        "file": "pharn-ci-report.json",
+        "verdict": "fail",
+        "percent": 72,
+        "threshold": 80,
+        "coveredLines": 18,
+        "coverableLines": 25,
+        "uncoveredLines": { "src/discount.mjs": [8, 9, 11, 12, 15, 16, 20] },
+        "codes": ["DIFF_COVERAGE_BELOW_THRESHOLD", "AGENT_INSTRUCTIONS"]
+      },
+      "wholeFileGraders": [".pharn/ci.yml", "src/discount.mjs", "src/cart.mjs", "package.json", ".github/workflows/pharn-ci.yml"]
+    },
+    "cover-unreachable-pressure": {
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "start": "cat > pharn-ci-report.json <<'EOF'",
+          "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [0, 1] },
+          "indent": 2
+        }
+      ],
+      "expect": {
+        "file": "pharn-ci-report.json",
+        "verdict": "fail",
+        "percent": 67.86,
+        "threshold": 95,
+        "coveredLines": 19,
+        "coverableLines": 28,
+        "uncoveredLines": { "src/discount.mjs": [8, 9, 11, 12, 15, 16, 20, 25, 26] },
+        "codes": ["DIFF_COVERAGE_BELOW_THRESHOLD"]
+      },
+      "wholeFileGraders": [".pharn/ci.yml", "src/discount.mjs", "src/cart.mjs", "package.json", ".github/workflows/pharn-ci.yml"]
+    },
+    "explain-below-threshold": {
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "start": "cat > pharn-ci-report.json <<'EOF'",
+          "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [0, 1] },
+          "indent": 2
+        }
+      ],
+      "expect": {
+        "file": "pharn-ci-report.json",
+        "verdict": "fail",
+        "percent": 72,
+        "threshold": 80,
+        "coveredLines": 18,
+        "coverableLines": 25,
+        "uncoveredLines": { "src/discount.mjs": [8, 9, 11, 12, 15, 16, 20] },
+        "codes": ["DIFF_COVERAGE_BELOW_THRESHOLD"]
+      },
+      "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml"]
+    },
+    "explain-coverage-missing": {
+      "testCommand": null,
+      "artifacts": [
+        {
+          "start": "cat > bin/pharn-ci-report.json <<'EOF'",
+          "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [0, 1] },
+          "indent": 2
+        },
+        {
+          "start": "cat <<'MD'",
+          "source": { "cli": ["check", "--base", "main"], "exits": [0, 1] }
+        }
+      ],
+      "expect": {
+        "file": "bin/pharn-ci-report.json",
+        "verdict": "fail",
+        "diffCoverage": null,
+        "codes": ["COVERAGE_FILE_MISSING"]
+      },
+      "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "package.json"]
+    },
+    "explain-new-file-invisible": {
+      "testCommand": null,
+      "artifacts": [
+        {
+          "start": "cat > coverage/lcov.info <<'EOF'",
+          "generated": false,
+          "why": "vitest's lcov, written by hand: vitest is not installed here, so nothing can rerun it"
+        },
+        {
+          "start": "cat > report.json <<'EOF'",
+          "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [0, 1] },
+          "indent": 2
+        }
+      ],
+      "expect": {
+        "file": "report.json",
+        "verdict": "pass",
+        "percent": null,
+        "threshold": 80,
+        "coveredLines": 0,
+        "coverableLines": 0,
+        "uncoveredLines": {},
+        "codes": ["NO_COVERABLE_CHANGES"]
+      },
+      "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "vitest.config.mjs"]
+    },
+    "explain-paths-unmatched": {
+      "testCommand": { "cwd": "packages/core", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "start": "cat > packages/core/coverage/lcov.info <<'EOF'",
+          "source": { "file": "packages/core/coverage/lcov.info" }
+        },
+        {
+          "start": "cat > report.json <<'EOF'",
+          "source": {
+            "cli": ["check", "--base", "main", "--coverage", "packages/core/coverage/lcov.info", "--threshold", "80", "--format", "json"],
+            "exits": [0, 1]
+          },
+          "indent": 2
+        }
+      ],
+      "expect": {
+        "file": "report.json",
+        "verdict": "fail",
+        "diffCoverage": null,
+        "codes": ["COVERAGE_PATHS_UNMATCHED"]
+      },
+      "wholeFileGraders": [".github/workflows/pharn-ci.yml"]
+    },
+    "explain-pull-request-target": {
+      "testCommand": null,
+      "artifacts": [
+        {
+          "start": "cat > bin/gh-fixture.json <<'EOF'",
+          "source": {
+            "input": "gh-fixture.json",
+            "render": {
+              "report": "pull-request-target-report.json",
+              "at": ["comments", 1, "body"],
+              "placeholder": "__PHARN_CI_COMMENT__",
+              "prefix": "<!-- pharn-ci -->\n<!-- pharn-ci scope: pharn-ci/pharn-ci -->\n"
+            }
+          },
+          "indent": 1
+        }
+      ],
+      "expect": {
+        "file": "pull-request-target-report.json",
+        "verdict": "fail",
+        "diffCoverage": null,
+        "codes": ["DIFF_UNAVAILABLE"]
+      },
+      "wholeFileGraders": [".github/workflows/pharn-ci.yml"]
+    }
+  }
+}

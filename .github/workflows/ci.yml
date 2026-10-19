@@ -27,6 +27,18 @@ jobs:
         run: claude plugin validate --strict plugins/pharn
       - name: Validate plugin phargus
         run: claude plugin validate --strict plugins/phargus
+      - name: Validate plugin pharn-ci
+        run: claude plugin validate --strict plugins/pharn-ci
+      - name: Test pharn-ci helper
+        run: node --test plugins/pharn-ci/tests/*.test.mjs
+      # Each pharn-ci skill carries its own copy of the report reference, and
+      # three eval cases carry copies of one scaffold. Keep them identical.
+      - name: Check shared pharn-ci files
+        run: |
+          cmp plugins/pharn-ci/skills/pharn-ci-explain/references/report.md plugins/pharn-ci/skills/pharn-ci-cover/references/report.md
+          for case in cover-exclude-asks explain-below-threshold; do
+            cmp plugins/pharn-ci/evals/cover-below-threshold/scaffold.sh "plugins/pharn-ci/evals/$case/scaffold.sh"
+          done
       # claude plugin eval only runs a scaffold inside its own case directory,
       # so these seven cases carry copies of one script. Keep them identical.
       - name: Check shared pharn eval scaffolds
@@ -81,3 +93,32 @@ jobs:
       - run: npm run prepare:integration -- --source .cache/phargus-source
       - run: npm run test:integration
       - run: npm run check:package
+
+  pharn-ci-fixtures:
+    name: pharn-ci fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: pharn-dev/pharn-ci
+          ref: a88e62a8febf5cd9a77b8e0252cd060c3b94782c # v0.1.0
+          path: .cache/pharn-ci-source
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.13.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: .cache/pharn-ci-source/package.json
+      - name: Test the fixture regen script
+        run: node --test plugins/pharn-ci/evals/fixtures/regen.test.mjs
+      - name: Build pharn-ci
+        working-directory: .cache/pharn-ci-source
+        run: pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build
+      # The eval scaffolds embed pharn-ci output and whole-file graders; regenerate them
+      # from the pinned pharn-ci and fail on any difference.
+      - name: Check pharn-ci eval fixtures
+        run: node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci .cache/pharn-ci-source

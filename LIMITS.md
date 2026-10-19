@@ -5,6 +5,7 @@
 | Plugin | Agent coverage | Tool contract and evidence |
 | ------ | -------------- | -------------------------- |
 | `pharn` | Claude Code; development instructions verified with 2.1.295. Codex behavior has not been verified. | The [skill](plugins/pharn/skills/pharn-cli/SKILL.md) targets PHARN CLI 0.10.0+ and describes a 0.9.x fallback. Its [evals](plugins/pharn/evals/) use a stub CLI, including 0.10.0-shaped output and an older text flow. They do not establish compatibility with every real CLI release. |
+| `pharn-ci` | Claude Code; not yet verified with recorded eval runs. Codex behavior has not been verified. | The [skills](plugins/pharn-ci/skills/) target pharn-ci 0.1.x and Report v1. Their [evals](plugins/pharn-ci/evals/) replay reports, comments and CLI output generated with the real pharn-ci 0.1.0 CLI and renderer, through stub `gh` and `pharn-ci` executables where a case needs them. They do not exercise a real GitHub API, a real Action run, or later pharn-ci releases. |
 | `phargus` | Targets Codex and Claude Code. No behavioral review is recorded for the current content; the 0.1.0 and predecessor reviews are archived as self-attested. See the [verification record](src/phargus/VERIFICATION.md). | The tested runtime release (tag and commit), the accepted package versions, and the minimum Node version are in [compatibility.json](src/phargus/compatibility.json). CI targets Node 22.18.0 and 24. |
 
 The runtime is `@pharn-dev/phargus`, published on npm. The skills are tested against
@@ -45,6 +46,25 @@ system, and application configuration determine what commands, files, and
 network endpoints it can access. The sandbox recorded for an eval is not
 automatically installed as a user's security policy. See
 [THREAT-MODEL.md](THREAT-MODEL.md) for the boundaries.
+
+`pharn-ci-cover`'s [check-lines helper](plugins/pharn-ci/skills/pharn-ci-cover/scripts/check-lines.mjs)
+re-checks the lines a report listed as uncovered against a fresh coverage
+report. With `--base`, it reads `git diff <base>...HEAD` the way pharn-ci 0.1.0
+does and recomputes the estimate from the added lines, so lines that lost
+coverage and files a test now loads are counted. Without `--base`, or when git
+cannot run, it assumes every line the report counted as covered still is.
+Exclusion patterns are not known to it, only the files the report already
+excluded, and its Cobertura source resolution is a simplified form of
+pharn-ci's. On `pull_request`, CI measures the merge commit: when the base
+changed a listed file after the branch point, CI's line numbers can differ from
+the checkout, which the helper reports (`base.changedFiles`) but cannot
+correct. The CI run's verdict decides. On macOS the eval sandbox cannot run
+`/usr/bin/git`, so eval runs there exercise only the helper's no-git path; the
+`--base` path is covered by its unit tests.
+The pharn-ci CLI is not on npm in 0.1.x, so the skills use a CLI only when the
+person has one; otherwise they read the report, the PR comment (which cuts long
+lists) or the job log. A single-plugin eval run cannot check that a pharn-ci
+question is routed away from the `pharn` plugin's `pharn-cli` skill.
 
 Phargus conclusions are limited by the available evidence. Collector windows and
 SSE omit some raw metrics; missing data and unknown loss remain unknown.

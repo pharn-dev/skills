@@ -6,3 +6,4 @@ plugins/*/evals/results/
 src/*/.cache/
 src/*/dist/
 src/*/evals/results/
+.cache/

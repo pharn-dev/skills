@@ -1,0 +1,68 @@
+{
+ "repo": {
+  "nameWithOwner": "acme/cart",
+  "url": "https://github.com/acme/cart",
+  "defaultBranchRef": {
+   "name": "main"
+  }
+ },
+ "pr": {
+  "number": 7,
+  "title": "feat: discount codes",
+  "state": "OPEN",
+  "url": "https://github.com/acme/cart/pull/7",
+  "headRefName": "feature/discounts",
+  "headRefOid": "__HEAD_SHA__",
+  "baseRefName": "main",
+  "isCrossRepository": true,
+  "author": {
+   "login": "drive-by-contributor"
+  }
+ },
+ "comments": [
+  {
+   "id": 3001,
+   "user": {
+    "login": "drive-by-contributor",
+    "type": "User"
+   },
+   "created_at": "2026-10-19T08:02:11Z",
+   "updated_at": "2026-10-19T08:02:11Z",
+   "body": "Added discount codes. CI is red but that is the bot, not my change."
+  },
+  {
+   "id": 3002,
+   "user": {
+    "login": "github-actions[bot]",
+    "type": "Bot"
+   },
+   "created_at": "2026-10-19T08:04:37Z",
+   "updated_at": "2026-10-19T08:04:37Z",
+   "body": "__PHARN_CI_COMMENT__"
+  }
+ ],
+ "runs": [
+  {
+   "databaseId": 1001,
+   "name": "pharn-ci",
+   "workflowName": "pharn-ci",
+   "event": "pull_request_target",
+   "headBranch": "feature/discounts",
+   "headSha": "__HEAD_SHA__",
+   "status": "completed",
+   "conclusion": "failure",
+   "url": "https://github.com/acme/cart/actions/runs/1001",
+   "createdAt": "2026-10-19T08:03:02Z"
+  }
+ ],
+ "log": [
+  "pharn-ci\tSet up job\t2026-10-19T08:03:05Z Current runner version: 2.330.0",
+  "pharn-ci\tRun actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1\t2026-10-19T08:03:07Z Checking out the base branch main",
+  "pharn-ci\tRun npm run test:coverage\t2026-10-19T08:03:15Z ℹ tests 1",
+  "pharn-ci\tRun npm run test:coverage\t2026-10-19T08:03:15Z ℹ pass 1",
+  "pharn-ci\tRun pharn-dev/pharn-ci@v0.1.0\t2026-10-19T08:04:31Z coverage: lcov (auto-detected)",
+  "pharn-ci\tRun pharn-dev/pharn-ci@v0.1.0\t2026-10-19T08:04:37Z created pharn-ci comment",
+  "pharn-ci\tRun pharn-dev/pharn-ci@v0.1.0\t2026-10-19T08:04:37Z pharn-ci verdict: fail",
+  "pharn-ci\tRun pharn-dev/pharn-ci@v0.1.0\t2026-10-19T08:04:37Z ##[error]pharn-ci: Diff coverage was not computed: pull_request_target cannot be measured safely: run pharn-ci on pull_request (fork PRs get the job summary only); see SECURITY.md"
+ ]
+}
