@@ -13,6 +13,20 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Added
 
+- `pharn-ci` 0.1.0, a new plugin for the pharn-ci pull request check
+  (`pharn-dev/pharn-ci` Action and `pharn-ci check` CLI 0.1.x, Report v1), not
+  released yet. `pharn-ci-explain` explains a verdict and each message code
+  from the report, the sticky PR comment or the job log, finds the cause in the
+  repository and proposes the fix, read-only unless asked. `pharn-ci-cover`
+  writes tests for the added lines the report lists as uncovered, re-checks
+  them with the bundled `scripts/check-lines.mjs` (Node core, lcov and
+  Cobertura), and never moves the gate: no threshold, exclusion, config,
+  workflow, coverage-ignore or production-code change without the person's
+  explicit confirmation. Nine evals (five for explain, four for cover) run
+  against fixtures generated with the real pharn-ci 0.1.0 CLI and renderer,
+  with stub `gh` and `pharn-ci` CLIs where a case needs them. CI runs the
+  helper's unit tests and checks the shared copies of the report reference and
+  the eval scaffold.
 - `pharn` evals: `add-refused-behind`, `remove-by-name`, `cli-missing-asks`,
   `hostile-output` and `status-strict` cover `pharn add` refused on a behind
   install, `pharn remove <name>`, asking before an `npx` download when no CLI

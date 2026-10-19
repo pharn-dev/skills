@@ -15,6 +15,13 @@ access. An incorrect instruction or prompt injection can influence those actions
 starts with read-only checks and an update preview, distinguishes edited files,
 and requires explicit intent before forcing an overwrite. Its
 [evals](plugins/pharn/evals/) check both desired actions and forbidden actions.
+The [pharn-ci skills](plugins/pharn-ci/skills/) treat report paths, message
+text, PR comments, job logs and artifacts as data from the change under review,
+keep `pharn-ci-explain` read-only unless asked, and limit `pharn-ci-cover` to
+test files: the gate (threshold, exclusions, config, workflow, coverage-ignore
+comments, production code) changes only after the person's explicit
+confirmation. Their evals include a report and a file name that carry
+instructions, and a request to "do whatever it takes".
 Phargus's [data guidance](src/phargus/knowledge/data.md) treats request paths, stack
 strings, object names, and finding messages as evidence rather than instructions.
 
@@ -41,6 +48,24 @@ attestation. Helpers are not a sandbox for application dependencies. Phargus dia
 rules have a separate [isolated-vm execution contract](src/phargus/knowledge/rules.md);
 a missing peer, compile error, timeout, or failed execution must remain a failure.
 That sandbox does not cover all helper commands.
+
+## pharn-ci reports and coverage files
+
+**Boundary:** `pharn-ci-cover`'s helper reads a pharn-ci report and coverage
+files, both of which the pull request under review can shape (on a fork PR, an
+uploaded artifact is fully attacker-controlled), and runs git in the person's
+repository.
+
+**Existing safeguards:** the [helper](plugins/pharn-ci/skills/pharn-ci-cover/scripts/check-lines.mjs)
+uses Node core only, validates the report's shape, parses lcov and Cobertura
+without evaluating them (no DTD or entity expansion beyond the five predefined
+and numeric references), runs only `git rev-parse`, `git ls-files` and
+`git status` without a shell and with `--literal-pathspecs`, writes nothing, and
+prints paths only as JSON. Its [unit tests](plugins/pharn-ci/tests/) run in CI.
+
+**Limit:** the helper's estimate is only as honest as the coverage file it
+reads. It does not detect a forged or hand-edited coverage report, and it reads
+whole files into memory, so a very large hostile file can exhaust it.
 
 ## Diagnostic input, output, and application availability
 

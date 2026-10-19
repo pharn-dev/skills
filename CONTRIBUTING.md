@@ -13,8 +13,9 @@ security claims, read [LIMITS.md](LIMITS.md) and [THREAT-MODEL.md](THREAT-MODEL.
 
 ## Rules
 
-- **One plugin per product.** `plugins/pharn` holds skills for PHARN and
-  `plugins/phargus` holds skills for Phargus; another tool gets its own plugin and
+- **One plugin per product.** `plugins/pharn` holds skills for PHARN,
+  `plugins/pharn-ci` holds skills for pharn-ci and `plugins/phargus` holds skills
+  for Phargus; another tool gets its own plugin and
   its own marketplace entry. The marketplaces in `.claude-plugin/` and
   `.agents/plugins/` are maintained by hand.
 - **Generated plugins keep their sources in `src/<plugin>/`.** For `phargus`,
@@ -35,7 +36,9 @@ Pull requests must pass the checks below. The first four run in
 `.github/workflows/ci.yml`; Socket reports through its installed integration:
 
 - **Validate**: `claude plugin validate --strict` on the marketplace and on
-  each plugin.
+  each plugin, the `pharn-ci-cover` helper's unit tests
+  (`node --test plugins/pharn-ci/tests/*.test.mjs`), and the identical copies of
+  shared eval scaffolds and of the pharn-ci report reference.
 - **Markdown lint**: `markdownlint-cli2` over all Markdown files.
 - **Phargus** (Node 22.18.0 and 24): formatting, generated files, skill
   metadata, lint, typecheck, unit tests, integration tests against the pinned
@@ -76,6 +79,22 @@ download; run it on a machine without `pharn` on `PATH` or a cached
 `@pharn-dev/pharn` that `npx --no-install` could find. Cases sharing one stub
 carry identical copies of its `scaffold.sh`, and CI checks that they match.
 
+```bash
+claude plugin eval plugins/pharn-ci --scaffold --allow-tools Bash Edit Write --trust-plugin --no-publish
+```
+
+Each `pharn-ci` eval case builds a small git repository with a pull request
+branch. Reports, PR comments and CLI output in the scaffolds were generated
+with the real pharn-ci 0.1.0 CLI and renderer for that exact tree, so line
+numbers and message texts match; regenerate them when a case's tree or the
+targeted pharn-ci version changes. Cases that need GitHub or a local CLI carry
+a stub `gh` or `pharn-ci` in `./bin` that logs its calls and refuses writes.
+The `pharn-ci-cover` cases run the fixture's tests on Node's own test runner,
+so they need Node 22 or later and no network; `Edit` and `Write` are granted so
+the graders can check which files were and were not changed.
+`cover-below-threshold`, `cover-exclude-asks` and `explain-below-threshold`
+share one scaffold, and CI checks that the copies match.
+
 `phargus` evals run in Codex and in Claude Code from `src/phargus`
 (`npm run eval`, then `npm run review:evals` per trial, then
 `npm run check:evals`); see
@@ -84,13 +103,13 @@ carry identical copies of its `scaffold.sh`, and CI checks that they match.
 ## Releasing
 
 Each plugin is versioned and released on its own; tags are `<plugin>-vX.Y.Z`
-(for example `pharn-v0.3.1`, `phargus-v0.1.0`).
+(for example `pharn-v0.3.1`, `pharn-ci-v0.1.0`, `phargus-v0.1.0`).
 
 1. In the PR that ships the change, bump the plugin's version and add its
    section to [CHANGELOG.md](CHANGELOG.md), headed `## [<plugin> X.Y.Z] - <date>`
    with a link reference to the tag. For `phargus`, bump `version` in
    `src/phargus/catalog.json` and `package.json`, then run `npm run build`; for
-   `pharn`, edit `plugins/pharn/.claude-plugin/plugin.json`.
+   `pharn` or `pharn-ci`, edit its `.claude-plugin/plugin.json`.
 2. For `phargus`, before the release:
    1. `npm run prepare:integration`, then `npm run eval` for all sixteen trials.
       The runner writes the trials to `VERIFICATION.json` and redacted evidence

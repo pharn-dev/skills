@@ -5,13 +5,18 @@
     "url": "https://github.com/pharn-dev"
   },
   "metadata": {
-    "description": "Skills for PHARN, which gets features shipped right with Claude Code, and for Phargus."
+    "description": "Skills for PHARN, which gets features shipped right with Claude Code, for pharn-ci and for Phargus."
   },
   "plugins": [
     {
       "name": "pharn",
       "source": "./plugins/pharn",
       "description": "Skills for keeping PHARN, which gets features shipped right with Claude Code, current in a project."
+    },
+    {
+      "name": "pharn-ci",
+      "source": "./plugins/pharn-ci",
+      "description": "Skills for pharn-ci, the pull request check for diff coverage and agent setup files: explain a verdict, and cover the added lines it reports as untested."
     },
     {
       "name": "phargus",
