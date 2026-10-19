@@ -29,16 +29,17 @@ jobs:
         run: claude plugin validate --strict plugins/phargus
       - name: Validate plugin pharn-ci
         run: claude plugin validate --strict plugins/pharn-ci
-      - name: Test pharn-ci helper
+      - name: Test pharn-ci helpers
         run: node --test plugins/pharn-ci/tests/*.test.mjs
       # Each pharn-ci skill carries its own copy of the report reference, and
-      # three eval cases carry copies of one scaffold. Keep them identical.
+      # eval cases carry copies of shared scaffolds. Keep them identical.
       - name: Check shared pharn-ci files
         run: |
           cmp plugins/pharn-ci/skills/pharn-ci-explain/references/report.md plugins/pharn-ci/skills/pharn-ci-cover/references/report.md
           for case in cover-exclude-asks explain-below-threshold; do
             cmp plugins/pharn-ci/evals/cover-below-threshold/scaffold.sh "plugins/pharn-ci/evals/$case/scaffold.sh"
           done
+          cmp plugins/pharn-ci/evals/install-node-default/scaffold.sh plugins/pharn-ci/evals/install-fork-comments/scaffold.sh
       # claude plugin eval only runs a scaffold inside its own case directory,
       # so these seven cases carry copies of one script. Keep them identical.
       - name: Check shared pharn eval scaffolds

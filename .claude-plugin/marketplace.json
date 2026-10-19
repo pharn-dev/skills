@@ -16,7 +16,7 @@
     {
       "name": "pharn-ci",
       "source": "./plugins/pharn-ci",
-      "description": "Skills for pharn-ci, the pull request check for diff coverage and agent setup files: explain a verdict, and cover the added lines it reports as untested."
+      "description": "Skills for pharn-ci, the pull request check for diff coverage and agent setup files: add it to a repository, explain a verdict, and cover the added lines it reports as untested."
     },
     {
       "name": "phargus",

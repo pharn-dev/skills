@@ -15,12 +15,22 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 - `pharn-ci` 0.1.0, a new plugin for the pharn-ci pull request check
   (`pharn-dev/pharn-ci` Action and `pharn-ci check` CLI 0.1.x, Report v1), not
-  released yet. `pharn-ci-explain` explains a verdict and each message code
-  from the report, the sticky PR comment or the job log, finds the cause in the
-  repository and proposes the fix, read-only unless asked. `pharn-ci-cover`
+  released yet. `pharn-ci-install` adds pharn-ci to a repository: it turns on
+  lcov or Cobertura output with the project's own runner, runs it and checks
+  the result with the bundled `scripts/check-coverage.mjs` the way pharn-ci
+  reads it (auto-discovery, format, paths matched to tracked files, the
+  coverage root they look relative to), writes `.pharn/ci.yml` (threshold 80
+  when none is named) and a workflow pinned to the v0.1.0 release commit, or
+  extends an existing test job without running the tests twice, and for fork
+  PRs writes the two-workflow `workflow_run` pattern; it never uses
+  `pull_request_target`, installs nothing without asking and commits nothing.
+  `pharn-ci-explain` explains a verdict and each message code from the report,
+  the sticky PR comment or the job log, finds the cause in the repository and
+  proposes the fix, read-only unless asked. `pharn-ci-cover`
   writes tests for the added lines the report lists as uncovered, re-checks
   them with the bundled `scripts/check-lines.mjs` (Node core, lcov and
-  Cobertura), and never moves the gate: no threshold, exclusion, config,
+  Cobertura, read with code ported from pharn-ci 0.1.0 and shared with the
+  install helper), and never moves the gate: no threshold, exclusion, config,
   workflow, coverage-ignore or production-code change without the person's
   explicit confirmation. With `--base`, the helper reads `git diff
   <base>...HEAD` the way pharn-ci does, recomputes the estimate, finds lines
@@ -28,13 +38,14 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   numbers CI took from the merge commit). Git errors other than a missing or
   sandbox-blocked git are errors, report paths outside the repository never
   reach git, and without git it finds the repository from its `.git` entry.
-  Nine evals (five for explain, four for cover) run against fixtures generated
-  with the real pharn-ci 0.1.0 CLI and renderer, with stub `gh` and `pharn-ci`
-  CLIs where a case needs them; their gate graders compare whole files, so a
-  change made through any tool is caught. `evals/fixtures/regen.mjs`
+  Fourteen evals (five for install, five for explain, four for cover) run
+  against fixtures generated with the real pharn-ci 0.1.0 CLI and renderer,
+  with stub `gh` and `pharn-ci` CLIs where a case needs them; their gate
+  graders compare whole files, so a change made through any tool is caught. `evals/fixtures/regen.mjs`
   regenerates the fixtures from a pharn-ci checkout, and a CI job checks them
-  against pharn-ci v0.1.0. CI also runs the helper's unit tests and checks the
-  shared copies of the report reference and the eval scaffold.
+  against pharn-ci v0.1.0, including the install skill's pins and its helper's
+  agreement with the CLI. CI also runs the helpers' unit tests and checks the
+  shared copies of the report reference and the eval scaffolds.
 - `pharn` evals: `add-refused-behind`, `remove-by-name`, `cli-missing-asks`,
   `hostile-output` and `status-strict` cover `pharn add` refused on a behind
   install, `pharn remove <name>`, asking before an `npx` download when no CLI
