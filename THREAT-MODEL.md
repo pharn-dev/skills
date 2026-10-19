@@ -59,9 +59,14 @@ repository.
 **Existing safeguards:** the [helper](plugins/pharn-ci/skills/pharn-ci-cover/scripts/check-lines.mjs)
 uses Node core only, validates the report's shape, parses lcov and Cobertura
 without evaluating them (no DTD or entity expansion beyond the five predefined
-and numeric references), runs only `git rev-parse`, `git ls-files` and
-`git status` without a shell and with `--literal-pathspecs`, writes nothing, and
-prints paths only as JSON. Its [unit tests](plugins/pharn-ci/tests/) run in CI.
+and numeric references), runs only `git rev-parse`, `git ls-files`,
+`git status` and, with `--base`, `git rev-parse --verify` and two `git diff`
+calls, all without a shell, with `--literal-pathspecs`, with `--end-of-options`
+or after `--`, and with a `--base` value starting with `-` refused. Report paths
+that are absolute, contain `..` or a NUL byte never reach git. When git cannot
+run it finds the repository by walking up to a `.git` entry and checks files on
+disk instead. It writes nothing and prints paths only as JSON. Its
+[unit tests](plugins/pharn-ci/tests/) run in CI.
 
 **Limit:** the helper's estimate is only as honest as the coverage file it
 reads. It does not detect a forged or hand-edited coverage report, and it reads

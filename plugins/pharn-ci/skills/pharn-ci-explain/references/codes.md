@@ -35,11 +35,14 @@ config-only changes. Otherwise check, in order:
   imports is often absent from the report altogether; it then adds nothing to
   the denominator instead of counting as 0%. Compare the changed files
   (`git diff --name-only <base>...HEAD`) with the report's `SF:` lines (lcov)
-  or `filename` attributes (Cobertura). The fix is in the coverage tool, so
-  that it includes all sources: vitest `coverage.include` (and `all` on
-  older versions), jest `collectCoverageFrom`, pytest-cov `--cov=<package>`
-  or `source` in `.coveragerc`, Node's test runner
-  `--test-coverage-include`.
+  or `filename` attributes (Cobertura). The fix is a test that loads the
+  file, or a coverage tool set to include all sources: vitest
+  `coverage.include` (and `all` on older versions), jest
+  `collectCoverageFrom`, pytest-cov `--cov=<package>` or `source` in
+  `.coveragerc`. Node's own test runner reports only files a test loaded, and
+  `--test-coverage-include` only filters those, so it cannot list an untested
+  file; run the tests under c8 with `--all --include 'src/**'` for that, and
+  ask before installing c8.
 - **Every changed file excluded.** `diffCoverage.excludedFiles` lists them.
 - **Only non-instrumented lines changed** (types, comments, declarations).
 

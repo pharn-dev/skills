@@ -1,6 +1,6 @@
 ---
 name: pharn-ci-cover
-description: Write tests for the added lines that a pharn-ci report (the pharn-dev/pharn-ci GitHub Action or the `pharn-ci check` CLI, 0.1.x, Report v1) lists as uncovered, so a pull request's diff coverage meets its threshold. Use when pharn-ci fails with DIFF_COVERAGE_BELOW_THRESHOLD, or the person asks to cover the lines pharn-ci reports, raise diff coverage, or get the pharn-ci coverage check passing. Adds tests only - never lowers the threshold, excludes files, edits the pharn-ci config or workflow, or adds coverage-ignore comments. Not for the PHARN CLI (pharn-cli).
+description: Write tests for the added lines that a pharn-ci report (the pharn-dev/pharn-ci GitHub Action or the `pharn-ci check` CLI, 0.1.x, Report v1) lists as uncovered, so a pull request's diff coverage meets its threshold. Use when pharn-ci fails with DIFF_COVERAGE_BELOW_THRESHOLD, or the person asks to cover the lines pharn-ci reports, raise diff coverage, get the pharn-ci coverage check passing, or exclude a file from, lower or switch off the pharn-ci coverage gate (it explains what that changes and asks first). Adds tests only - never lowers the threshold, excludes files, edits the pharn-ci config or workflow, or adds coverage-ignore comments. Not for the PHARN CLI (pharn-cli).
 compatibility: Node.js >=22 for scripts/check-lines.mjs; git; the project's own test runner.
 ---
 
@@ -36,8 +36,22 @@ uncovered lines: the JSON, or a comment whose table is not cut (`…and N more`)
   HEAD` with the PR head (`gh pr view <pr> --json headRefOid`) when you can,
   and run `git status --short` on the listed files. If they differ, the line
   numbers may not match: say so and stop.
-- See the added lines with `git diff --unified=0 <base>...HEAD -- <file>`,
-  where `<base>` is the PR's base branch.
+- Know the base the CI run diffed against: the PR's base branch on
+  `pull_request` (CI measured the merge commit), the previous commit on
+  `push`. Pass it as `--base` to the helper (step 4) from the start: before
+  you write any test, run it on the report and the coverage file CI used, or
+  a fresh run of the unchanged suite, and read:
+  - `lines.notAdded` not empty and `base.changedFiles` empty: the listed lines
+    are not added lines in this checkout, so this is not the commit the report
+    measured. Say so and stop.
+  - `base.changedFiles` not empty: the base changed those files after the
+    branch point, so CI's line numbers for them (taken from the merge commit)
+    may be shifted here. Say so, prefer a local `pharn-ci check` for the real
+    numbers, and suggest re-running CI after the tests land.
+  - `null` in those fields: they were not checked (git could not run). Say
+    so, give the person `git diff --name-only HEAD...origin/<base> --
+    <files>` to run, and carry on.
+- See the added lines with `git diff --unified=0 <base>...HEAD -- <file>`.
 
 ## 2. Plan
 
@@ -78,14 +92,25 @@ Follow [references/tests.md](references/tests.md):
     <base>` with the workflow's settings. That is pharn-ci's own number.
   - **Otherwise**, save the report as JSON and run
     `node <skill-dir>/scripts/check-lines.mjs --report <report.json>
-    --coverage <coverage file> [--coverage <file>]... [--coverage-root <dir>]`
-    from the repository. It prints one JSON object: `lines.nowCovered`,
-    `lines.stillUncovered` and `lines.notInCoverage` per file,
-    `sourcesChanged` (listed files that differ from `HEAD`; should be empty,
-    since you changed only tests) and `estimate` (covered, coverable, percent,
-    `meetsThreshold`). It is an estimate: the CI run decides. When git cannot
-    run in your environment it still works, prints `"git": false` with a
-    note, and cannot check `sourcesChanged`; say so in your answer.
+    --coverage <coverage file> [--coverage <file>]... --base <base>
+    [--coverage-root <dir>]` from the repository. It prints one JSON object:
+    - `lines.nowCovered`, `lines.stillUncovered` and `lines.notInCoverage`:
+      the listed lines, per file;
+    - `lines.regressed`: added lines the report counted as covered that the
+      new run no longer covers. Lost coverage: find which change caused it
+      and fix the tests, never the gate;
+    - `lines.notAdded` and `base.changedFiles`: read as in step 1;
+    - `coverableMismatch`: files whose coverable line count differs from the
+      report's (a file a test now loads, a different tool version);
+    - `sourcesChanged`: listed files that differ from `HEAD`; should be empty,
+      since you changed only tests;
+    - `estimate`: covered, coverable, percent and `meetsThreshold`. With
+      `--base` (`basis: "added-lines"`) it is recomputed from the diff the way
+      pharn-ci does; without it (`"listed-lines"`) it assumes every line the
+      report counted as covered still is. Either way the CI run decides.
+    When git cannot run in your environment the helper still works, prints
+    `"git": false` with a note, and leaves the checks that need git `null`;
+    say so in your answer.
   - `notInCoverage` means the new report has no record for that line: the
     file is not loaded by the tests, the paths need a coverage root, or the
     line numbers moved.
@@ -99,7 +124,9 @@ Your answer names:
 - per file, the lines now covered and the lines still uncovered, with the
   reason for each line left;
 - the new diff coverage against the threshold, and whether it came from
-  `pharn-ci check` or the helper's estimate;
+  `pharn-ci check` or the helper's estimate (and its `basis`);
+- any `regressed` lines, `base.changedFiles` and the checks that came back
+  `null`;
 - the test command you ran and its result;
 - `git status --short`. Do not commit.
 

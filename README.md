@@ -281,6 +281,9 @@ claude plugin validate --strict plugins/pharn-ci
 # test the pharn-ci-cover helper
 node --test plugins/pharn-ci/tests/*.test.mjs
 
+# check the pharn-ci eval fixtures against a built pharn-ci checkout
+node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci ../pharn-ci
+
 # lint Markdown
 npx markdownlint-cli2 "**/*.md"
 

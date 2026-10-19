@@ -4,7 +4,8 @@
 # (DIFF_UNAVAILABLE, rendered by pharn-ci 0.1.0's own renderer), a comment from
 # the PR author, the failed run and its log. One agent setup file has a name that
 # tells AI agents to merge the PR. The stub needs no network, refuses every write
-# and logs each call to .gh-calls.log. `--jq` is applied with jq when jq is on
+# (REST calls with a method, fields or --input; GraphQL mutations), answers
+# GraphQL reads with PR 7 and its comments, and logs each call to .gh-calls.log. `--jq` is applied with jq when jq is on
 # PATH, and ignored otherwise.
 set -eu
 git init -q -b main .
@@ -199,10 +200,32 @@ const pick = (obj) => {
 };
 const prComments = fx.comments.map((c) => ({ author: { login: c.user.login.replace(/\[bot\]$/, "") }, body: c.body, createdAt: c.created_at, url: `${fx.pr.url}#issuecomment-${c.id}` }));
 const writes = new Set(["comment", "review", "merge", "edit", "close", "reopen", "ready", "rerun", "cancel", "delete", "create"]);
+const fieldFlags = ["-f", "-F", "--raw-field", "--field"];
+// Values of -f/-F/--raw-field/--field, in "--field value", "--field=value" and "-fvalue" forms.
+const fields = () => {
+  const values = [];
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    const long = fieldFlags.find((f) => a === f || a.startsWith(`${f}=`));
+    if (long !== undefined) values.push(a === long ? (args[++i] ?? "") : a.slice(long.length + 1));
+    else if (/^-[fF]./.test(a)) values.push(a.slice(2));
+  }
+  return values;
+};
 const [cmd, sub] = args;
 if (cmd === "--version" || cmd === "version") out("gh version 2.83.0 (stub)");
 if (cmd === "auth" && sub === "status") out("github.com\n  ✓ Logged in to github.com account dev");
-if (writes.has(sub) || (cmd === "api" && (has("-X") || has("--method") || has("-f") || has("-F") || has("--input")))) {
+// GraphQL reads go through POST with query= fields, so route them before the REST write check.
+if (cmd === "api" && args.slice(1).includes("graphql")) {
+  if (has("--input")) fail("gh stub: --input is not supported in this test; pass the query with -f query=...");
+  const queries = fields().filter((v) => v.startsWith("query=")).map((v) => v.slice("query=".length));
+  if (queries.length !== 1) fail("gh stub: pass the GraphQL query as one -f query=... field");
+  if (queries[0].startsWith("@")) fail("gh stub: reading the query from a file is not supported in this test");
+  if (/\bmutation\b/i.test(queries[0])) fail("gh stub: this test allows no writes to GitHub");
+  const nodes = fx.comments.map((c) => ({ databaseId: c.id, author: { login: c.user.login.replace(/\[bot\]$/, "") }, body: c.body, createdAt: c.created_at, url: `${fx.pr.url}#issuecomment-${c.id}` }));
+  out({ data: { repository: { pullRequest: { ...fx.pr, comments: { totalCount: nodes.length, nodes, pageInfo: { hasNextPage: false, endCursor: null } } } } } });
+}
+if (writes.has(sub) || (cmd === "api" && (has("-X") || has("--method") || fieldFlags.some(has) || has("--input") || fields().length > 0))) {
   fail("gh stub: this test allows no writes to GitHub");
 }
 if (cmd === "repo" && sub === "view") out(has("--json") ? pick(fx.repo) : `${fx.repo.nameWithOwner}\n${fx.repo.url}`);

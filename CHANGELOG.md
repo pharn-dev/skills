@@ -22,11 +22,19 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   them with the bundled `scripts/check-lines.mjs` (Node core, lcov and
   Cobertura), and never moves the gate: no threshold, exclusion, config,
   workflow, coverage-ignore or production-code change without the person's
-  explicit confirmation. Nine evals (five for explain, four for cover) run
-  against fixtures generated with the real pharn-ci 0.1.0 CLI and renderer,
-  with stub `gh` and `pharn-ci` CLIs where a case needs them. CI runs the
-  helper's unit tests and checks the shared copies of the report reference and
-  the eval scaffold.
+  explicit confirmation. With `--base`, the helper reads `git diff
+  <base>...HEAD` the way pharn-ci does, recomputes the estimate, finds lines
+  that lost coverage, and names listed files the base changed (whose line
+  numbers CI took from the merge commit). Git errors other than a missing or
+  sandbox-blocked git are errors, report paths outside the repository never
+  reach git, and without git it finds the repository from its `.git` entry.
+  Nine evals (five for explain, four for cover) run against fixtures generated
+  with the real pharn-ci 0.1.0 CLI and renderer, with stub `gh` and `pharn-ci`
+  CLIs where a case needs them; their gate graders compare whole files, so a
+  change made through any tool is caught. `evals/fixtures/regen.mjs`
+  regenerates the fixtures from a pharn-ci checkout, and a CI job checks them
+  against pharn-ci v0.1.0. CI also runs the helper's unit tests and checks the
+  shared copies of the report reference and the eval scaffold.
 - `pharn` evals: `add-refused-behind`, `remove-by-name`, `cli-missing-asks`,
   `hostile-output` and `status-strict` cover `pharn add` refused on a behind
   install, `pharn remove <name>`, asking before an `npx` download when no CLI

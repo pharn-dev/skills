@@ -48,11 +48,19 @@ automatically installed as a user's security policy. See
 [THREAT-MODEL.md](THREAT-MODEL.md) for the boundaries.
 
 `pharn-ci-cover`'s [check-lines helper](plugins/pharn-ci/skills/pharn-ci-cover/scripts/check-lines.mjs)
-re-checks only the lines a report listed as uncovered against a fresh coverage
-report, and estimates the new diff coverage on the report's own denominator. It
-does not re-run pharn-ci: changed production lines, newly coverable test files
-and differences in path mapping are not reflected, and its Cobertura source
-resolution is a simplified form of pharn-ci's. The CI run's verdict decides.
+re-checks the lines a report listed as uncovered against a fresh coverage
+report. With `--base`, it reads `git diff <base>...HEAD` the way pharn-ci 0.1.0
+does and recomputes the estimate from the added lines, so lines that lost
+coverage and files a test now loads are counted. Without `--base`, or when git
+cannot run, it assumes every line the report counted as covered still is.
+Exclusion patterns are not known to it, only the files the report already
+excluded, and its Cobertura source resolution is a simplified form of
+pharn-ci's. On `pull_request`, CI measures the merge commit: when the base
+changed a listed file after the branch point, CI's line numbers can differ from
+the checkout, which the helper reports (`base.changedFiles`) but cannot
+correct. The CI run's verdict decides. On macOS the eval sandbox cannot run
+`/usr/bin/git`, so eval runs there exercise only the helper's no-git path; the
+`--base` path is covered by its unit tests.
 The pharn-ci CLI is not on npm in 0.1.x, so the skills use a CLI only when the
 person has one; otherwise they read the report, the PR comment (which cuts long
 lists) or the job log. A single-plugin eval run cannot check that a pharn-ci

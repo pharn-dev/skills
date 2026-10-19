@@ -55,6 +55,14 @@ rendering that drops detail.
    - **Which commit.** Compare `gh pr view <pr> --json headRefOid` with
      `git rev-parse HEAD`. A report for another commit can list line numbers
      that no longer match the checkout; say so before relying on them.
+   - **Merge commits.** On `pull_request`, CI measures the PR merged into its
+     base, so its line numbers come from the merged file. When the base
+     changed a listed file after the branch point, they can differ from this
+     checkout even with matching head SHAs. Check with
+     `git diff --name-only HEAD...origin/<base> -- <files>`: any file it
+     prints may be shifted. A local `pharn-ci check` measures this checkout and
+     is authoritative for it. The local base ref can be stale; `git fetch`
+     downloads, so ask before running it.
 
 ## Reading the comment when there is no JSON
 

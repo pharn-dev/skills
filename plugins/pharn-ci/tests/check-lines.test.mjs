@@ -1,25 +1,33 @@
-// Tests for skills/pharn-ci-cover/scripts/check-lines.mjs. Run: node --test plugins/pharn-ci/tests/
+// Tests for skills/pharn-ci-cover/scripts/check-lines.mjs. Run: node --test plugins/pharn-ci/tests/*.test.mjs
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
+  atLeast,
   compare,
   detectFormat,
-  displayPercent,
+  estimateOf,
+  findGitRoot,
+  gitCannotRun,
+  isSafeRepoPath,
   parseCli,
   parseCobertura,
   parseLcov,
+  parseStatusZ,
+  parseUnifiedDiff,
+  percentOf,
   readReport,
   run,
   UsageError,
 } from "../skills/pharn-ci-cover/scripts/check-lines.mjs";
 
 const SCRIPT = fileURLToPath(new URL("../skills/pharn-ci-cover/scripts/check-lines.mjs", import.meta.url));
+const BOM = String.fromCharCode(0xfeff);
 
 function report(overrides = {}) {
   return {
@@ -46,30 +54,69 @@ function lcov(file, hits) {
     .join("\n")}\nend_of_record\n`;
 }
 
+/** A git error the way execFileSync throws it: a message, stderr text and, for spawn failures, a code. */
+function gitError(stderr, code) {
+  const err = new Error("Command failed: git");
+  err.stderr = stderr;
+  if (code) err.code = code;
+  return err;
+}
+
+const throwing = (err) => () => {
+  throw err;
+};
+
+const XCRUN = "git: error: couldn't create cache file '/var/folders/x/T/xcrun_db-1' (errno=Operation not permitted)\n";
+
 describe("parseCli", () => {
   test("needs a report and at least one coverage file", () => {
     assert.throws(() => parseCli(["--coverage", "a.info"]), UsageError);
     assert.throws(() => parseCli(["--report", "r.json"]), UsageError);
     assert.throws(() => parseCli(["--report", "r.json", "--coverage", "a", "extra"]), UsageError);
   });
-  test("rejects unknown formats and escaping coverage roots", () => {
+  test("rejects unknown formats, escaping coverage roots and option-like bases", () => {
     assert.throws(() => parseCli(["--report", "r", "--coverage", "a", "--format", "clover"]), /lcov, cobertura or auto/);
     assert.throws(() => parseCli(["--report", "r", "--coverage", "a", "--coverage-root", "../x"]), /repo-relative/);
     assert.throws(() => parseCli(["--report", "r", "--coverage", "a", "--coverage-root", "/abs"]), /repo-relative/);
+    assert.throws(() => parseCli(["--report", "r", "--coverage", "a", "--base=-x"]), /--base/);
+    assert.throws(() => parseCli(["--report", "r", "--coverage", "a", "--base="]), /--base/);
   });
-  test("collects repeated coverage files", () => {
-    const o = parseCli(["--report", "r", "--coverage", "a", "--coverage", "b", "--coverage-root", "packages/core"]);
+  test("collects repeated coverage files and the base", () => {
+    const o = parseCli(["--report", "r", "--coverage", "a", "--coverage", "b", "--coverage-root", "packages/core", "--base", "main"]);
     assert.deepEqual(o.coverage, ["a", "b"]);
     assert.equal(o.coverageRoot, "packages/core");
     assert.equal(o.format, "auto");
+    assert.equal(o.base, "main");
+    assert.equal(parseCli(["--report", "r", "--coverage", "a"]).base, null);
   });
 });
 
 describe("readReport", () => {
-  test("reads the uncovered lines, deduplicated and sorted", () => {
+  test("reads the uncovered lines, deduplicated and sorted, and the excluded files", () => {
     const r = report();
     r.diffCoverage.files[0].uncoveredLines = [20, 8, 8, 0, -1, 1.5];
-    assert.deepEqual(readReport(JSON.stringify(r)).files, [{ path: "src/discount.mjs", lines: [8, 20] }]);
+    r.diffCoverage.excludedFiles = ["src/gen.mjs"];
+    const out = readReport(JSON.stringify(r));
+    assert.deepEqual(out.files, [{ path: "src/discount.mjs", lines: [8, 20], coverableLines: 25 }]);
+    assert.deepEqual([...out.excludedFiles], ["src/gen.mjs"]);
+  });
+  test("keeps fully covered files, so --base can check them", () => {
+    const r = report();
+    r.diffCoverage.files.push({ path: "src/cart.mjs", percent: 100, coveredLines: 3, coverableLines: 3, uncoveredLines: [] });
+    assert.deepEqual(readReport(JSON.stringify(r)).files[1], { path: "src/cart.mjs", lines: [], coverableLines: 3 });
+  });
+  test("leaves out paths that are not repo-relative", () => {
+    const r = report();
+    for (const p of ["/etc/passwd", "../outside.mjs", "a\0b.mjs", "C:\\x.mjs"]) {
+      r.diffCoverage.files.push({ path: p, percent: 0, coveredLines: 0, coverableLines: 1, uncoveredLines: [1] });
+    }
+    const out = readReport(JSON.stringify(r));
+    assert.deepEqual(
+      out.files.map((f) => f.path),
+      ["src/discount.mjs"],
+    );
+    assert.deepEqual(out.invalidPaths, ["/etc/passwd", "../outside.mjs", "a\0b.mjs", "C:\\x.mjs"]);
+    assert.equal(isSafeRepoPath("src/a b.mjs"), true);
   });
   test("refuses non-reports and reports without diff coverage", () => {
     assert.throws(() => readReport("not json"), /not JSON/);
@@ -83,7 +130,7 @@ describe("readReport", () => {
 
 describe("parsers", () => {
   test("detects lcov and Cobertura, and nothing else", () => {
-    assert.equal(detectFormat("﻿  TN:\nSF:a"), "lcov");
+    assert.equal(detectFormat(`${BOM}  TN:\nSF:a`), "lcov");
     assert.equal(detectFormat('<?xml version="1.0"?>\n<coverage line-rate="1">'), "cobertura");
     assert.equal(detectFormat('<?xml version="1.0"?><coverage clover="4.5">'), null);
     assert.equal(detectFormat("<report>"), null);
@@ -120,16 +167,82 @@ describe("parsers", () => {
     );
     assert.equal(p.skipped, 1);
   });
+  test("the diff reader handles renames, quoted paths, tab suffixes, deletions and binary files", () => {
+    const diff = [
+      "diff --git a/src/old.mjs b/src/new.mjs",
+      "similarity index 90%",
+      "rename from src/old.mjs",
+      "rename to src/new.mjs",
+      "--- a/src/old.mjs",
+      "+++ b/src/new.mjs",
+      "@@ -8,0 +9,2 @@",
+      "+nine",
+      "+++ b/looks like a header",
+      'diff --git "a/src/sp\\303\\251cial.mjs" "b/src/sp\\303\\251cial.mjs"',
+      'index 1..2 100644',
+      '--- "a/src/sp\\303\\251cial.mjs"',
+      '+++ "b/src/sp\\303\\251cial.mjs"',
+      "@@ -1 +1 @@",
+      "-a",
+      "+b",
+      "diff --git a/src/with space.mjs b/src/with space.mjs",
+      "--- a/src/with space.mjs\t",
+      "+++ b/src/with space.mjs\t",
+      "@@ -0,0 +1 @@",
+      "+x",
+      "diff --git a/src/gone.mjs b/src/gone.mjs",
+      "deleted file mode 100644",
+      "--- a/src/gone.mjs",
+      "+++ /dev/null",
+      "@@ -1 +0,0 @@",
+      "-y",
+      "diff --git a/img.png b/img.png",
+      "Binary files a/img.png and b/img.png differ",
+    ].join("\n");
+    const files = parseUnifiedDiff(diff);
+    assert.deepEqual(
+      files.map((f) => [f.path, f.oldPath, f.status, f.addedLines, f.binary ?? false]),
+      [
+        ["src/new.mjs", "src/old.mjs", "renamed", [9, 10], false],
+        ["src/spécial.mjs", "src/spécial.mjs", "modified", [1], false],
+        ["src/with space.mjs", "src/with space.mjs", "modified", [1], false],
+        ["src/gone.mjs", "src/gone.mjs", "deleted", [], false],
+        ["img.png", "img.png", "modified", [], true],
+      ],
+    );
+  });
+  test("git status -z records keep both paths of a rename", () => {
+    assert.deepEqual(parseStatusZ("R  src/new.mjs\0src/old.mjs\0 M src/a.mjs\0C  src/copy.mjs\0src/a.mjs\0"), [
+      "src/a.mjs",
+      "src/copy.mjs",
+      "src/new.mjs",
+      "src/old.mjs",
+    ]);
+    assert.deepEqual(parseStatusZ(""), []);
+  });
 });
 
-describe("displayPercent", () => {
-  test("rounds to two decimals without crossing the threshold or the ends", () => {
-    assert.equal(displayPercent(18, 25, 80), 72);
-    assert.equal(displayPercent(15999, 20000, 80), 79.99);
-    assert.equal(displayPercent(19999, 20000, null), 99.99);
-    assert.equal(displayPercent(1, 20000, null), 0.01);
-    assert.equal(displayPercent(0, 0, 80), null);
-    assert.equal(displayPercent(5, 5, 100), 100);
+describe("percent and threshold", () => {
+  test("follow pharn-ci's rounding and exact comparison", () => {
+    assert.equal(percentOf(18, 25), 72);
+    assert.equal(percentOf(19999, 20000), 99.99);
+    assert.equal(percentOf(1, 20000), 0.01);
+    assert.equal(percentOf(0, 0), null);
+    assert.equal(percentOf(5, 5), 100);
+    assert.equal(atLeast(15999, 20000, 80), false);
+    assert.equal(atLeast(16000, 20000, 80), true);
+    assert.equal(atLeast(801, 1000, 80.1), true);
+    assert.equal(atLeast(800, 1000, 80.1), false);
+    assert.deepEqual(estimateOf(15999, 20000, 80, "listed-lines"), {
+      coveredLines: 15999,
+      coverableLines: 20000,
+      percent: 79.99,
+      threshold: 80,
+      meetsThreshold: false,
+      basis: "listed-lines",
+    });
+    assert.equal(estimateOf(3, 4, null, "added-lines").meetsThreshold, null);
+    assert.equal(estimateOf(0, 0, 100, "added-lines").meetsThreshold, true);
   });
 });
 
@@ -145,7 +258,10 @@ describe("compare", () => {
     assert.deepEqual(out.lines.stillUncovered, [{ path: "src/discount.mjs", lines: [11, 12] }]);
     assert.deepEqual(out.lines.notInCoverage, [{ path: "src/discount.mjs", lines: [20] }]);
     assert.equal(out.lines.checked, 7);
-    assert.deepEqual(out.estimate, { coveredLines: 22, coverableLines: 25, percent: 88, threshold: 80, meetsThreshold: true });
+    assert.equal(out.lines.notAdded, null);
+    assert.equal(out.lines.regressed, null);
+    assert.equal(out.coverableMismatch, null);
+    assert.deepEqual(out.estimate, { coveredLines: 22, coverableLines: 25, percent: 88, threshold: 80, meetsThreshold: true, basis: "listed-lines" });
   });
 
   test("sums hits across files, maps absolute paths and reports paths outside the repo", () => {
@@ -189,6 +305,114 @@ describe("compare", () => {
   });
 });
 
+describe("git classification", () => {
+  test("tells a git that cannot run from a git that failed", () => {
+    assert.equal(gitCannotRun(gitError("", "ENOENT")), true);
+    assert.equal(gitCannotRun(gitError("", "EACCES")), true);
+    assert.equal(gitCannotRun(gitError("", "EPERM")), true);
+    assert.equal(gitCannotRun(gitError(XCRUN)), true);
+    assert.equal(gitCannotRun(gitError("fatal: detected dubious ownership in repository at '/x'\n")), false);
+    assert.equal(gitCannotRun(gitError("fatal: not a git repository (or any of the parent directories): .git\n")), false);
+    assert.equal(gitCannotRun(gitError("", "ENOBUFS")), false);
+  });
+});
+
+/** A small repository: main, a feature branch with an edit, a new line in a renamed file, then main moves on. */
+function makeRepo(dir) {
+  const git = (...args) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.com", ...args], { cwd: dir, stdio: "ignore" });
+  git("init", "-q", "-b", "main");
+  mkdirSync(path.join(dir, "src"));
+  mkdirSync(path.join(dir, "coverage"));
+  writeFileSync(path.join(dir, "src", "a.mjs"), "export const a = 1;\nexport const b = 2;\nexport const c = 3;\n");
+  writeFileSync(path.join(dir, "src", "old.mjs"), "one\ntwo\nthree\nfour\nfive\nsix\nseven\neight\n");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  git("checkout", "-qb", "feature");
+  writeFileSync(path.join(dir, "src", "a.mjs"), "export const a = 1;\nexport const b = 2;\nexport const c = 3;\nexport const d = 4;\nexport const e = 5;\nexport const f = 6;\n");
+  git("mv", "src/old.mjs", "src/new.mjs");
+  writeFileSync(path.join(dir, "src", "new.mjs"), "one\ntwo\nthree\nfour\nfive\nsix\nseven\neight\nnine\n");
+  git("add", "-A");
+  git("commit", "-qm", "feature");
+  git("checkout", "-q", "main");
+  writeFileSync(path.join(dir, "src", "a.mjs"), "// header\nexport const a = 1;\nexport const b = 2;\nexport const c = 3;\n");
+  writeFileSync(path.join(dir, "src", "old.mjs"), "ONE\ntwo\nthree\nfour\nfive\nsix\nseven\neight\n");
+  git("commit", "-qam", "main moves on");
+  git("checkout", "-q", "feature");
+}
+
+function featureReport(uncoveredA = [5, 6]) {
+  return report({
+    diffCoverage: {
+      format: "lcov",
+      percent: 50,
+      threshold: 80,
+      coveredLines: 2,
+      coverableLines: 4,
+      files: [
+        { path: "src/a.mjs", percent: 33.33, coveredLines: 1, coverableLines: 3, uncoveredLines: uncoveredA },
+        { path: "src/new.mjs", percent: 100, coveredLines: 1, coverableLines: 1, uncoveredLines: [] },
+      ],
+    },
+  });
+}
+
+describe("--base (in a git repository)", () => {
+  let dir;
+  before(() => {
+    dir = mkdtempSync(path.join(tmpdir(), "check-lines-base-"));
+    makeRepo(dir);
+    writeFileSync(path.join(dir, "report.json"), JSON.stringify(featureReport()));
+    writeFileSync(path.join(dir, "coverage", "lcov.info"), `${lcov("src/a.mjs", { 4: 1, 5: 1, 6: 0 })}${lcov("src/new.mjs", { 9: 0 })}`);
+  });
+  after(() => rmSync(dir, { recursive: true, force: true }));
+  const args = (...extra) => ["--report", "report.json", "--coverage", "coverage/lcov.info", ...extra];
+
+  test("recomputes the estimate from the diff and finds lines that lost coverage", () => {
+    const out = run(args("--base", "main"), { cwd: dir });
+    assert.deepEqual(out.lines.nowCovered, [{ path: "src/a.mjs", lines: [5] }]);
+    assert.deepEqual(out.lines.stillUncovered, [{ path: "src/a.mjs", lines: [6] }]);
+    assert.deepEqual(out.lines.notAdded, []);
+    assert.deepEqual(out.lines.regressed, [{ path: "src/new.mjs", lines: [9] }]);
+    assert.deepEqual(out.coverableMismatch, []);
+    assert.deepEqual(out.estimate, { coveredLines: 2, coverableLines: 4, percent: 50, threshold: 80, meetsThreshold: false, basis: "added-lines" });
+  });
+
+  test("names the listed files the base changed, through the rename source too", () => {
+    const out = run(args("--base", "main"), { cwd: dir });
+    assert.equal(out.base.ref, "main");
+    assert.match(out.base.sha, /^[0-9a-f]{40}$/);
+    assert.deepEqual(out.base.changedFiles, ["src/a.mjs", "src/new.mjs"]);
+    assert.ok(out.notes.some((n) => /merge commit/.test(n)));
+  });
+
+  test("flags listed lines that are not added lines, and coverable counts that differ", () => {
+    writeFileSync(path.join(dir, "stale.json"), JSON.stringify(featureReport([2, 6])));
+    writeFileSync(path.join(dir, "coverage", "partial.info"), lcov("src/a.mjs", { 4: 1, 5: 1, 6: 0 }));
+    const out = run(["--report", "stale.json", "--coverage", "coverage/partial.info", "--base", "main"], { cwd: dir });
+    assert.deepEqual(out.lines.notAdded, [{ path: "src/a.mjs", lines: [2] }]);
+    assert.deepEqual(out.coverableMismatch, [{ path: "src/new.mjs", report: 1, local: 0 }]);
+  });
+
+  test("a base found neither as given nor under origin/ is a usage error", () => {
+    assert.throws(() => run(args("--base", "nope"), { cwd: dir }), /base nope was not found/);
+    const cli = spawnSync(process.execPath, [SCRIPT, ...args("--base", "nope")], { cwd: dir, encoding: "utf8" });
+    assert.equal(cli.status, 2);
+    assert.match(cli.stderr, /^check-lines: base nope was not found/);
+  });
+
+  test("without git, --base is reported as not checked", () => {
+    const out = run(args("--base", "main"), { cwd: dir, git: throwing(gitError(XCRUN)) });
+    assert.equal(out.git, false);
+    assert.deepEqual(out.base, { ref: "main", sha: null, changedFiles: null });
+    assert.equal(out.lines.notAdded, null);
+    assert.equal(out.lines.regressed, null);
+    assert.equal(out.coverableMismatch, null);
+    assert.equal(out.sourcesChanged, null);
+    assert.equal(out.estimate.basis, "listed-lines");
+    assert.ok(out.notes.some((n) => /--base was not checked/.test(n)));
+  });
+});
+
 describe("run (in a git repository)", () => {
   let dir;
   before(() => {
@@ -204,38 +428,50 @@ describe("run (in a git repository)", () => {
     writeFileSync(path.join(dir, "coverage", "lcov.info"), lcov("src/discount.mjs", { 8: 1, 9: 1, 11: 1, 12: 1, 15: 1, 16: 1, 20: 0 }));
   });
   after(() => rmSync(dir, { recursive: true, force: true }));
+  const args = ["--report", "report.json", "--coverage", "coverage/lcov.info"];
 
   test("prints the comparison and says whether the listed sources changed", () => {
-    const out = run(["--report", "report.json", "--coverage", "coverage/lcov.info"], { cwd: dir });
+    const out = run(args, { cwd: dir });
     assert.equal(out.schemaVersion, 1);
     assert.equal(out.git, true);
-    assert.deepEqual(out.notes, []);
+    assert.equal(out.base, null);
+    assert.deepEqual(out.invalidPaths, []);
     assert.deepEqual(out.coverage.files, [{ path: "coverage/lcov.info", format: "lcov" }]);
     assert.deepEqual(out.lines.stillUncovered, [{ path: "src/discount.mjs", lines: [20] }]);
     assert.equal(out.estimate.coveredLines, 24);
+    assert.ok(out.notes.some((n) => /without --base/.test(n)));
     assert.deepEqual(out.sourcesChanged, []);
     writeFileSync(path.join(dir, "src", "discount.mjs"), "export const x = 2;\n");
-    assert.deepEqual(run(["--report", "report.json", "--coverage", "coverage/lcov.info"], { cwd: dir }).sourcesChanged, ["src/discount.mjs"]);
+    assert.deepEqual(run(args, { cwd: dir }).sourcesChanged, ["src/discount.mjs"]);
   });
 
-  test("without a working git, matches files on disk and says so", () => {
-    const blocked = () => {
-      const err = new Error("Command failed: git rev-parse --show-toplevel");
-      err.stderr = "git: error: couldn't create cache file '/var/folders/x/T/xcrun_db-1' (errno=Operation not permitted)\n";
-      throw err;
-    };
-    const out = run(["--report", "report.json", "--coverage", "coverage/lcov.info"], { cwd: dir, git: blocked });
-    assert.equal(out.git, false);
-    assert.equal(out.notes.length, 1);
-    assert.equal(out.sourcesChanged, null);
-    assert.deepEqual(out.lines.stillUncovered, [{ path: "src/discount.mjs", lines: [20] }]);
-    assert.equal(out.coverage.unmatchedPaths, 0);
-    const notARepo = () => {
-      const err = new Error("Command failed");
-      err.stderr = "fatal: not a git repository (or any of the parent directories): .git\n";
-      throw err;
-    };
-    assert.throws(() => run(["--report", "report.json", "--coverage", "coverage/lcov.info"], { cwd: dir, git: notARepo }), /not inside a git repository/);
+  test("without a working git, matches files on disk from the directory holding .git", () => {
+    for (const err of [gitError(XCRUN), gitError("", "ENOENT"), gitError("", "EPERM")]) {
+      const out = run(args, { cwd: dir, git: throwing(err) });
+      assert.equal(out.git, false);
+      assert.equal(out.sourcesChanged, null);
+      assert.deepEqual(out.lines.stillUncovered, [{ path: "src/discount.mjs", lines: [20] }]);
+      assert.equal(out.coverage.unmatchedPaths, 0);
+    }
+    assert.equal(findGitRoot(path.join(dir, "src")), dir);
+    const fromSubdir = run(["--report", "../report.json", "--coverage", "../coverage/lcov.info"], { cwd: path.join(dir, "src"), git: throwing(gitError(XCRUN)) });
+    assert.deepEqual(fromSubdir.lines.stillUncovered, [{ path: "src/discount.mjs", lines: [20] }]);
+    assert.equal(fromSubdir.coverage.unmatchedPaths, 0);
+  });
+
+  test("any other git failure is an error, not a silent fallback", () => {
+    assert.throws(() => run(args, { cwd: dir, git: throwing(gitError("fatal: detected dubious ownership in repository at '/x'\n")) }), /git failed: fatal: detected dubious ownership/);
+    assert.throws(() => run(args, { cwd: dir, git: throwing(gitError("fatal: not a git repository (or any of the parent directories): .git\n")) }), /not inside a git repository/);
+    assert.throws(() => run(args, { cwd: dir, git: throwing(gitError("", "ENOBUFS")) }), /git failed: ENOBUFS/);
+  });
+
+  test("report paths outside the repo never reach git", () => {
+    const r = report();
+    r.diffCoverage.files.push({ path: "/etc/passwd", percent: 0, coveredLines: 0, coverableLines: 1, uncoveredLines: [1] });
+    writeFileSync(path.join(dir, "hostile.json"), JSON.stringify(r));
+    const out = run(["--report", "hostile.json", "--coverage", "coverage/lcov.info"], { cwd: dir });
+    assert.deepEqual(out.invalidPaths, ["/etc/passwd"]);
+    assert.equal(out.lines.checked, 7);
   });
 
   test("the command line exits 2 with a message on bad input, 0 with JSON otherwise", () => {
@@ -246,8 +482,20 @@ describe("run (in a git repository)", () => {
     const clover = spawnSync(process.execPath, [SCRIPT, "--report", "report.json", "--coverage", "clover.xml"], { cwd: dir, encoding: "utf8" });
     assert.equal(clover.status, 2);
     assert.match(clover.stderr, /neither lcov nor Cobertura/);
-    const ok = spawnSync(process.execPath, [SCRIPT, "--report", "report.json", "--coverage", "coverage/lcov.info"], { cwd: dir, encoding: "utf8" });
+    const ok = spawnSync(process.execPath, [SCRIPT, ...args], { cwd: dir, encoding: "utf8" });
     assert.equal(ok.status, 0, ok.stderr);
     assert.equal(JSON.parse(ok.stdout).lines.checked, 7);
+  });
+
+  test("the command line runs through a symlink and from a path with a space", () => {
+    const spaced = path.join(dir, "skill dir");
+    mkdirSync(spaced);
+    copyFileSync(SCRIPT, path.join(spaced, "check-lines.mjs"));
+    symlinkSync(SCRIPT, path.join(dir, "linked.mjs"));
+    for (const entry of [path.join(spaced, "check-lines.mjs"), path.join(dir, "linked.mjs")]) {
+      const out = spawnSync(process.execPath, [entry, "--help"], { cwd: dir, encoding: "utf8" });
+      assert.equal(out.status, 0, out.stderr);
+      assert.match(out.stdout, /^usage: check-lines\.mjs/);
+    }
   });
 });

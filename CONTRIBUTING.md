@@ -86,8 +86,16 @@ claude plugin eval plugins/pharn-ci --scaffold --allow-tools Bash Edit Write --t
 Each `pharn-ci` eval case builds a small git repository with a pull request
 branch. Reports, PR comments and CLI output in the scaffolds were generated
 with the real pharn-ci 0.1.0 CLI and renderer for that exact tree, so line
-numbers and message texts match; regenerate them when a case's tree or the
-targeted pharn-ci version changes. Cases that need GitHub or a local CLI carry
+numbers and message texts match. Regenerate them, and the whole-file graders
+built from the scaffolds' files, with
+`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci <checkout>`
+after changing a case's tree or the targeted pharn-ci version; `--check`
+reports drift without writing. The checkout must be pharn-ci at the commit
+pinned in `plugins/pharn-ci/evals/fixtures/manifest.json`, built with
+`pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build`, and
+Node must be the pinned version. The `pharn-ci fixtures` job in
+`.github/workflows/ci.yml` runs `--check` against that pinned commit; it is not
+one of the required checks above. Cases that need GitHub or a local CLI carry
 a stub `gh` or `pharn-ci` in `./bin` that logs its calls and refuses writes.
 The `pharn-ci-cover` cases run the fixture's tests on Node's own test runner,
 so they need Node 22 or later and no network; `Edit` and `Write` are granted so
