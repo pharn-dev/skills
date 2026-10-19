@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import {
   atLeast,
   compare,
-  detectFormat,
+  detectCoverageFormat,
   estimateOf,
   findGitRoot,
   gitCannotRun,
@@ -76,8 +76,8 @@ describe("parseCli", () => {
   });
   test("rejects unknown formats, escaping coverage roots and option-like bases", () => {
     assert.throws(() => parseCli(["--report", "r", "--coverage", "a", "--format", "clover"]), /lcov, cobertura or auto/);
-    assert.throws(() => parseCli(["--report", "r", "--coverage", "a", "--coverage-root", "../x"]), /repo-relative/);
-    assert.throws(() => parseCli(["--report", "r", "--coverage", "a", "--coverage-root", "/abs"]), /repo-relative/);
+    assert.throws(() => parseCli(["--report", "r", "--coverage", "a", "--coverage-root", "../x"]), /must not contain a "\.\." segment/);
+    assert.throws(() => parseCli(["--report", "r", "--coverage", "a", "--coverage-root", "/abs"]), /not absolute/);
     assert.throws(() => parseCli(["--report", "r", "--coverage", "a", "--base=-x"]), /--base/);
     assert.throws(() => parseCli(["--report", "r", "--coverage", "a", "--base="]), /--base/);
   });
@@ -129,43 +129,38 @@ describe("readReport", () => {
 });
 
 describe("parsers", () => {
-  test("detects lcov and Cobertura, and nothing else", () => {
-    assert.equal(detectFormat(`${BOM}  TN:\nSF:a`), "lcov");
-    assert.equal(detectFormat('<?xml version="1.0"?>\n<coverage line-rate="1">'), "cobertura");
-    assert.equal(detectFormat('<?xml version="1.0"?><coverage clover="4.5">'), null);
-    assert.equal(detectFormat("<report>"), null);
-    assert.equal(detectFormat(""), null);
+  test("detects lcov and Cobertura as pharn-ci does", () => {
+    assert.equal(detectCoverageFormat(`${BOM}  TN:\nSF:a`), "lcov");
+    assert.equal(detectCoverageFormat('<?xml version="1.0"?>\n<coverage line-rate="1">'), "cobertura");
+    assert.equal(detectCoverageFormat('<?xml version="1.0"?>\n<!-- x -->\n<!DOCTYPE coverage SYSTEM "c.dtd">\n<coverage/>'), "cobertura");
+    assert.equal(detectCoverageFormat('<?xml version="1.0"?><coverage clover="4.5">'), "unknown");
+    // PHPUnit's Clover output: root `coverage`, first child `project`.
+    assert.equal(detectCoverageFormat('<?xml version="1.0"?>\n<coverage generated="1">\n  <project timestamp="1">'), "unknown");
+    assert.equal(detectCoverageFormat("<report><coverage>"), "unknown");
+    assert.equal(detectCoverageFormat(`${" ".repeat(1100)}SF:a`), "unknown");
+    assert.equal(detectCoverageFormat(" \n "), "empty");
+    assert.equal(detectCoverageFormat(""), "empty");
   });
-  test("lcov skips malformed and orphan DA records", () => {
-    const p = parseLcov("DA:1,1\nSF:a.js\nDA:2,1\nDA:x,1\nDA:3,-1\nDA:4\r\nDA:5,0\nend_of_record\n");
-    assert.deepEqual(
-      p.records.map((r) => [r.file, r.line, r.hits]),
-      [
-        ["a.js", 2, 1],
-        ["a.js", 5, 0],
-      ],
-    );
+  test("lcov skips malformed and orphan DA records, sums repeats and maps paths", () => {
+    const p = parseLcov("DA:1,1\nSF:a.js\nDA:2,1\nDA:x,1\nDA:3,-1\nDA:4\r\nDA:5,0\nend_of_record\nSF:/repo/a.js\nDA:2,3\nSF:b.js\nend_of_record\n", { repoRoot: "/repo" });
+    assert.deepEqual([...p.map].map(([f, lines]) => [f, [...lines]]), [["a.js", [[2, 4], [5, 0]]]]);
     assert.equal(p.skipped, 4);
+    const rooted = parseLcov("SF:src/a.ts\nDA:1,1\nSF:/repo/x.ts\nDA:1,1\n", { repoRoot: "/repo", coverageRoot: "packages/core" });
+    assert.deepEqual([...rooted.map.keys()], ["packages/core/src/a.ts", "x.ts"]);
   });
-  test("Cobertura reads class lines, not method lines, and its sources", () => {
+  test("Cobertura reads class lines, not method lines, and resolves sources as pharn-ci does", () => {
     const xml = `<?xml version="1.0"?>
 <!-- <class filename="ignored.py"> -->
-<coverage><sources><source>/repo/src</source><source>.</source></sources>
+<coverage><source>/stray</source><sources><source>/repo/src</source><source>.</source></sources>
 <packages><package name="p"><classes>
 <class name="a" filename="pkg/a&amp;b.py"><methods><method name="m"><lines><line number="1" hits="9"/></lines></method></methods>
 <lines><line number="2" hits="1"/><line number="3" hits="0"/><line number="x" hits="1"/><line number="4"/></lines></class>
 </classes></package></packages></coverage>`;
-    const p = parseCobertura(xml);
-    assert.deepEqual(p.sources, ["/repo/src", "."]);
-    assert.deepEqual(
-      p.records.map((r) => [r.file, r.line, r.hits]),
-      [
-        ["pkg/a&b.py", 2, 1],
-        ["pkg/a&b.py", 3, 0],
-        ["pkg/a&b.py", 4, 0],
-      ],
-    );
-    assert.equal(p.skipped, 1);
+    const withoutRoot = parseCobertura(xml);
+    assert.deepEqual([...withoutRoot.map].map(([f, lines]) => [f, [...lines]]), [["pkg/a&b.py", [[2, 1], [3, 0], [4, 0]]]]);
+    assert.equal(withoutRoot.skipped, 1);
+    // The first source whose join stays under the repo root wins, whether or not that file exists.
+    assert.deepEqual([...parseCobertura(xml, { repoRoot: "/repo" }).map.keys()], ["src/pkg/a&b.py"]);
   });
   test("the diff reader handles renames, quoted paths, tab suffixes, deletions and binary files", () => {
     const diff = [
@@ -248,8 +243,8 @@ describe("percent and threshold", () => {
 
 describe("compare", () => {
   const tracked = new Set(["src/discount.mjs", "packages/core/src/a.ts"]);
-  const opts = { repoRoot: "/repo", coverageRoot: "", tracked };
-  const parsed = (text) => ({ parsed: parseLcov(text) });
+  const opts = { tracked };
+  const parsed = (text, options = {}) => ({ parsed: parseLcov(text, { repoRoot: "/repo", ...options }) });
 
   test("sorts listed lines into covered, uncovered and absent, and estimates the result", () => {
     const r = readReport(JSON.stringify(report()));
@@ -291,7 +286,7 @@ describe("compare", () => {
         }),
       ),
     );
-    const rooted = compare(r, [parsed(lcov("src/a.ts", { 3: 1 }))], { ...opts, coverageRoot: "packages/core" });
+    const rooted = compare(r, [parsed(lcov("src/a.ts", { 3: 1 }), { coverageRoot: "packages/core" })], opts);
     assert.deepEqual(rooted.lines.nowCovered, [{ path: "packages/core/src/a.ts", lines: [3] }]);
     assert.equal(rooted.estimate.meetsThreshold, null);
     const unrooted = compare(r, [parsed(lcov("src/a.ts", { 3: 1 }))], opts);
@@ -299,6 +294,7 @@ describe("compare", () => {
     assert.deepEqual(unrooted.lines.notInCoverage, [{ path: "packages/core/src/a.ts", lines: [3] }]);
     const cob = parseCobertura(
       '<coverage><sources><source>/elsewhere</source><source>/repo/packages/core</source></sources><classes><class filename="src/a.ts"><lines><line number="3" hits="2"/></lines></class></classes></coverage>',
+      { repoRoot: "/repo" },
     );
     const out = compare(r, [{ parsed: cob }], opts);
     assert.deepEqual(out.lines.nowCovered, [{ path: "packages/core/src/a.ts", lines: [3] }]);

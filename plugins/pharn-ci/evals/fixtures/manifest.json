@@ -204,6 +204,35 @@
         "codes": ["DIFF_UNAVAILABLE"]
       },
       "wholeFileGraders": [".github/workflows/pharn-ci.yml"]
+    },
+    "install-node-default": {
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [],
+      "helperParity": { "coverage": ["coverage/lcov.info"] },
+      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
+    },
+    "install-fork-comments": {
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [],
+      "helperParity": { "coverage": ["coverage/lcov.info"] },
+      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
+    },
+    "install-existing-ci": {
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [],
+      "helperParity": { "coverage": ["coverage/lcov.info"] },
+      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
+    },
+    "install-missing-dependency": {
+      "testCommand": null,
+      "artifacts": [],
+      "wholeFileGraders": ["src/price.mjs", "test/price.test.mjs"]
+    },
+    "install-monorepo-root": {
+      "testCommand": { "cwd": "packages/core", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [],
+      "helperParity": { "coverage": ["packages/core/coverage/lcov.info"] },
+      "wholeFileGraders": ["packages/core/package.json", "packages/core/src/slug.mjs", "packages/core/test/slug.test.mjs"]
     }
   }
 }

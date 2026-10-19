@@ -24,11 +24,560 @@ const USAGE =
   "usage: check-lines.mjs --report <report.json> --coverage <file> [--coverage <file>]... [--base <ref>] [--coverage-root <dir>] [--format lcov|cobertura|auto]";
 
 // Built from code points: these are invisible in source, and a literal one is easy to lose in an edit.
-const BOM = String.fromCharCode(0xfeff);
-const REPLACEMENT = String.fromCharCode(0xfffd);
 const LINE_TERMINATORS = ["\n", "\r", String.fromCharCode(0x2028), String.fromCharCode(0x2029)];
 
 export class UsageError extends Error {}
+
+// <shared:coverage>
+// This block is byte-identical in pharn-ci-cover/scripts/check-lines.mjs and
+// pharn-ci-install/scripts/check-coverage.mjs (tests/shared-block.test.mjs checks it). It needs `existsSync`
+// from node:fs, `path` from node:path and a `UsageError` class from the file around it.
+//
+// Ported from pharn-ci 0.1.0 (a88e62a8febf5cd9a77b8e0252cd060c3b94782c, Apache-2.0): packages/core/src/paths.ts,
+// coverage/xml.ts, coverage/detect.ts, coverage/lcov.ts, coverage/cobertura.ts and coverage/merge.ts, so a
+// coverage file is detected, read and mapped to repository paths the way pharn-ci does it.
+
+// --- paths (paths.ts) ---
+
+function toPosixPath(p) {
+  const slashed = p.replace(/\\/g, "/");
+  const drive = /^[A-Za-z]:\//.exec(slashed)?.[0] ?? "";
+  const absolute = drive !== "" || slashed.startsWith("/");
+  const rest = drive !== "" ? slashed.slice(drive.length) : slashed;
+  const out = [];
+  for (const segment of rest.split("/")) {
+    if (segment === "" || segment === ".") continue;
+    if (segment === ".." && out.length > 0 && out[out.length - 1] !== "..") out.pop();
+    else if (segment === ".." && absolute) continue; // `..` above the filesystem root stays at the root.
+    else out.push(segment);
+  }
+  const prefix = drive !== "" ? drive.toUpperCase() : absolute ? "/" : "";
+  return prefix + out.join("/");
+}
+
+function isDriveRoot(root) {
+  const first = root.charAt(0);
+  return first >= "A" && first <= "Z" && root.charAt(1) === ":" && root.charAt(2) === "/";
+}
+
+/** `repoRoot` in the form normalizePath compares against, or "" when there is none. */
+export function normalizeRoot(repoRoot) {
+  if (!repoRoot) return "";
+  const root = toPosixPath(repoRoot.trim());
+  let end = root.length;
+  while (end > 0 && root[end - 1] === "/") end--;
+  return root.slice(0, end);
+}
+
+function foldForRoot(p, root) {
+  return isDriveRoot(root) ? p.toLowerCase() : p;
+}
+
+/** True when `p` lies under `root` (a normalizeRoot result) on whole segments. */
+export function startsWithPath(p, root) {
+  if (p.length <= root.length || p[root.length] !== "/") return false;
+  const head = p.slice(0, root.length);
+  return isDriveRoot(root) ? head.toLowerCase() === root.toLowerCase() : head === root;
+}
+
+/** A coverage path as a repo-relative POSIX path; one outside `repoRoot` stays absolute and matches nothing. */
+export function normalizePath(p, repoRoot) {
+  let out = toPosixPath(p.trim());
+  const root = normalizeRoot(repoRoot);
+  if (root !== "" && startsWithPath(out, root)) out = out.slice(root.length + 1);
+  return out;
+}
+
+/** `/a`, `\a`, `C:/a` and `C:\a` are absolute; `C:a` and relative paths are not. */
+export function isAbsolutePath(p) {
+  const first = p.charAt(0);
+  if (first === "/" || first === "\\") return true;
+  const separator = p.charAt(2);
+  const letter = (first >= "A" && first <= "Z") || (first >= "a" && first <= "z");
+  return p.charAt(1) === ":" && (separator === "/" || separator === "\\") && letter;
+}
+
+/** Join a coverage root in front of a path that is relative as written; no root or "." leaves it as is. */
+export function joinCoverageRoot(p, coverageRoot) {
+  if (coverageRoot === undefined || coverageRoot === ".") return p;
+  return normalizePath(`${coverageRoot}/${p}`);
+}
+
+/** pharn-ci's coverage-root rule (config.ts parseCoverageRoot): repo-relative, "/" separators, no "..". */
+export function parseCoverageRoot(value) {
+  const reject = (reason) => {
+    throw new UsageError(`--coverage-root "${value}" ${reason}`);
+  };
+  const trimmed = value.trim();
+  if (trimmed === "") reject("must not be empty");
+  if (trimmed.includes("\\")) reject('must not contain "\\" (use "/" as the separator)');
+  if (isAbsolutePath(trimmed)) reject("must be relative to the repository root, not absolute");
+  const segments = trimmed.split("/").filter((s) => s !== "" && s !== ".");
+  const root = segments.join("/");
+  if (root.startsWith("-")) reject('must not start with "-"');
+  if (segments.includes("..")) reject('must not contain a ".." segment');
+  return root === "" ? "." : root;
+}
+
+/** A repo-relative path git can take as a pathspec: not empty, not absolute, no '..' segment, no NUL. */
+export function isSafeRepoPath(p) {
+  if (typeof p !== "string" || p === "" || p.includes("\0")) return false;
+  if (p.startsWith("/") || /^[A-Za-z]:[\\/]/.test(p) || p.startsWith("\\")) return false;
+  return !p.split(/[\\/]/).includes("..");
+}
+
+// --- XML scanner (xml.ts): one forward pass, no regular expressions, no element stack ---
+
+const NO_ATTRS = new Map();
+const ENTITY_WINDOW = 10;
+const NAMED_ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
+
+function isSpace(c) {
+  return c === " " || c === "\t" || c === "\n" || c === "\r";
+}
+
+function isQuote(c) {
+  return c === '"' || c === "'";
+}
+
+function decodeReference(text, amp) {
+  const limit = Math.min(text.length, amp + 1 + ENTITY_WINDOW);
+  let semi = -1;
+  for (let i = amp + 1; i < limit; i++) {
+    if (text.charAt(i) === ";") {
+      semi = i;
+      break;
+    }
+  }
+  if (semi === -1) return undefined;
+  const body = text.slice(amp + 1, semi);
+  const named = Object.hasOwn(NAMED_ENTITIES, body) ? NAMED_ENTITIES[body] : undefined;
+  if (named !== undefined) return { value: named, end: semi + 1 };
+  if (body.charAt(0) !== "#") return undefined;
+  const hex = body.charAt(1) === "x";
+  const digits = body.slice(hex ? 2 : 1);
+  if (digits === "") return undefined;
+  let code = 0;
+  for (let i = 0; i < digits.length; i++) {
+    const digit = Number.parseInt(digits.charAt(i), hex ? 16 : 10);
+    if (Number.isNaN(digit)) return undefined;
+    code = code * (hex ? 16 : 10) + digit;
+  }
+  if (code < 1 || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) return undefined;
+  return { value: String.fromCodePoint(code), end: semi + 1 };
+}
+
+/** The five predefined entities and numeric references; anything else stays literal. */
+export function decodeEntities(text) {
+  let amp = text.indexOf("&");
+  if (amp === -1) return text;
+  let out = "";
+  let from = 0;
+  while (amp !== -1) {
+    const decoded = decodeReference(text, amp);
+    if (decoded === undefined) {
+      amp = text.indexOf("&", amp + 1);
+      continue;
+    }
+    out += text.slice(from, amp) + decoded.value;
+    from = decoded.end;
+    amp = text.indexOf("&", from);
+  }
+  return out + text.slice(from);
+}
+
+function readName(body, from) {
+  let i = from;
+  while (i < body.length && !isSpace(body.charAt(i)) && body.charAt(i) !== "/") i++;
+  return body.slice(from, i);
+}
+
+function parseAttributes(body, from, end) {
+  let attrs;
+  let i = from;
+  while (i < end) {
+    while (i < end && isSpace(body.charAt(i))) i++;
+    const nameStart = i;
+    while (i < end && !isSpace(body.charAt(i)) && body.charAt(i) !== "=") i++;
+    const name = body.slice(nameStart, i);
+    while (i < end && isSpace(body.charAt(i))) i++;
+    if (body.charAt(i) !== "=" || i >= end) continue;
+    i++;
+    while (i < end && isSpace(body.charAt(i))) i++;
+    const quote = body.charAt(i);
+    if (!isQuote(quote) || i >= end) {
+      while (i < end && !isSpace(body.charAt(i))) i++;
+      continue;
+    }
+    const close = body.indexOf(quote, i + 1);
+    if (close === -1 || close >= end) break;
+    if (name !== "") {
+      attrs ??= new Map();
+      if (!attrs.has(name)) attrs.set(name, decodeEntities(body.slice(i + 1, close)));
+    }
+    i = close + 1;
+  }
+  return attrs ?? NO_ATTRS;
+}
+
+function parseTag(body) {
+  if (body.charAt(0) === "/") {
+    const name = readName(body, 1);
+    return name === "" ? undefined : { type: "end", name };
+  }
+  let end = body.length;
+  while (end > 0 && isSpace(body.charAt(end - 1))) end--;
+  const selfClosing = end > 0 && body.charAt(end - 1) === "/";
+  if (selfClosing) end--;
+  const name = readName(body, 0);
+  if (name === "") return undefined;
+  return { type: "start", name, attrs: parseAttributes(body, name.length, end), selfClosing };
+}
+
+function findDeclarationEnd(text, from) {
+  let quote = "";
+  for (let i = from; i < text.length; i++) {
+    const c = text.charAt(i);
+    if (quote !== "") {
+      if (c === quote) quote = "";
+    } else if (isQuote(c)) quote = c;
+    else if (c === ">") return i;
+  }
+  return -1;
+}
+
+function findTagEnd(text, start) {
+  let quote = "";
+  for (let i = start + 1; i < text.length; i++) {
+    const c = text.charAt(i);
+    if (c === "<") return -i - 2;
+    if (quote !== "") {
+      if (c === quote) quote = "";
+    } else if (isQuote(c)) quote = c;
+    else if (c === ">") return i;
+  }
+  return -1;
+}
+
+/** Report start tags, end tags and text runs in document order; comments, CDATA, PIs and DOCTYPE are skipped. */
+export function scanXml(text, onEvent) {
+  const length = text.length;
+  let pos = text.charCodeAt(0) === 0xfeff ? 1 : 0;
+  while (pos < length) {
+    const lt = text.indexOf("<", pos);
+    const textEnd = lt === -1 ? length : lt;
+    if (textEnd > pos) onEvent({ type: "text", text: decodeEntities(text.slice(pos, textEnd)) });
+    if (lt === -1) return;
+    const next = text.charAt(lt + 1);
+    if (next === "<") {
+      pos = lt + 1;
+    } else if (next === "!" && text.startsWith("<!--", lt)) {
+      const close = text.indexOf("-->", lt + 4);
+      if (close === -1) return;
+      pos = close + 3;
+    } else if (next === "!" && text.startsWith("<![CDATA[", lt)) {
+      const close = text.indexOf("]]>", lt + 9);
+      if (close === -1) return;
+      pos = close + 3;
+    } else if (next === "?") {
+      const close = text.indexOf("?>", lt + 2);
+      if (close === -1) return;
+      pos = close + 2;
+    } else if (next === "!") {
+      const close = findDeclarationEnd(text, lt + 2);
+      if (close === -1) return;
+      pos = close + 1;
+    } else {
+      const close = findTagEnd(text, lt);
+      if (close === -1) return;
+      if (close < -1) {
+        pos = -close - 2;
+        continue;
+      }
+      const event = parseTag(text.slice(lt + 1, close));
+      if (event !== undefined) onEvent(event);
+      pos = close + 1;
+    }
+  }
+}
+
+// --- format detection (detect.ts): only the first 1 KiB after a BOM is read ---
+
+const DETECTION_WINDOW = 1024;
+
+function detectXml(window) {
+  let decided;
+  let seenRoot = false;
+  scanXml(window, (event) => {
+    if (decided !== undefined) return;
+    if (!seenRoot) {
+      if (event.type === "text") {
+        if (event.text.trim() !== "") decided = "unknown";
+      } else if (event.type === "end") decided = "unknown";
+      else if (event.name !== "coverage" || event.attrs.has("clover")) decided = "unknown";
+      else if (event.selfClosing) decided = "cobertura";
+      else seenRoot = true;
+      return;
+    }
+    if (event.type === "text") return;
+    decided = event.type === "start" && event.name === "project" ? "unknown" : "cobertura";
+  });
+  if (decided !== undefined) return decided;
+  return seenRoot ? "cobertura" : "unknown";
+}
+
+/**
+ * "lcov" (starts with TN: or SF:), "cobertura" (root element exactly `coverage`, no `clover` attribute, first
+ * child not `project`), "empty" (only whitespace, all within the window) or "unknown".
+ */
+export function detectCoverageFormat(text) {
+  const start = text.charCodeAt(0) === 0xfeff ? 1 : 0;
+  const end = start + DETECTION_WINDOW;
+  const window = text.slice(start, end);
+  let first = 0;
+  while (first < window.length && isSpace(window.charAt(first))) first++;
+  if (first === window.length) return end >= text.length ? "empty" : "unknown";
+  if (window.startsWith("TN:", first) || window.startsWith("SF:", first)) return "lcov";
+  if (window.charAt(first) !== "<") return "unknown";
+  return detectXml(window.slice(first));
+}
+
+// --- lcov (lcov.ts): SF, DA and end_of_record; hits for a line are summed across records ---
+
+/** { map: Map<path, Map<line, hits>>, skipped } with paths mapped as pharn-ci maps them. */
+export function parseLcov(text, { repoRoot, coverageRoot } = {}) {
+  const map = new Map();
+  let current;
+  let skipped = 0;
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (line.startsWith("SF:")) {
+      const sf = line.slice(3);
+      const p =
+        coverageRoot !== undefined && !isAbsolutePath(sf.trim())
+          ? normalizePath(joinCoverageRoot(sf, coverageRoot), repoRoot)
+          : normalizePath(sf, repoRoot);
+      current = map.get(p);
+      if (!current) {
+        current = new Map();
+        map.set(p, current);
+      }
+    } else if (line.startsWith("DA:")) {
+      if (!current) {
+        skipped++;
+        continue;
+      }
+      const [lineNo, hits] = line.slice(3).split(",");
+      const n = Number(lineNo);
+      const h = Number(hits);
+      if (!Number.isInteger(n) || n < 1 || !Number.isFinite(h) || h < 0) {
+        skipped++;
+        continue;
+      }
+      current.set(n, (current.get(n) ?? 0) + h);
+    } else if (line === "end_of_record") {
+      current = undefined;
+    }
+  }
+  for (const [p, hits] of map) if (hits.size === 0) map.delete(p);
+  return { map, skipped };
+}
+
+// --- Cobertura (cobertura.ts): class-level <line> records; <source> only inside <sources> ---
+
+const MAX_CLIMBING_JOIN_SOURCES = 16;
+
+function climbs(p) {
+  return p === ".." || p.startsWith("../");
+}
+
+function addCoberturaLine(perFile, filename, number, hits) {
+  if (number === undefined) return false;
+  const lineNo = Number(number);
+  if (!Number.isInteger(lineNo) || lineNo < 1) return false;
+  let count = 0;
+  if (hits !== undefined) {
+    if (hits.trim() === "") return false;
+    count = Number(hits);
+    if (!Number.isFinite(count) || count < 0) return false;
+  }
+  let lines = perFile.get(filename);
+  if (!lines) {
+    lines = new Map();
+    perFile.set(filename, lines);
+  }
+  lines.set(lineNo, Math.max(lines.get(lineNo) ?? 0, count));
+  return true;
+}
+
+function directSources(sources, repoRoot) {
+  const root = normalizeRoot(repoRoot);
+  const foldedRoot = foldForRoot(root, root);
+  const kept = [];
+  const seen = new Set();
+  const keep = (source, k) => {
+    if (seen.has(k)) return;
+    seen.add(k);
+    kept.push(source);
+  };
+  for (const source of sources) {
+    const p = normalizePath(source);
+    if (!isAbsolutePath(source)) {
+      if (climbs(p)) continue;
+      if (p !== "") {
+        kept.push(source);
+        break;
+      }
+      keep(source, "relative:");
+      continue;
+    }
+    if (root === "") continue;
+    if (startsWithPath(p, root)) {
+      const rest = p.slice(root.length + 1);
+      if (rest !== "" && !isAbsolutePath(`${rest}/`)) {
+        kept.push(source);
+        break;
+      }
+      if (rest.length < 3) keep(source, `under:${rest}`);
+    } else if (p.length === root.length) {
+      if (startsWithPath(`${p}/`, root)) keep(source, "root:");
+    } else if (p.length < root.length) {
+      const folded = foldForRoot(p, root);
+      if (foldedRoot.startsWith(p.endsWith("/") ? folded : `${folded}/`)) keep(source, `ancestor:${p.length}:${folded}`);
+    }
+  }
+  return kept;
+}
+
+function resolveCoberturaPath(filename, sources, repoRoot, coverageRoot) {
+  for (const source of sources) {
+    const joined = `${source}/${filename}`;
+    if (isAbsolutePath(source)) {
+      if (repoRoot === undefined) continue;
+      const k = normalizePath(joined, repoRoot);
+      if (!isAbsolutePath(k) && !climbs(k)) return k;
+    } else {
+      const k = normalizePath(joined);
+      if (k !== "" && !climbs(k)) return joinCoverageRoot(k, coverageRoot);
+    }
+  }
+  const k = normalizePath(filename, repoRoot);
+  return isAbsolutePath(k) ? k : joinCoverageRoot(k, coverageRoot);
+}
+
+/** { map, skipped } like parseLcov; a file seen in several classes keeps the maximum hits per line. */
+export function parseCobertura(text, { repoRoot, coverageRoot } = {}) {
+  const sources = [];
+  let skipped = 0;
+  const perFile = new Map();
+  let inSources = false;
+  let sourceText;
+  let currentFile;
+  let methodDepth = 0;
+  scanXml(text, (event) => {
+    if (event.type === "text") {
+      if (sourceText !== undefined) sourceText += event.text;
+      return;
+    }
+    if (event.type === "end") {
+      if (event.name === "sources") {
+        inSources = false;
+        sourceText = undefined;
+      } else if (event.name === "source") {
+        const source = sourceText?.trim();
+        if (source) sources.push(source);
+        sourceText = undefined;
+      } else if (event.name === "class") {
+        currentFile = undefined;
+        methodDepth = 0;
+      } else if ((event.name === "methods" || event.name === "method") && methodDepth > 0) {
+        methodDepth--;
+      }
+      return;
+    }
+    if (event.name === "sources") inSources = !event.selfClosing;
+    else if (event.name === "source") {
+      if (inSources && !event.selfClosing) sourceText = "";
+    } else if (event.name === "class") {
+      const filename = event.selfClosing ? "" : (event.attrs.get("filename") ?? "").trim();
+      currentFile = filename === "" ? undefined : filename;
+      methodDepth = 0;
+    } else if (event.name === "methods" || event.name === "method") {
+      if (currentFile !== undefined && !event.selfClosing) methodDepth++;
+    } else if (event.name === "line" && currentFile !== undefined && methodDepth === 0) {
+      if (!addCoberturaLine(perFile, currentFile, event.attrs.get("number"), event.attrs.get("hits"))) skipped++;
+    }
+  });
+  const distinct = [...new Set(sources)];
+  const direct = directSources(distinct, repoRoot);
+  const climbing = distinct.slice(0, MAX_CLIMBING_JOIN_SOURCES);
+  const resolve = (filename) => {
+    if (isAbsolutePath(filename)) return normalizePath(filename, repoRoot);
+    return resolveCoberturaPath(filename, climbs(normalizePath(filename)) ? climbing : direct, repoRoot, coverageRoot);
+  };
+  const map = new Map();
+  for (const [filename, lines] of perFile) {
+    const k = resolve(filename);
+    let target = map.get(k);
+    if (!target) {
+      target = new Map();
+      map.set(k, target);
+    }
+    for (const [lineNo, hits] of lines) target.set(lineNo, Math.max(target.get(lineNo) ?? 0, hits));
+  }
+  return { map, skipped };
+}
+
+/** Parse `text` as `format` ("lcov" or "cobertura"). */
+export function parseCoverage(text, format, options) {
+  return format === "lcov" ? parseLcov(text, options) : parseCobertura(text, options);
+}
+
+/** The union of several maps, summing the hits of a line several maps list (merge.ts). */
+export function mergeCoverageMaps(maps) {
+  const merged = new Map();
+  for (const map of maps) {
+    for (const [p, lines] of map) {
+      let target = merged.get(p);
+      if (target === undefined) {
+        target = new Map();
+        merged.set(p, target);
+      }
+      for (const [line, hits] of lines) target.set(line, (target.get(line) ?? 0) + hits);
+    }
+  }
+  return merged;
+}
+
+// --- git and the repository root ---
+
+/** True when git itself could not run: missing, not executable, or blocked by a sandbox (macOS xcrun cache). */
+export function gitCannotRun(err) {
+  if (["ENOENT", "EACCES", "EPERM"].includes(err?.code)) return true;
+  const stderr = String(err?.stderr ?? "");
+  return /couldn't create cache file|xcrun: error|xcode-select/.test(stderr) && !/not a git repository/i.test(stderr);
+}
+
+/** git's first non-empty stderr line, or the error's own message. */
+export function gitMessage(err) {
+  const line = String(err?.stderr ?? "")
+    .split("\n")
+    .map((l) => l.trim())
+    .find((l) => l !== "");
+  return line ?? (err?.code ? `${err.code}` : String(err?.message ?? err));
+}
+
+/** The nearest directory at or above `cwd` that holds a .git entry (directory or file), or null. */
+export function findGitRoot(cwd) {
+  let dir = path.resolve(cwd);
+  for (;;) {
+    if (existsSync(path.join(dir, ".git"))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+// </shared:coverage>
 
 export function parseCli(argv) {
   let parsed;
@@ -57,21 +606,11 @@ export function parseCli(argv) {
   if (!["lcov", "cobertura", "auto"].includes(format)) {
     throw new UsageError(`--format must be lcov, cobertura or auto, got "${format}"`);
   }
-  const root = v["coverage-root"];
-  if (root !== undefined && (path.isAbsolute(root) || root.split(/[\\/]/).includes("..") || root.startsWith("-"))) {
-    throw new UsageError("--coverage-root must be repo-relative: not absolute, no '..', not starting with '-'");
-  }
+  const root = v["coverage-root"] === undefined ? undefined : parseCoverageRoot(v["coverage-root"]);
   if (v.base !== undefined && (v.base === "" || v.base.startsWith("-") || v.base.includes("\0"))) {
     throw new UsageError("--base must be a ref or commit, not empty and not starting with '-'");
   }
-  return { report: v.report, coverage: v.coverage, coverageRoot: root ?? "", format, base: v.base ?? null };
-}
-
-/** A repo-relative path git can take as a pathspec: not empty, not absolute, no '..' segment, no NUL. */
-export function isSafeRepoPath(p) {
-  if (typeof p !== "string" || p === "" || p.includes("\0")) return false;
-  if (p.startsWith("/") || /^[A-Za-z]:[\\/]/.test(p) || p.startsWith("\\")) return false;
-  return !p.split(/[\\/]/).includes("..");
+  return { report: v.report, coverage: v.coverage, coverageRoot: root, format, base: v.base ?? null };
 }
 
 /** Validate the parts of Report v1 this helper reads. Throws UsageError on anything else. */
@@ -122,86 +661,6 @@ export function readReport(text) {
     excludedFiles: new Set(excluded),
     invalidPaths,
   };
-}
-
-export function detectFormat(text) {
-  const head = (text.startsWith(BOM) ? text.slice(1) : text).slice(0, 1024).trimStart();
-  if (head.startsWith("TN:") || head.startsWith("SF:")) return "lcov";
-  if (head.startsWith("<") && /<coverage[\s>]/.test(head) && !/<coverage[^>]*\sclover=/.test(head)) return "cobertura";
-  return null;
-}
-
-/** lcov: [{ file, line, hits }] plus the count of malformed DA records. */
-export function parseLcov(text) {
-  const records = [];
-  let skipped = 0;
-  let file = null;
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (line.startsWith("SF:")) file = line.slice(3);
-    else if (line === "end_of_record") file = null;
-    else if (line.startsWith("DA:")) {
-      const [n, h] = line.slice(3).split(",");
-      const num = Number(n);
-      const hits = Number(h);
-      if (file === null || !/^\d+$/.test(n ?? "") || num < 1 || h === undefined || h === "" || !Number.isFinite(hits) || hits < 0) {
-        skipped++;
-        continue;
-      }
-      records.push({ file, line: num, hits });
-    }
-  }
-  return { records, skipped, sources: [] };
-}
-
-const ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
-
-function decodeXml(s) {
-  return s.replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g, (_, e) => {
-    if (e[0] !== "#") return ENTITIES[e];
-    const cp = e[1] === "x" ? Number.parseInt(e.slice(2), 16) : Number.parseInt(e.slice(1), 10);
-    return cp <= 0x10ffff ? String.fromCodePoint(cp) : REPLACEMENT;
-  });
-}
-
-function attr(attrs, name) {
-  const m = new RegExp(`(?:^|\\s)${name}\\s*=\\s*("([^"]*)"|'([^']*)')`).exec(attrs);
-  return m === null ? undefined : decodeXml(m[2] ?? m[3] ?? "");
-}
-
-/** Cobertura: class-level <line> records (not those under <methods>), plus the <source> entries. */
-export function parseCobertura(text) {
-  const body = text.replace(/<!--[\s\S]*?-->/g, "").replace(/<!\[CDATA\[[\s\S]*?\]\]>/g, "");
-  const sources = [];
-  for (const m of body.matchAll(/<source>([^<]*)<\/source>/g)) {
-    const s = decodeXml(m[1]).trim();
-    if (s !== "") sources.push(s);
-  }
-  const records = [];
-  let skipped = 0;
-  let file = null;
-  let inMethods = 0;
-  for (const m of body.matchAll(/<(\/?)(class|methods|line)\b([^>]*?)(\/?)>/g)) {
-    const [, close, tag, attrs, selfClose] = m;
-    if (tag === "class") {
-      if (close) file = null;
-      else file = selfClose ? null : (attr(attrs, "filename") ?? null);
-    } else if (tag === "methods") {
-      if (close) inMethods = Math.max(0, inMethods - 1);
-      else if (!selfClose) inMethods++;
-    } else if (!close && file !== null && inMethods === 0) {
-      const n = attr(attrs, "number");
-      const h = attr(attrs, "hits");
-      const num = Number(n);
-      const hits = h === undefined ? 0 : Number(h);
-      if (!/^\d+$/.test(n ?? "") || num < 1 || !Number.isFinite(hits) || hits < 0) {
-        skipped++;
-        continue;
-      }
-      records.push({ file, line: num, hits });
-    }
-  }
-  return { records, skipped, sources };
 }
 
 // --- unified diff reader --------------------------------------------------------------------------
@@ -408,47 +867,6 @@ export function estimateOf(covered, coverable, threshold, basis) {
 
 // --- comparison -----------------------------------------------------------------------------------
 
-function toPosix(p) {
-  return p.replace(/\\/g, "/");
-}
-
-/** A repo-relative POSIX path for a coverage path, or null when it lies outside the repo. */
-function repoRelative(repoRoot, absolute) {
-  const rel = toPosix(path.relative(repoRoot, absolute));
-  if (rel === "" || rel === ".." || rel.startsWith("../") || path.isAbsolute(rel)) return null;
-  return rel;
-}
-
-/**
- * Resolve a coverage file's paths to tracked repo-relative paths, once per distinct path. Relative lcov
- * paths start at the coverage root (default: the repo root). Relative Cobertura filenames are joined to
- * each <source> in order and the first tracked result wins, as pharn-ci does; with no usable source,
- * the coverage root applies. Returns null for a path that is not a tracked file.
- */
-function makeResolver(sources, { repoRoot, coverageRoot, tracked }) {
-  const cache = new Map();
-  return (file) => {
-    if (cache.has(file)) return cache.get(file);
-    const f = toPosix(file);
-    let rel = null;
-    if (path.isAbsolute(f) || /^[A-Za-z]:\//.test(f)) {
-      rel = repoRelative(repoRoot, f);
-    } else {
-      const candidates = [];
-      for (const s of sources) {
-        const src = toPosix(s);
-        candidates.push(path.isAbsolute(src) ? path.join(src, f) : path.join(repoRoot, coverageRoot, src, f));
-      }
-      candidates.push(path.join(repoRoot, coverageRoot, f));
-      const rels = candidates.map((c) => repoRelative(repoRoot, c)).filter((r) => r !== null);
-      rel = rels.find((r) => tracked.has(r)) ?? rels[0] ?? null;
-    }
-    const result = rel !== null && tracked.has(rel) ? rel : null;
-    cache.set(file, result);
-    return result;
-  };
-}
-
 function groupByPath(entries) {
   const byPath = new Map();
   for (const { path: p, line } of entries) {
@@ -465,30 +883,30 @@ const key = (p, line) => `${p}\n${line}`;
  * estimate is recomputed from the added lines (pharn-ci's own rule), without it the report's covered
  * count is taken as still true. Only the lines asked about are kept from the coverage records.
  */
-export function compare(report, coverageFiles, { repoRoot, coverageRoot, tracked, diff = null }) {
+export function compare(report, coverageFiles, { tracked, diff = null }) {
   const measured = diff === null ? [] : diff.filter((f) => f.status !== "deleted" && !report.excludedFiles.has(f.path));
   const wanted = new Set();
   for (const f of report.files) for (const line of f.lines) wanted.add(key(f.path, line));
   for (const f of measured) for (const line of f.addedLines) wanted.add(key(f.path, line));
 
+  // The files' maps are already keyed by repo path (the parsers map paths as pharn-ci does) and merge by sum.
+  const merged = mergeCoverageMaps(coverageFiles.map((cf) => cf.parsed.map));
+  const skipped = coverageFiles.reduce((n, cf) => n + cf.parsed.skipped, 0);
   const hits = new Map();
   const coveragePaths = new Set();
-  const unmatched = new Set();
-  let skipped = 0;
-  for (const cf of coverageFiles) {
-    skipped += cf.parsed.skipped;
-    const resolve = makeResolver(cf.parsed.sources, { repoRoot, coverageRoot, tracked });
-    for (const rec of cf.parsed.records) {
-      const p = resolve(rec.file);
-      if (p === null) {
-        unmatched.add(rec.file);
-        continue;
-      }
-      coveragePaths.add(p);
-      const k = key(p, rec.line);
-      if (wanted.has(k)) hits.set(k, (hits.get(k) ?? 0) + rec.hits);
+  const unmatched = [];
+  for (const [p, lines] of merged) {
+    if (!tracked.has(p)) {
+      unmatched.push(p);
+      continue;
+    }
+    coveragePaths.add(p);
+    for (const [line, h] of lines) {
+      const k = key(p, line);
+      if (wanted.has(k)) hits.set(k, h);
     }
   }
+  unmatched.sort();
 
   const nowCovered = [];
   const stillUncovered = [];
@@ -552,8 +970,8 @@ export function compare(report, coverageFiles, { repoRoot, coverageRoot, tracked
   return {
     coverage: {
       paths: coveragePaths.size,
-      unmatchedPaths: unmatched.size,
-      ...(unmatched.size > 0 ? { unmatchedExample: [...unmatched][0] } : {}),
+      unmatchedPaths: unmatched.length,
+      ...(unmatched.length > 0 ? { unmatchedExample: unmatched[0] } : {}),
       linesSkipped: skipped,
     },
     lines: {
@@ -580,33 +998,6 @@ function realGit(cwd, args) {
     maxBuffer: 256 * 1024 * 1024,
     timeout: 120_000,
   });
-}
-
-/** git's first non-empty stderr line, or the error's own message. */
-function gitMessage(err) {
-  const line = String(err?.stderr ?? "")
-    .split("\n")
-    .map((l) => l.trim())
-    .find((l) => l !== "");
-  return line ?? (err?.code ? `${err.code}` : String(err?.message ?? err));
-}
-
-/** True when git itself could not run: missing, not executable, or blocked by a sandbox (macOS xcrun cache). */
-export function gitCannotRun(err) {
-  if (["ENOENT", "EACCES", "EPERM"].includes(err?.code)) return true;
-  const stderr = String(err?.stderr ?? "");
-  return /couldn't create cache file|xcrun: error|xcode-select/.test(stderr) && !/not a git repository/i.test(stderr);
-}
-
-/** The nearest directory at or above `cwd` that holds a .git entry (directory or file), or null. */
-export function findGitRoot(cwd) {
-  let dir = path.resolve(cwd);
-  for (;;) {
-    if (existsSync(path.join(dir, ".git"))) return dir;
-    const parent = path.dirname(dir);
-    if (parent === dir) return null;
-    dir = parent;
-  }
 }
 
 /**
@@ -702,9 +1093,12 @@ export function run(argv, { cwd = process.cwd(), git = realGit } = {}) {
   const report = readReport(readText(opts.report, "report"));
   const coverageFiles = opts.coverage.map((p) => {
     const text = readText(p, "coverage file");
-    const format = opts.format === "auto" ? detectFormat(text) : opts.format;
-    if (format === null) throw new UsageError(`${p} is neither lcov nor Cobertura XML; pass --format if it is`);
-    return { file: p, format, parsed: format === "lcov" ? parseLcov(text) : parseCobertura(text) };
+    const format = opts.format === "auto" ? detectCoverageFormat(text) : opts.format;
+    if (format === "empty") throw new UsageError(`${p} is empty (pharn-ci reports COVERAGE_FILE_EMPTY)`);
+    if (format === "unknown") {
+      throw new UsageError(`${p} is neither lcov nor Cobertura XML as pharn-ci detects them (COVERAGE_FORMAT_UNSUPPORTED); pass --format if it is`);
+    }
+    return { file: p, format, parsed: parseCoverage(text, format, { repoRoot, coverageRoot: opts.coverageRoot }) };
   });
 
   const notes = [];
@@ -734,7 +1128,7 @@ export function run(argv, { cwd = process.cwd(), git = realGit } = {}) {
     notes.push("without --base the estimate assumes every line the report counted as covered is still covered");
   }
 
-  const result = compare(report, coverageFiles, { repoRoot, coverageRoot: opts.coverageRoot, tracked, diff });
+  const result = compare(report, coverageFiles, { tracked, diff });
   const listed = report.files.map((f) => f.path);
   const sourcesChanged = !repo.git
     ? null

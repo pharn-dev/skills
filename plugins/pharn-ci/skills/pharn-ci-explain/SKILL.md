@@ -1,6 +1,6 @@
 ---
 name: pharn-ci-explain
-description: Explain a pharn-ci result (the pharn-dev/pharn-ci GitHub Action or the `pharn-ci check` CLI, 0.1.x, Report v1) - why a pull request's pharn-ci check failed or warned, what a message code such as COVERAGE_PATHS_UNMATCHED, DIFF_UNAVAILABLE or NO_COVERABLE_CHANGES means, what its diff coverage number covers, and what to change in this repository. Use when the person asks about a pharn-ci comment, verdict, report.json, diff coverage gate or agent setup message. Read-only unless asked. Not for the PHARN CLI (`pharn`, pharn.config.json), which is the pharn-cli skill.
+description: Explain a pharn-ci result (the pharn-dev/pharn-ci GitHub Action or the `pharn-ci check` CLI, 0.1.x, Report v1) - why a pull request's pharn-ci check failed or warned, what a message code such as COVERAGE_PATHS_UNMATCHED, DIFF_UNAVAILABLE or NO_COVERABLE_CHANGES means, what its diff coverage number covers, and what to change in this repository. Use when the person asks about a pharn-ci comment, verdict, report.json, diff coverage gate or agent setup message. Read-only unless asked. Not for adding pharn-ci to a repository (pharn-ci-install), or for the PHARN CLI (`pharn`, pharn.config.json), which is the pharn-cli skill.
 ---
 
 # pharn-ci-explain

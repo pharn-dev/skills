@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: install-node-default
+context:
+  scaffold_script: scaffold.sh

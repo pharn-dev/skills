@@ -54,13 +54,26 @@ does and recomputes the estimate from the added lines, so lines that lost
 coverage and files a test now loads are counted. Without `--base`, or when git
 cannot run, it assumes every line the report counted as covered still is.
 Exclusion patterns are not known to it, only the files the report already
-excluded, and its Cobertura source resolution is a simplified form of
-pharn-ci's. On `pull_request`, CI measures the merge commit: when the base
+excluded. It reads coverage files with code ported from pharn-ci 0.1.0 (format
+detection, lcov and Cobertura parsing, path and source mapping). On `pull_request`, CI measures the merge commit: when the base
 changed a listed file after the branch point, CI's line numbers can differ from
 the checkout, which the helper reports (`base.changedFiles`) but cannot
 correct. The CI run's verdict decides. On macOS the eval sandbox cannot run
 `/usr/bin/git`, so eval runs there exercise only the helper's no-git path; the
 `--base` path is covered by its unit tests.
+`pharn-ci-install`'s [check-coverage helper](plugins/pharn-ci/skills/pharn-ci-install/scripts/check-coverage.mjs)
+mirrors pharn-ci 0.1.0's coverage rules (auto-discovery, format detection,
+path mapping, the coverage-root suggestion) with the same ported code, and the
+fixture check compares it with the pinned CLI on the eval trees. It is not
+pharn-ci: it does not read `.pharn/ci.yml`, diff the change or apply
+exclusions, and when git cannot run it matches paths against files on disk.
+When the project's coverage command cannot run locally (a missing dependency,
+no toolchain), the skill writes the setup unverified and says so. The
+workflows it writes target pharn-ci 0.1.0 on GitHub-hosted runners (`node24`
+Actions); GitHub Enterprise Server and self-hosted runners need a version that
+runs them. Pins for actions pharn-ci's own docs do not pin (setup-go,
+setup-java, pnpm) come from the repository or are left for the person. The
+evals check the files it writes, not a real Actions run.
 The pharn-ci CLI is not on npm in 0.1.x, so the skills use a CLI only when the
 person has one; otherwise they read the report, the PR comment (which cuts long
 lists) or the job log. A single-plugin eval run cannot check that a pharn-ci

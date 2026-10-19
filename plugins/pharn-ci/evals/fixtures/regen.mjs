@@ -16,6 +16,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const FIXTURES = path.dirname(fileURLToPath(import.meta.url));
 const EVALS = path.dirname(FIXTURES);
+const PLUGIN = path.dirname(EVALS);
+const HELPER = path.join(PLUGIN, "skills/pharn-ci-install/scripts/check-coverage.mjs");
+const PIN_REFERENCE = path.join(PLUGIN, "skills/pharn-ci-install/references/workflows.md");
 
 export class RegenError extends Error {}
 
@@ -107,6 +110,43 @@ export function replaceHeredoc(script, start, content) {
 /** The file a `cat > <file> <<'X'` line writes, or null for `cat <<'X'` (stdout). */
 function heredocTarget(start) {
   return /^cat\s+>\s*(\S+)\s+<</.exec(start)?.[1] ?? null;
+}
+
+// ---------------------------------------------------------------- pins
+
+/** Every `owner/repo@<40-hex sha> # v<version>` in a text, in order. */
+export function extractPins(text) {
+  return [...text.matchAll(/([\w.-]+\/[\w.-]+)@([0-9a-f]{40}) # (v\d[\w.-]*)/g)].map((m) => ({ action: m[1], sha: m[2], version: m[3], text: m[0] }));
+}
+
+/**
+ * Problems with the install skill's pins: pharn-ci itself must be the manifest's release commit, and every other
+ * pin must appear, byte for byte, in pharn-ci's README or example workflows at that commit.
+ */
+export function pinProblems(reference, sources, manifest) {
+  const problems = [];
+  const pins = extractPins(reference);
+  if (pins.length === 0) problems.push("the pin reference lists no pins");
+  for (const pin of pins) {
+    if (pin.action === "pharn-dev/pharn-ci") {
+      if (pin.sha !== manifest.pharnCiSha || pin.version !== `v${manifest.cliVersion}`) {
+        problems.push(`${pin.text} is not pharn-dev/pharn-ci@${manifest.pharnCiSha} # v${manifest.cliVersion}`);
+      }
+    } else if (!sources.some((s) => s.includes(pin.text))) {
+      problems.push(`${pin.text} appears nowhere in pharn-ci's README or examples/workflows at ${manifest.pharnCiSha}`);
+    }
+  }
+  return problems;
+}
+
+function pharnCiPinSources(pharnCi) {
+  const examples = path.join(pharnCi, "examples/workflows");
+  return [
+    readFileSync(path.join(pharnCi, "README.md"), "utf8"),
+    ...readdirSync(examples)
+      .filter((f) => f.endsWith(".yml"))
+      .map((f) => readFileSync(path.join(examples, f), "utf8")),
+  ];
 }
 
 // ---------------------------------------------------------------- running
@@ -215,10 +255,46 @@ function regenCase(name, spec, tools) {
       scaffold = replaceHeredoc(scaffold, artifact.start, content);
     }
     if (spec.expect !== undefined) checkExpect(name, spec.expect, reports);
+    if (spec.helperParity !== undefined) checkHelperParity(name, spec.helperParity, tmp, tools);
     return { scaffold, graders };
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }
+}
+
+const COVERAGE_CODES = new Set([
+  "COVERAGE_FILE_MISSING",
+  "COVERAGE_FILE_EMPTY",
+  "COVERAGE_FORMAT_UNSUPPORTED",
+  "COVERAGE_PATHS_UNMATCHED",
+  "COVERAGE_PATHS_PARTIALLY_UNMATCHED",
+  "COVERAGE_LINES_SKIPPED",
+  "COVERAGE_FILE_TRACKED",
+]);
+
+/**
+ * The install helper must agree with the pinned CLI on the case's coverage: the same coverage codes and the
+ * same suggested root, then, with that root applied, the same again.
+ */
+function checkHelperParity(name, parity, tmp, tools) {
+  const compare = (root) => {
+    const args = parity.coverage.flatMap((c) => ["--coverage", c]);
+    const rootArgs = root === null ? [] : ["--coverage-root", root];
+    const helper = JSON.parse(run(["node", HELPER, ...args, ...rootArgs], tmp));
+    const report = JSON.parse(run(["node", tools.cli, "check", "--base", "HEAD", "--format", "json", ...args, ...rootArgs], tmp, { exits: [0, 1] }));
+    const cliCodes = report.messages.map((m) => m.code).filter((c) => COVERAGE_CODES.has(c));
+    const unmatched = report.messages.find((m) => m.code === "COVERAGE_PATHS_UNMATCHED");
+    const cliRoot = unmatched === undefined ? null : (/look relative to `([^`]+)`/.exec(unmatched.text)?.[1] ?? null);
+    const got = { codes: helper.codes, suggestedRoot: helper.paths?.suggestedRoot ?? null };
+    const wanted = { codes: cliCodes, suggestedRoot: cliRoot };
+    if (JSON.stringify(got) !== JSON.stringify(wanted)) {
+      const label = root === null ? "" : ` with --coverage-root ${root}`;
+      throw new RegenError(`${name}: check-coverage.mjs disagrees with pharn-ci${label}\n  pharn-ci ${JSON.stringify(wanted)}\n  helper   ${JSON.stringify(got)}`);
+    }
+    return cliRoot;
+  };
+  const suggested = compare(null);
+  if (suggested !== null) compare(suggested);
 }
 
 function lineDiff(label, before, after) {
@@ -272,6 +348,8 @@ export async function main(argv) {
   const manifest = JSON.parse(readFileSync(path.join(FIXTURES, "manifest.json"), "utf8"));
   const tools = await loadTools(pharnCi, manifest);
   const diffs = [];
+  for (const problem of pinProblems(readFileSync(PIN_REFERENCE, "utf8"), pharnCiPinSources(pharnCi), manifest)) diffs.push(`pin: ${problem}`);
+  if (diffs.length === 0) console.error("pins: ok");
   for (const [name, spec] of Object.entries(manifest.cases)) {
     const { scaffold, graders } = regenCase(name, spec, tools);
     const want = new Map([["scaffold.sh", scaffold], ...[...graders].map(([f, c]) => [`graders/${f}`, c])]);

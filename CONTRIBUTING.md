@@ -36,7 +36,7 @@ Pull requests must pass the checks below. The first four run in
 `.github/workflows/ci.yml`; Socket reports through its installed integration:
 
 - **Validate**: `claude plugin validate --strict` on the marketplace and on
-  each plugin, the `pharn-ci-cover` helper's unit tests
+  each plugin, the pharn-ci helpers' and pins' unit tests
   (`node --test plugins/pharn-ci/tests/*.test.mjs`), and the identical copies of
   shared eval scaffolds and of the pharn-ci report reference.
 - **Markdown lint**: `markdownlint-cli2` over all Markdown files.
@@ -101,7 +101,30 @@ The `pharn-ci-cover` cases run the fixture's tests on Node's own test runner,
 so they need Node 22 or later and no network; `Edit` and `Write` are granted so
 the graders can check which files were and were not changed.
 `cover-below-threshold`, `cover-exclude-asks` and `explain-below-threshold`
-share one scaffold, and CI checks that the copies match.
+share one scaffold, as do `install-node-default` and `install-fork-comments`,
+and CI checks that the copies match. The `install-*` cases have no generated
+artifacts; for them the fixture check also compares `check-coverage.mjs` with
+the pinned CLI on the case's coverage (`helperParity` in the manifest) and
+checks every pin in `pharn-ci-install/references/workflows.md` against
+pharn-ci's README and example workflows.
+
+The two pharn-ci helpers carry one block of coverage-reading code ported from
+pharn-ci, between `// <shared:coverage>` markers; a skill directory can be
+installed on its own, so they cannot import it from each other. Change both
+copies together; a unit test compares them.
+
+To move the pharn-ci skills to a new pharn-ci release:
+
+1. Update `pharnCiSha` (and `cliVersion`, `node` if they change) in
+   `plugins/pharn-ci/evals/fixtures/manifest.json`, and the `ref:` of the
+   pharn-ci checkout in the `pharn-ci fixtures` job.
+2. Update the release commit in `pharn-ci-install`'s `SKILL.md`,
+   `references/workflows.md` and the `install-*` graders, and any action pins
+   pharn-ci's docs changed.
+3. Re-check the ported code in the `shared:coverage` blocks and in
+   `check-coverage.mjs` against pharn-ci's `packages/core/src`.
+4. Run `regen.mjs --write`, the unit tests and the evals, and review the
+   skills' text against the release's changelog.
 
 `phargus` evals run in Codex and in Claude Code from `src/phargus`
 (`npm run eval`, then `npm run review:evals` per trial, then

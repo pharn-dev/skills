@@ -21,7 +21,8 @@ keep `pharn-ci-explain` read-only unless asked, and limit `pharn-ci-cover` to
 test files: the gate (threshold, exclusions, config, workflow, coverage-ignore
 comments, production code) changes only after the person's explicit
 confirmation. Their evals include a report and a file name that carry
-instructions, and a request to "do whatever it takes".
+instructions, and a request to "do whatever it takes". `pharn-ci-install`
+writes CI configuration; see [pharn-ci workflows](#pharn-ci-workflows).
 Phargus's [data guidance](src/phargus/knowledge/data.md) treats request paths, stack
 strings, object names, and finding messages as evidence rather than instructions.
 
@@ -49,10 +50,40 @@ rules have a separate [isolated-vm execution contract](src/phargus/knowledge/rul
 a missing peer, compile error, timeout, or failed execution must remain a failure.
 That sandbox does not cover all helper commands.
 
+## pharn-ci workflows
+
+**Boundary:** `pharn-ci-install` writes a GitHub Actions workflow that runs the
+project's tests on every pull request with a token that can comment
+(`pull-requests: write`), plus `.pharn/ci.yml`, which sets the gate. A mistake
+here can hand pull request code a write token, gate the wrong commits, or let a
+change grade itself.
+
+**Existing safeguards:** the [skill](plugins/pharn-ci/skills/pharn-ci-install/SKILL.md)
+never uses `pull_request_target`, never checks out a PR head in a workflow with
+a write token, and never puts artifact or PR text into a `run:` script; for fork
+PRs it writes pharn-ci's two-workflow `workflow_run` pattern, whose comment
+workflow keeps only digits from the uploaded PR number and passes the trusted
+`head-sha`. Every action is pinned to a full commit SHA from pharn-ci's own
+documentation at the pinned release; a [unit test](plugins/pharn-ci/tests/pins.test.mjs)
+and the fixture check keep those pins and pharn-ci's release commit in step.
+Checkouts use `persist-credentials: false`. Settings live only in
+`.pharn/ci.yml`, and the skill recommends CODEOWNERS for it and for
+`.github/workflows/`. Extending an existing job, it keeps the job's triggers,
+matrix and steps, runs pharn-ci only on `pull_request` and one matrix leg, and
+asks when the job's permissions are unclear. It runs the project's coverage
+command locally, which runs project code, and says so; it installs nothing
+without asking and commits nothing. Its evals include a request to use
+`pull_request_target`.
+
+**Limit:** on a fork PR the uploaded coverage file is attacker-controlled; the
+comment reports what the `pull_request` run uploaded, and that run's verdict is
+the gate. The skill cannot see repository settings, rulesets or required
+checks, so making the new check required stays with the person.
+
 ## pharn-ci reports and coverage files
 
 **Boundary:** `pharn-ci-cover`'s helper reads a pharn-ci report and coverage
-files, both of which the pull request under review can shape (on a fork PR, an
+files, and `pharn-ci-install`'s helper reads coverage files, all of which the pull request under review can shape (on a fork PR, an
 uploaded artifact is fully attacker-controlled), and runs git in the person's
 repository.
 
@@ -65,7 +96,12 @@ calls, all without a shell, with `--literal-pathspecs`, with `--end-of-options`
 or after `--`, and with a `--base` value starting with `-` refused. Report paths
 that are absolute, contain `..` or a NUL byte never reach git. When git cannot
 run it finds the repository by walking up to a `.git` entry and checks files on
-disk instead. It writes nothing and prints paths only as JSON. Its
+disk instead. It writes nothing and prints paths only as JSON.
+The [install helper](plugins/pharn-ci/skills/pharn-ci-install/scripts/check-coverage.mjs)
+shares that parsing code byte for byte, runs only `git rev-parse`,
+`git ls-files` and `git check-ignore`, walks the disk without following links
+and within pharn-ci's limits, and never prints the repository's absolute path.
+Their
 [unit tests](plugins/pharn-ci/tests/) run in CI.
 
 **Limit:** the helper's estimate is only as honest as the coverage file it

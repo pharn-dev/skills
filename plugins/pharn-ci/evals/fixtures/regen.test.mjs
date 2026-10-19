@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { readHeredoc, RegenError, replaceHeredoc, wholeFileGrader, wholeFilePattern, yamlSingleQuoted } from "./regen.mjs";
+import { extractPins, pinProblems, readHeredoc, RegenError, replaceHeredoc, wholeFileGrader, wholeFilePattern, yamlSingleQuoted } from "./regen.mjs";
 
 const EVALS = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const scaffold = (name) => readFileSync(path.join(EVALS, name, "scaffold.sh"), "utf8");
@@ -93,4 +93,22 @@ test("heredoc rules", () => {
   assert.throws(() => readHeredoc(script, "cat > a.json <<EOF"), /quoted/);
   assert.throws(() => readHeredoc(`${script}cat > a.json <<'EOF'\n{}\nEOF\n`, "cat > a.json <<'EOF'"), /2 times/);
   assert.throws(() => readHeredoc(script, "cat > b.json <<'EOF'"), /0 times/);
+});
+
+test("pins are read from text and checked against pharn-ci's own", () => {
+  const sha = "a".repeat(40);
+  const other = "b".repeat(40);
+  const manifest = { pharnCiSha: sha, cliVersion: "0.1.0" };
+  const reference = `| x | \`pharn-dev/pharn-ci@${sha} # v0.1.0\` |\n| y | \`actions/checkout@${other} # v7.0.1\` |\nactions/setup-node@v4 and foo/bar@${"c".repeat(39)} # v1`;
+  assert.deepEqual(
+    extractPins(reference).map((p) => [p.action, p.version]),
+    [
+      ["pharn-dev/pharn-ci", "v0.1.0"],
+      ["actions/checkout", "v7.0.1"],
+    ],
+  );
+  assert.deepEqual(pinProblems(reference, [`uses: actions/checkout@${other} # v7.0.1`], manifest), []);
+  assert.match(pinProblems(reference, [`uses: actions/checkout@${other} # v7.0.0`], manifest).join(), /appears nowhere/);
+  assert.match(pinProblems(reference, [`actions/checkout@${other} # v7.0.1`], { ...manifest, pharnCiSha: other }).join(), /is not pharn-dev\/pharn-ci@/);
+  assert.deepEqual(pinProblems("no pins here", [], manifest), ["the pin reference lists no pins"]);
 });

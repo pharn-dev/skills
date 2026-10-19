@@ -1,6 +1,6 @@
 ---
 name: pharn-ci-cover
-description: Write tests for the added lines that a pharn-ci report (the pharn-dev/pharn-ci GitHub Action or the `pharn-ci check` CLI, 0.1.x, Report v1) lists as uncovered, so a pull request's diff coverage meets its threshold. Use when pharn-ci fails with DIFF_COVERAGE_BELOW_THRESHOLD, or the person asks to cover the lines pharn-ci reports, raise diff coverage, get the pharn-ci coverage check passing, or exclude a file from, lower or switch off the pharn-ci coverage gate (it explains what that changes and asks first). Adds tests only - never lowers the threshold, excludes files, edits the pharn-ci config or workflow, or adds coverage-ignore comments. Not for the PHARN CLI (pharn-cli).
+description: Write tests for the added lines that a pharn-ci report (the pharn-dev/pharn-ci GitHub Action or the `pharn-ci check` CLI, 0.1.x, Report v1) lists as uncovered, so a pull request's diff coverage meets its threshold. Use when pharn-ci fails with DIFF_COVERAGE_BELOW_THRESHOLD, or the person asks to cover the lines pharn-ci reports, raise diff coverage, get the pharn-ci coverage check passing, or exclude a file from, lower or switch off the pharn-ci coverage gate (it explains what that changes and asks first). Adds tests only - never lowers the threshold, excludes files, edits the pharn-ci config or workflow, or adds coverage-ignore comments. Not for adding pharn-ci to a repository (pharn-ci-install) or the PHARN CLI (pharn-cli).
 compatibility: Node.js >=22 for scripts/check-lines.mjs; git; the project's own test runner.
 ---
 
@@ -93,7 +93,9 @@ Follow [references/tests.md](references/tests.md):
   - **Otherwise**, save the report as JSON and run
     `node <skill-dir>/scripts/check-lines.mjs --report <report.json>
     --coverage <coverage file> [--coverage <file>]... --base <base>
-    [--coverage-root <dir>]` from the repository. It prints one JSON object:
+    [--coverage-root <dir>]` from the repository. Always pass `--base`, also
+    when git cannot run here: the helper then marks the checks it could not
+    make as `null`. It prints one JSON object:
     - `lines.nowCovered`, `lines.stillUncovered` and `lines.notInCoverage`:
       the listed lines, per file;
     - `lines.regressed`: added lines the report counted as covered that the
