@@ -72,6 +72,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -84,7 +85,7 @@ jobs:
       - run: npm run check:skills
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
+      - run: npm run test:coverage
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: pharn-dev/phargus
@@ -94,6 +95,31 @@ jobs:
       - run: npm run prepare:integration -- --source .cache/phargus-source
       - run: npm run test:integration
       - run: npm run check:package
+      # pharn-ci needs this leg's coverage and the PR number; a fork PR's token here
+      # cannot comment, so pharn-ci-comment.yml posts it from the default branch instead.
+      - name: Write PR number for pharn-ci
+        if: matrix.node == '24' && github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: echo "$PR_NUMBER" > pr-number
+      - if: matrix.node == '24' && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pharn-ci-input
+          path: |
+            src/phargus/coverage/lcov.info
+            src/phargus/pr-number
+      - id: pharn-ci
+        if: matrix.node == '24' && github.event_name == 'pull_request'
+        uses: pharn-dev/pharn-ci@a88e62a8febf5cd9a77b8e0252cd060c3b94782c # v0.1.0
+        timeout-minutes: 5
+        with:
+          comment: false
+      - if: always() && steps.pharn-ci.outputs.report-path != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pharn-ci-report
+          path: ${{ steps.pharn-ci.outputs.report-path }}
 
   pharn-ci-fixtures:
     name: pharn-ci fixtures
