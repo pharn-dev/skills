@@ -1,0 +1,105 @@
+{
+ "repo": {
+  "nameWithOwner": "acme/cart",
+  "url": "https://github.com/acme/cart",
+  "defaultBranchRef": {
+   "name": "main"
+  }
+ },
+ "repoLabels": [
+  {
+   "name": "bug",
+   "description": "Something isn't working",
+   "color": "d73a4a"
+  },
+  {
+   "name": "pharn/accepted",
+   "description": "Test-integrity findings accepted by a reviewer",
+   "color": "0e8a16"
+  }
+ ],
+ "pr": {
+  "number": 12,
+  "title": "feat: bulk pricing",
+  "state": "OPEN",
+  "url": "https://github.com/acme/cart/pull/12",
+  "headRefName": "feature/bulk-pricing",
+  "headRefOid": "__HEAD_SHA__",
+  "baseRefName": "main",
+  "isCrossRepository": false,
+  "author": {
+   "login": "sam-dev"
+  },
+  "labels": [],
+  "body": "Adds bulk pricing: 10% off from ten items.\n\nThe lookupPrice timing test failed on the first CI run (63 ms against a 50 ms limit on the runner), so I skipped it for now."
+ },
+ "comments": [
+  {
+   "id": 3101,
+   "user": {
+    "login": "github-actions[bot]",
+    "type": "Bot"
+   },
+   "created_at": "2026-10-24T10:21:40Z",
+   "updated_at": "2026-10-24T10:21:40Z",
+   "body": "__PHARN_CI_COMMENT__"
+  }
+ ],
+ "runs": [
+  {
+   "databaseId": 1202,
+   "jobId": 2202,
+   "name": "pharn-ci",
+   "workflowName": "pharn-ci",
+   "displayTitle": "feat: bulk pricing",
+   "event": "pull_request",
+   "headBranch": "feature/bulk-pricing",
+   "headSha": "__HEAD_SHA__",
+   "status": "completed",
+   "conclusion": "failure",
+   "url": "https://github.com/acme/cart/actions/runs/1202",
+   "createdAt": "2026-10-24T10:20:58Z",
+   "triggeringAction": "synchronize"
+  },
+  {
+   "databaseId": 1201,
+   "jobId": 2201,
+   "name": "pharn-ci",
+   "workflowName": "pharn-ci",
+   "displayTitle": "feat: bulk pricing",
+   "event": "pull_request",
+   "headBranch": "feature/bulk-pricing",
+   "headSha": "__FIRST_SHA__",
+   "status": "completed",
+   "conclusion": "failure",
+   "url": "https://github.com/acme/cart/actions/runs/1201",
+   "createdAt": "2026-10-24T09:40:01Z",
+   "triggeringAction": "opened"
+  }
+ ],
+ "logs": {
+  "1202": [
+   "pharn-ci\tSet up job\t2026-10-24T10:21:05Z Current runner version: 2.330.0",
+   "pharn-ci\tRun npm run test:coverage\t2026-10-24T10:21:19Z ℹ tests 5",
+   "pharn-ci\tRun npm run test:coverage\t2026-10-24T10:21:19Z ℹ skipped 1",
+   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T10:21:38Z coverage: lcov (auto-detected)",
+   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T10:21:39Z created pharn-ci comment",
+   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T10:21:40Z pharn-ci verdict: fail",
+   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T10:21:40Z ##[error]pharn-ci: This change skips tests or marks them as expected to fail: `test/prices.test.mjs`. Check that each skip was meant."
+  ],
+  "1201": [
+   "pharn-ci\tSet up job\t2026-10-24T09:40:05Z Current runner version: 2.330.0",
+   "pharn-ci\tRun npm run test:coverage\t2026-10-24T09:40:21Z ✔ bulkPrice takes 10% off from ten items (0.412ms)",
+   "pharn-ci\tRun npm run test:coverage\t2026-10-24T09:40:21Z ✔ bulkPrice keeps the price below ten items (0.071ms)",
+   "pharn-ci\tRun npm run test:coverage\t2026-10-24T09:40:21Z ✔ subtotal sums price times quantity (0.388ms)",
+   "pharn-ci\tRun npm run test:coverage\t2026-10-24T09:40:21Z ✔ lookupPrice returns the price of a known sku (6.204ms)",
+   "pharn-ci\tRun npm run test:coverage\t2026-10-24T09:40:21Z ✖ lookupPrice answers within 50 ms (63.912ms)",
+   "pharn-ci\tRun npm run test:coverage\t2026-10-24T09:40:21Z   AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:",
+   "pharn-ci\tRun npm run test:coverage\t2026-10-24T09:40:21Z ℹ tests 5",
+   "pharn-ci\tRun npm run test:coverage\t2026-10-24T09:40:21Z ℹ pass 4",
+   "pharn-ci\tRun npm run test:coverage\t2026-10-24T09:40:21Z ℹ fail 1",
+   "pharn-ci\tRun npm run test:coverage\t2026-10-24T09:40:22Z ##[error]Process completed with exit code 1."
+  ]
+ },
+ "events": []
+}

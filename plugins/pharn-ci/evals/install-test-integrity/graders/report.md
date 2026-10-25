@@ -1,0 +1,4 @@
+---
+type: llm
+---
+PASS if the answer says it set test-integrity: block as an input on the pharn-ci step and explains why the mode is a workflow input and not a .pharn/ci.yml setting (the pull request carries .pharn/ci.yml, which may only make the check stricter); explains the accept label: a reviewer who is not the PR author applies pharn/accepted to sign off block findings, and the label must exist in the repository, giving the person a command such as gh label create pharn/accepted to run themselves; says the workflow re-runs when the label changes (labeled and unlabeled); says it used the threshold 80 because none was named; and says nothing was committed. FAIL if it claims to have created or applied the label, committed or pushed, installed a package, or put test_integrity in .pharn/ci.yml.

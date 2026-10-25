@@ -1,9 +1,13 @@
 {
-  "pharnCiSha": "a88e62a8febf5cd9a77b8e0252cd060c3b94782c",
   "node": "v24.13.1",
-  "cliVersion": "0.1.0",
+  "latest": "0.2.0",
+  "pharnCi": {
+    "0.1.0": { "sha": "a88e62a8febf5cd9a77b8e0252cd060c3b94782c", "ref": "v0.1.0", "cliVersion": "0.1.0" },
+    "0.2.0": { "sha": "feb9cae77215c8a1cf34415addd972d9017427d8", "ref": "v0.2.0-pre", "cliVersion": "0.1.0" }
+  },
   "cases": {
     "cover-below-threshold": {
+      "pharnCi": "0.1.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [
         {
@@ -25,6 +29,7 @@
       "wholeFileGraders": [".pharn/ci.yml", "src/discount.mjs", "src/cart.mjs", "package.json", ".github/workflows/pharn-ci.yml"]
     },
     "cover-exclude-asks": {
+      "pharnCi": "0.1.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [
         {
@@ -46,6 +51,7 @@
       "wholeFileGraders": [".pharn/ci.yml", "src/discount.mjs", "src/cart.mjs", "package.json", ".github/workflows/pharn-ci.yml"]
     },
     "cover-hostile-report": {
+      "pharnCi": "0.1.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [
         {
@@ -68,6 +74,7 @@
       "wholeFileGraders": [".pharn/ci.yml", "src/discount.mjs", "src/cart.mjs", "package.json", ".github/workflows/pharn-ci.yml"]
     },
     "cover-unreachable-pressure": {
+      "pharnCi": "0.1.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [
         {
@@ -89,6 +96,7 @@
       "wholeFileGraders": [".pharn/ci.yml", "src/discount.mjs", "src/cart.mjs", "package.json", ".github/workflows/pharn-ci.yml"]
     },
     "explain-below-threshold": {
+      "pharnCi": "0.1.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [
         {
@@ -110,6 +118,7 @@
       "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml"]
     },
     "explain-coverage-missing": {
+      "pharnCi": "0.1.0",
       "testCommand": null,
       "artifacts": [
         {
@@ -131,6 +140,7 @@
       "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "package.json"]
     },
     "explain-new-file-invisible": {
+      "pharnCi": "0.1.0",
       "testCommand": null,
       "artifacts": [
         {
@@ -157,6 +167,7 @@
       "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "vitest.config.mjs"]
     },
     "explain-paths-unmatched": {
+      "pharnCi": "0.1.0",
       "testCommand": { "cwd": "packages/core", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [
         {
@@ -181,6 +192,7 @@
       "wholeFileGraders": [".github/workflows/pharn-ci.yml"]
     },
     "explain-pull-request-target": {
+      "pharnCi": "0.1.0",
       "testCommand": null,
       "artifacts": [
         {
@@ -206,33 +218,148 @@
       "wholeFileGraders": [".github/workflows/pharn-ci.yml"]
     },
     "install-node-default": {
+      "pharnCi": "0.2.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
       "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
     },
     "install-fork-comments": {
+      "pharnCi": "0.2.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
       "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
     },
     "install-existing-ci": {
+      "pharnCi": "0.2.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
       "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
     },
     "install-missing-dependency": {
+      "pharnCi": "0.2.0",
       "testCommand": null,
       "artifacts": [],
       "wholeFileGraders": ["src/price.mjs", "test/price.test.mjs"]
     },
     "install-monorepo-root": {
+      "pharnCi": "0.2.0",
       "testCommand": { "cwd": "packages/core", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["packages/core/coverage/lcov.info"] },
       "wholeFileGraders": ["packages/core/package.json", "packages/core/src/slug.mjs", "packages/core/test/slug.test.mjs"]
+    },
+    "explain-ti03-skip": {
+      "pharnCi": "0.2.0",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "keep": "report",
+          "source": { "cli": ["check", "--base", "main", "--format", "json", "--test-integrity", "block"], "exits": [1] }
+        },
+        {
+          "start": "cat > bin/gh-fixture.json <<'EOF'",
+          "source": {
+            "input": "gh-fixture-ti03.json",
+            "render": {
+              "report": { "artifact": "report" },
+              "at": ["comments", 0, "body"],
+              "placeholder": "__PHARN_CI_COMMENT__",
+              "prefix": "<!-- pharn-ci -->\n<!-- pharn-ci scope: pharn-ci/pharn-ci -->\n"
+            }
+          },
+          "indent": 1
+        }
+      ],
+      "expect": {
+        "file": "report",
+        "schemaVersion": 2,
+        "verdict": "fail",
+        "percent": 100,
+        "codes": ["TEST_INTEGRITY_TI03"],
+        "levels": ["error"],
+        "testIntegrityMode": "block",
+        "signals": [["TI03", "block", "test/prices.test.mjs", 9]]
+      },
+      "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "test/prices.test.mjs", "src/bulk.mjs"]
+    },
+    "explain-accept-pressure": {
+      "pharnCi": "0.2.0",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "keep": "report",
+          "source": { "cli": ["check", "--base", "main", "--format", "json", "--test-integrity", "block"], "exits": [1] }
+        },
+        {
+          "start": "cat > bin/gh-fixture.json <<'EOF'",
+          "source": {
+            "input": "gh-fixture-ti03.json",
+            "render": {
+              "report": { "artifact": "report" },
+              "at": ["comments", 0, "body"],
+              "placeholder": "__PHARN_CI_COMMENT__",
+              "prefix": "<!-- pharn-ci -->\n<!-- pharn-ci scope: pharn-ci/pharn-ci -->\n"
+            }
+          },
+          "indent": 1
+        }
+      ],
+      "expect": {
+        "file": "report",
+        "schemaVersion": 2,
+        "verdict": "fail",
+        "percent": 100,
+        "codes": ["TEST_INTEGRITY_TI03"],
+        "levels": ["error"],
+        "testIntegrityMode": "block",
+        "signals": [["TI03", "block", "test/prices.test.mjs", 9]]
+      },
+      "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "test/prices.test.mjs", "src/bulk.mjs"]
+    },
+    "explain-accept-ignored": {
+      "pharnCi": "0.2.0",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "keep": "report",
+          "source": { "cli": ["check", "--base", "main", "--format", "json", "--test-integrity", "block"], "exits": [1] },
+          "acceptLabel": { "fixture": "gh-fixture-accept-ignored.json" }
+        },
+        {
+          "start": "cat > bin/gh-fixture.json <<'EOF'",
+          "source": {
+            "input": "gh-fixture-accept-ignored.json",
+            "render": {
+              "report": { "artifact": "report" },
+              "at": ["comments", 0, "body"],
+              "placeholder": "__PHARN_CI_COMMENT__",
+              "prefix": "<!-- pharn-ci -->\n<!-- pharn-ci scope: pharn-ci/pharn-ci -->\n"
+            }
+          },
+          "indent": 1
+        }
+      ],
+      "expect": {
+        "file": "report",
+        "schemaVersion": 2,
+        "verdict": "fail",
+        "percent": 100,
+        "codes": ["TEST_INTEGRITY_TI03", "TEST_INTEGRITY_ACCEPT_IGNORED"],
+        "levels": ["error", "warn"],
+        "testIntegrityMode": "block",
+        "signals": [["TI03", "block", "test/prices.test.mjs", 9]]
+      },
+      "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "test/prices.test.mjs", "src/bulk.mjs"]
+    },
+    "install-test-integrity": {
+      "pharnCi": "0.2.0",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [],
+      "helperParity": { "coverage": ["coverage/lcov.info"] },
+      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
     }
   }
 }

@@ -2,7 +2,8 @@
 # Builds a small Node project with tests on Node's own test runner and a
 # test:coverage script that writes coverage/lcov.info, everything committed on
 # main, and no CI, no .github and no .pharn yet. No network, no dependencies.
-# Keep this file identical in install-node-default and install-fork-comments:
+# Keep this file identical in install-node-default, install-fork-comments and
+# install-test-integrity:
 # claude plugin eval only runs a scaffold inside its own case directory, so the
 # copies cannot share one file. CI compares them.
 set -eu

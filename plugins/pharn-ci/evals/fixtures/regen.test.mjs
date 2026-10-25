@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { extractPins, pinProblems, readHeredoc, RegenError, replaceHeredoc, wholeFileGrader, wholeFilePattern, yamlSingleQuoted } from "./regen.mjs";
+import { checkoutProblems, extractPins, parseArgs, parsePharnCiArg, pinProblems, readHeredoc, RegenError, replaceHeredoc, wholeFileGrader, wholeFilePattern, yamlSingleQuoted } from "./regen.mjs";
 
 const EVALS = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const scaffold = (name) => readFileSync(path.join(EVALS, name, "scaffold.sh"), "utf8");
@@ -98,7 +98,7 @@ test("heredoc rules", () => {
 test("pins are read from text and checked against pharn-ci's own", () => {
   const sha = "a".repeat(40);
   const other = "b".repeat(40);
-  const manifest = { pharnCiSha: sha, cliVersion: "0.1.0" };
+  const manifest = { latest: "0.1.0", pharnCi: { "0.1.0": { sha, ref: "v0.1.0", cliVersion: "0.1.0" } } };
   const reference = `| x | \`pharn-dev/pharn-ci@${sha} # v0.1.0\` |\n| y | \`actions/checkout@${other} # v7.0.1\` |\nactions/setup-node@v4 and foo/bar@${"c".repeat(39)} # v1`;
   assert.deepEqual(
     extractPins(reference).map((p) => [p.action, p.version]),
@@ -109,6 +109,29 @@ test("pins are read from text and checked against pharn-ci's own", () => {
   );
   assert.deepEqual(pinProblems(reference, [`uses: actions/checkout@${other} # v7.0.1`], manifest), []);
   assert.match(pinProblems(reference, [`uses: actions/checkout@${other} # v7.0.0`], manifest).join(), /appears nowhere/);
-  assert.match(pinProblems(reference, [`actions/checkout@${other} # v7.0.1`], { ...manifest, pharnCiSha: other }).join(), /is not pharn-dev\/pharn-ci@/);
+  const moved = { ...manifest, pharnCi: { "0.1.0": { sha: other, ref: "v0.1.0", cliVersion: "0.1.0" } } };
+  assert.match(pinProblems(reference, [`actions/checkout@${other} # v7.0.1`], moved).join(), /is not pharn-dev\/pharn-ci@/);
+  const preTag = { latest: "0.2.0", pharnCi: { ...manifest.pharnCi, "0.2.0": { sha, ref: "v0.2.0-pre", cliVersion: "0.1.0" } } };
+  assert.match(pinProblems(reference, [`actions/checkout@${other} # v7.0.1`], preTag).join(), /# v0\.2\.0-pre/);
   assert.deepEqual(pinProblems("no pins here", [], manifest), ["the pin reference lists no pins"]);
+  assert.throws(() => pinProblems(reference, [], { ...manifest, latest: "9.9.9" }), /manifest\.latest/);
+});
+
+test("one checkout per pinned version, and every case on a pinned version", () => {
+  assert.deepEqual(parsePharnCiArg("0.2.0=/x/y=z"), { version: "0.2.0", dir: "/x/y=z" });
+  assert.throws(() => parsePharnCiArg("/x/y"), /<version>=/);
+  const opts = parseArgs(["--check", "--pharn-ci", "0.1.0=a", "--pharn-ci=0.2.0=b"]);
+  assert.equal(opts.mode, "check");
+  assert.deepEqual([...opts.pharnCi.keys()], ["0.1.0", "0.2.0"]);
+  assert.throws(() => parseArgs(["--check", "--pharn-ci", "0.1.0=a", "--pharn-ci", "0.1.0=b"]), /twice/);
+  assert.throws(() => parseArgs(["--check"]), /usage/);
+
+  const pin = { sha: "a".repeat(40), ref: "v0.1.0", cliVersion: "0.1.0" };
+  const manifest = { latest: "0.2.0", pharnCi: { "0.1.0": pin, "0.2.0": pin }, cases: { a: { pharnCi: "0.1.0" }, b: { pharnCi: "0.2.0" } } };
+  const both = new Map([["0.1.0", "a"], ["0.2.0", "b"]]);
+  assert.deepEqual(checkoutProblems(manifest, both), []);
+  assert.match(checkoutProblems(manifest, new Map([["0.1.0", "a"]])).join(), /no --pharn-ci 0\.2\.0=/);
+  assert.match(checkoutProblems(manifest, new Map([...both, ["0.3.0", "c"]])).join(), /0\.3\.0 is not a version/);
+  assert.match(checkoutProblems({ ...manifest, cases: { c: { pharnCi: "0.3.0" } } }, both).join(), /case c names pharn-ci 0\.3\.0/);
+  assert.match(checkoutProblems({ ...manifest, cases: { d: {} } }, both).join(), /case d names pharn-ci undefined/);
 });

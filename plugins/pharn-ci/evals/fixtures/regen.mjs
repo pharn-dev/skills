@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 // Regenerates the pharn-ci output embedded in the eval scaffolds, and the whole-file
-// "unchanged" graders, from the real pharn-ci CLI and renderer at the commit pinned in
-// manifest.json. Node core only.
+// "unchanged" graders, from the real pharn-ci CLI and renderer. manifest.json pins one
+// pharn-ci commit per version line, and each case names the version it was generated with.
+// Node core only.
 //
-//   node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci <pharn-ci checkout>
-//   node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci <pharn-ci checkout>
+//   node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout>
+//   node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout>
 //
-// The checkout must be built first: pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build
+// Pass one checkout per version in manifest.pharnCi, each at its pinned commit and built first:
+// pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build
 // --check exits 1 and prints a diff when a scaffold or grader is out of date; --write rewrites them.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
@@ -119,21 +121,29 @@ export function extractPins(text) {
   return [...text.matchAll(/([\w.-]+\/[\w.-]+)@([0-9a-f]{40}) # (v\d[\w.-]*)/g)].map((m) => ({ action: m[1], sha: m[2], version: m[3], text: m[0] }));
 }
 
+/** The pinned commit of the newest pharn-ci version the manifest names: the one the install skill writes. */
+export function latestPin(manifest) {
+  const pin = manifest.pharnCi?.[manifest.latest];
+  if (pin === undefined) throw new RegenError(`manifest.latest ${manifest.latest} is not a key of manifest.pharnCi`);
+  return pin;
+}
+
 /**
- * Problems with the install skill's pins: pharn-ci itself must be the manifest's release commit, and every other
- * pin must appear, byte for byte, in pharn-ci's README or example workflows at that commit.
+ * Problems with the install skill's pins: pharn-ci itself must be the latest pinned commit with its ref as the
+ * comment, and every other pin must appear, byte for byte, in pharn-ci's README or example workflows at that commit.
  */
 export function pinProblems(reference, sources, manifest) {
+  const latest = latestPin(manifest);
   const problems = [];
   const pins = extractPins(reference);
   if (pins.length === 0) problems.push("the pin reference lists no pins");
   for (const pin of pins) {
     if (pin.action === "pharn-dev/pharn-ci") {
-      if (pin.sha !== manifest.pharnCiSha || pin.version !== `v${manifest.cliVersion}`) {
-        problems.push(`${pin.text} is not pharn-dev/pharn-ci@${manifest.pharnCiSha} # v${manifest.cliVersion}`);
+      if (pin.sha !== latest.sha || pin.version !== latest.ref) {
+        problems.push(`${pin.text} is not pharn-dev/pharn-ci@${latest.sha} # ${latest.ref}`);
       }
     } else if (!sources.some((s) => s.includes(pin.text))) {
-      problems.push(`${pin.text} appears nowhere in pharn-ci's README or examples/workflows at ${manifest.pharnCiSha}`);
+      problems.push(`${pin.text} appears nowhere in pharn-ci's README or examples/workflows at ${latest.sha}`);
     }
   }
   return problems;
@@ -195,6 +205,12 @@ function checkExpect(name, expect, reports) {
   const dc = report.diffCoverage;
   for (const key of ["percent", "threshold", "coveredLines", "coverableLines"]) if (key in expect) facts[key] = dc?.[key];
   if ("uncoveredLines" in expect) facts.uncoveredLines = Object.fromEntries((dc?.files ?? []).map((f) => [f.path, f.uncoveredLines]));
+  if ("schemaVersion" in expect) facts.schemaVersion = report.schemaVersion;
+  if ("levels" in expect) facts.levels = report.messages.map((m) => m.level);
+  const ti = report.testIntegrity;
+  if ("testIntegrityMode" in expect) facts.testIntegrityMode = ti?.mode;
+  if ("signals" in expect) facts.signals = (ti?.signals ?? []).map((s) => [s.id, s.severity, s.path, s.line]);
+  if ("accepted" in expect) facts.accepted = ti?.accepted ?? null;
   const wanted = Object.fromEntries(Object.entries(expect).filter(([k]) => k !== "file"));
   const got = Object.fromEntries(Object.keys(wanted).map((k) => [k, facts[k]]));
   if (JSON.stringify(got) !== JSON.stringify(wanted)) {
@@ -230,8 +246,14 @@ function regenCase(name, spec, tools) {
       if (src.cli !== undefined) {
         const stdout = run(["node", tools.cli, ...src.cli], tmp, { exits: src.exits });
         if (src.cli.includes("json")) {
-          const report = JSON.parse(stdout);
+          let report = JSON.parse(stdout);
           if (artifact.appendMessage !== undefined) report.messages.push(readInput(artifact.appendMessage));
+          if (artifact.acceptLabel !== undefined) report = applyAcceptLabel(name, report, artifact.acceptLabel, tools);
+          // A kept report is not written into the scaffold: a later artifact renders it (a PR comment).
+          if (artifact.keep !== undefined) {
+            reports.set(artifact.keep, report);
+            continue;
+          }
           reports.set(heredocTarget(artifact.start), report);
           content = json(report, artifact.indent);
         } else {
@@ -244,7 +266,9 @@ function regenCase(name, spec, tools) {
         const r = src.render;
         if (r !== undefined) {
           if (getIn(value, r.at) !== r.placeholder) throw new RegenError(`${name}: ${src.input} has no ${r.placeholder} at ${r.at.join(".")}`);
-          setIn(value, r.at, r.prefix + tools.renderMarkdown(readInput(r.report)));
+          const rendered = typeof r.report === "string" ? readInput(r.report) : reports.get(r.report.artifact);
+          if (rendered === undefined) throw new RegenError(`${name}: no kept report ${JSON.stringify(r.report)} to render`);
+          setIn(value, r.at, r.prefix + tools.renderMarkdown(rendered));
         }
         content = json(value, artifact.indent);
       } else {
@@ -260,6 +284,25 @@ function regenCase(name, spec, tools) {
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }
+}
+
+/**
+ * The accept label as the pharn-ci Action applies it (packages/action/src/accept-label.ts), with pharn-ci core's own
+ * functions, on the pull request, labels and issue events of a gh fixture: only in mode block with a block finding, and
+ * only when the PR carries the label. The CLI never reads the label, so a case that shows an Action report with
+ * TEST_INTEGRITY_ACCEPTED or TEST_INTEGRITY_ACCEPT_IGNORED gets it here, from the same events the stub gh replays.
+ */
+function applyAcceptLabel(name, report, spec, tools) {
+  const { withAcceptLabel, carriesAcceptLabel, decideAcceptLabel, ignoreAcceptLabel, acceptTestIntegrity } = tools.core;
+  if (typeof decideAcceptLabel !== "function") throw new RegenError(`${name}: this pharn-ci has no accept label`);
+  const fixture = readInput(spec.fixture);
+  const label = spec.label ?? "pharn/accepted";
+  const labelled = withAcceptLabel(report, label);
+  const { mode, signals } = labelled.testIntegrity;
+  if (mode !== "block" || !signals.some((s) => s.severity === "block")) throw new RegenError(`${name}: the accept label is only read in mode block with a block finding`);
+  if (carriesAcceptLabel(fixture.pr.labels, label) !== true) throw new RegenError(`${name}: ${spec.fixture} pr.labels does not carry ${label}`);
+  const decision = decideAcceptLabel({ label, authorLogin: fixture.pr.author.login, events: fixture.events });
+  return decision.honoured ? acceptTestIntegrity(labelled, { label, by: decision.by }) : ignoreAcceptLabel(labelled, label, decision.reason);
 }
 
 const COVERAGE_CODES = new Set([
@@ -310,48 +353,76 @@ function lineDiff(label, before, after) {
   return out.join("\n");
 }
 
-async function loadTools(pharnCi, manifest) {
-  if (process.version !== manifest.node) throw new RegenError(`run this with Node ${manifest.node} (this is ${process.version})`);
+async function loadTools(pharnCi, version, pin) {
   const head = run(["git", "-C", pharnCi, "rev-parse", "HEAD"], process.cwd()).trim();
-  if (head !== manifest.pharnCiSha) throw new RegenError(`${pharnCi} is at ${head}, expected ${manifest.pharnCiSha}`);
+  if (head !== pin.sha) throw new RegenError(`${pharnCi} (pharn-ci ${version}) is at ${head}, expected ${pin.sha}`);
   const cli = path.join(pharnCi, "packages/cli/dist/index.js");
   const core = path.join(pharnCi, "packages/core/dist/index.js");
   for (const f of [cli, core]) {
     if (!existsSync(f)) throw new RegenError(`${f} is missing: run pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build in ${pharnCi}`);
   }
-  const version = run(["node", cli, "--version"], pharnCi).trim();
-  if (version !== manifest.cliVersion) throw new RegenError(`pharn-ci CLI is ${version}, expected ${manifest.cliVersion}`);
-  const { renderMarkdown } = await import(pathToFileURL(core).href);
-  return { cli, renderMarkdown };
+  const cliVersion = run(["node", cli, "--version"], pharnCi).trim();
+  if (cliVersion !== pin.cliVersion) throw new RegenError(`pharn-ci ${version}: the CLI prints ${cliVersion}, expected ${pin.cliVersion}`);
+  const coreModule = await import(pathToFileURL(core).href);
+  return { dir: pharnCi, cli, renderMarkdown: coreModule.renderMarkdown, core: coreModule };
 }
 
-function parseArgs(argv) {
-  const opts = { mode: undefined, pharnCi: undefined };
+/** The `<version>=<dir>` value of a --pharn-ci argument. */
+export function parsePharnCiArg(value) {
+  const m = /^([^=]+)=(.+)$/.exec(value ?? "");
+  if (m === null) throw new RegenError(`--pharn-ci takes <version>=<pharn-ci checkout>, got ${value}`);
+  return { version: m[1], dir: m[2] };
+}
+
+export function parseArgs(argv) {
+  const opts = { mode: undefined, pharnCi: new Map() };
+  const addPharnCi = (value) => {
+    const { version, dir } = parsePharnCiArg(value);
+    if (opts.pharnCi.has(version)) throw new RegenError(`--pharn-ci ${version} given twice`);
+    opts.pharnCi.set(version, path.resolve(dir));
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--check" || a === "--write") {
       if (opts.mode !== undefined && opts.mode !== a.slice(2)) throw new RegenError("pass --check or --write, not both");
       opts.mode = a.slice(2);
-    } else if (a === "--pharn-ci") opts.pharnCi = argv[++i];
-    else if (a.startsWith("--pharn-ci=")) opts.pharnCi = a.slice("--pharn-ci=".length);
+    } else if (a === "--pharn-ci") addPharnCi(argv[++i]);
+    else if (a.startsWith("--pharn-ci=")) addPharnCi(a.slice("--pharn-ci=".length));
     else throw new RegenError(`unknown argument: ${a}`);
   }
-  if (opts.mode === undefined || !opts.pharnCi) {
-    throw new RegenError("usage: regen.mjs --check|--write --pharn-ci <pharn-ci checkout>");
+  if (opts.mode === undefined || opts.pharnCi.size === 0) {
+    throw new RegenError("usage: regen.mjs --check|--write --pharn-ci <version>=<pharn-ci checkout> [--pharn-ci <version>=<checkout>]...");
   }
-  opts.pharnCi = path.resolve(opts.pharnCi);
   return opts;
+}
+
+/** Every version in manifest.pharnCi must be given a checkout, and nothing else may be. */
+export function checkoutProblems(manifest, given) {
+  const pinned = Object.keys(manifest.pharnCi ?? {});
+  const problems = [];
+  for (const v of pinned) if (!given.has(v)) problems.push(`no --pharn-ci ${v}=<checkout> (pinned at ${manifest.pharnCi[v].sha})`);
+  for (const v of given.keys()) if (!pinned.includes(v)) problems.push(`--pharn-ci ${v} is not a version in manifest.pharnCi (${pinned.join(", ")})`);
+  for (const [name, spec] of Object.entries(manifest.cases ?? {})) {
+    if (!pinned.includes(spec.pharnCi)) problems.push(`case ${name} names pharn-ci ${spec.pharnCi}, which manifest.pharnCi does not pin`);
+  }
+  latestPin(manifest);
+  return problems;
 }
 
 export async function main(argv) {
   const { mode, pharnCi } = parseArgs(argv);
   const manifest = JSON.parse(readFileSync(path.join(FIXTURES, "manifest.json"), "utf8"));
-  const tools = await loadTools(pharnCi, manifest);
+  if (process.version !== manifest.node) throw new RegenError(`run this with Node ${manifest.node} (this is ${process.version})`);
+  const problems = checkoutProblems(manifest, pharnCi);
+  if (problems.length > 0) throw new RegenError(problems.join("\n"));
+  const tools = new Map();
+  for (const [version, dir] of pharnCi) tools.set(version, await loadTools(dir, version, manifest.pharnCi[version]));
   const diffs = [];
-  for (const problem of pinProblems(readFileSync(PIN_REFERENCE, "utf8"), pharnCiPinSources(pharnCi), manifest)) diffs.push(`pin: ${problem}`);
+  const latestDir = tools.get(manifest.latest).dir;
+  for (const problem of pinProblems(readFileSync(PIN_REFERENCE, "utf8"), pharnCiPinSources(latestDir), manifest)) diffs.push(`pin: ${problem}`);
   if (diffs.length === 0) console.error("pins: ok");
   for (const [name, spec] of Object.entries(manifest.cases)) {
-    const { scaffold, graders } = regenCase(name, spec, tools);
+    const { scaffold, graders } = regenCase(name, spec, tools.get(spec.pharnCi));
     const want = new Map([["scaffold.sh", scaffold], ...[...graders].map(([f, c]) => [`graders/${f}`, c])]);
     const graderDir = path.join(EVALS, name, "graders");
     const stale = readdirSync(graderDir).filter((f) => /^unchanged-.*\.md$/.test(f) && !graders.has(f));
