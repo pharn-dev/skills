@@ -11,11 +11,48 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ## [Unreleased]
 
+### Changed
+
+- `phargus` tooling (no plugin version change): the behavioral release gate
+  needs checkable evidence and a human sign-off. `npm run eval` records every
+  trial in `VERIFICATION.json` itself, and writes redacted `final.json`,
+  `tool-result.json` and `commands.json` for committing under
+  `src/phargus/verification/<run>/`, with their SHA-256. Only
+  `npm run review:evals` records the semantic review, with the reviewer's
+  GitHub handle and time. `npm run check:evals`
+  requires an accepted trial of every case in both clients for the current
+  fingerprint, with intact evidence. The 0.1.0 review, whose rows were edited by
+  hand, whose reviewer was an AI assistant and whose evidence was never
+  committed, is archived as `verification/0.1.0-self-attested.json`.
+  `check:evals` fails until a reviewed run is committed (#27).
+
+### Fixed
+
+- `phargus` 0.1.1: the helpers accept the published `@pharn-dev/phargus` 0.1.x
+  (`>=0.1.0 <0.2.0`) instead of only the unreleased 0.0.1, and the tested runtime
+  is pinned to tag v0.1.0 (819a795875fc547e7daeccc0f0b50846ba642286). The setup
+  recipe installs `@pharn-dev/phargus@0.1.0` from npm, with a tag build as the
+  fallback. No reviewed run is recorded for 0.1.1 under the new gate (see
+  Changed), so it is not released yet.
+- `phargus` 0.1.1: file reads by `capture --file`, `summarize` and `compare`
+  have no event-count cap unless `--max-events` is given; live SSE capture and
+  `rules` replay keep the 10,000-event default. Before, a 60 s recording at
+  200 req/s (12,000 spans) was truncated at 10,000 events and `compare` reported
+  it as inconclusive. The skills now say how to raise the live-capture limit
+  (#26).
+- `phargus` 0.1.1: `phargus-setup` and the tools reference say that a helper
+  result the person names, such as `tool-result.json`, is written to exactly
+  that path, a relative name resolving against the application directory, and
+  that `.phargus/` holds captures only. Before, the setup eval saved the
+  summarize result to `.phargus/tool-result.json` (#28).
+
+## [pharn-ci 0.1.0] - 2026-10-25
+
 ### Added
 
 - `pharn-ci` 0.1.0, a new plugin for the pharn-ci pull request check
   (`pharn-dev/pharn-ci` Action and `pharn-ci check` CLI 0.1.x with Report v1,
-  and 0.2.x with Report v2 and the test-integrity check), not released yet. `pharn-ci-install` adds pharn-ci to a repository: it turns on
+  and 0.2.x with Report v2 and the test-integrity check). `pharn-ci-install` adds pharn-ci to a repository: it turns on
   lcov or Cobertura output with the project's own runner, runs it and checks
   the result with the bundled `scripts/check-coverage.mjs` the way pharn-ci
   reads it (auto-discovery, format, paths matched to tracked files, the
@@ -66,41 +103,6 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   apply, remove or request the accept label. Four evals (`explain-ti03-skip`,
   `explain-accept-ignored`, `explain-accept-pressure`,
   `install-test-integrity`) and a label-command grader cover it.
-
-### Changed
-
-- `phargus` tooling (no plugin version change): the behavioral release gate
-  needs checkable evidence and a human sign-off. `npm run eval` records every
-  trial in `VERIFICATION.json` itself, and writes redacted `final.json`,
-  `tool-result.json` and `commands.json` for committing under
-  `src/phargus/verification/<run>/`, with their SHA-256. Only
-  `npm run review:evals` records the semantic review, with the reviewer's
-  GitHub handle and time. `npm run check:evals`
-  requires an accepted trial of every case in both clients for the current
-  fingerprint, with intact evidence. The 0.1.0 review, whose rows were edited by
-  hand, whose reviewer was an AI assistant and whose evidence was never
-  committed, is archived as `verification/0.1.0-self-attested.json`.
-  `check:evals` fails until a reviewed run is committed (#27).
-
-### Fixed
-
-- `phargus` 0.1.1: the helpers accept the published `@pharn-dev/phargus` 0.1.x
-  (`>=0.1.0 <0.2.0`) instead of only the unreleased 0.0.1, and the tested runtime
-  is pinned to tag v0.1.0 (819a795875fc547e7daeccc0f0b50846ba642286). The setup
-  recipe installs `@pharn-dev/phargus@0.1.0` from npm, with a tag build as the
-  fallback. No reviewed run is recorded for 0.1.1 under the new gate (see
-  Changed), so it is not released yet.
-- `phargus` 0.1.1: file reads by `capture --file`, `summarize` and `compare`
-  have no event-count cap unless `--max-events` is given; live SSE capture and
-  `rules` replay keep the 10,000-event default. Before, a 60 s recording at
-  200 req/s (12,000 spans) was truncated at 10,000 events and `compare` reported
-  it as inconclusive. The skills now say how to raise the live-capture limit
-  (#26).
-- `phargus` 0.1.1: `phargus-setup` and the tools reference say that a helper
-  result the person names, such as `tool-result.json`, is written to exactly
-  that path, a relative name resolving against the application directory, and
-  that `.phargus/` holds captures only. Before, the setup eval saved the
-  summarize result to `.phargus/tool-result.json` (#28).
 
 ## [pharn 0.4.0] - 2026-10-25
 
@@ -285,6 +287,7 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 - CI: `claude plugin validate --strict` and markdownlint.
 
 [Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.4.0...HEAD
+[pharn-ci 0.1.0]: https://github.com/pharn-dev/skills/releases/tag/pharn-ci-v0.1.0
 [pharn 0.4.0]: https://github.com/pharn-dev/skills/compare/pharn-v0.3.1...pharn-v0.4.0
 [phargus 0.1.0]: https://github.com/pharn-dev/skills/releases/tag/phargus-v0.1.0
 [pharn 0.3.1]: https://github.com/pharn-dev/skills/compare/pharn-v0.3.0...pharn-v0.3.1
