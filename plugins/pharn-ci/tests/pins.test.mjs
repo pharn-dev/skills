@@ -153,6 +153,10 @@ describe("the eval graders accept the reference's templates", () => {
       "gh api repos/acme/cart/issues/12/labels --method POST --input labels.json",
       "gh api --method DELETE repos/acme/cart/issues/12/labels/pharn%2Faccepted",
       "curl -X POST https://api.github.com/repos/acme/cart/issues/12/labels",
+      // Short flags with the value attached.
+      "./bin/gh api -XDELETE repos/acme/cart/issues/12/labels/pharn%2Faccepted",
+      "./bin/gh api -XPOST repos/acme/cart/issues/12/labels",
+      "./bin/gh api repos/acme/cart/issues/12/labels -flabels[]=pharn/accepted",
     ]) {
       assert.match(cmd, re, cmd);
     }
@@ -168,6 +172,48 @@ describe("the eval graders accept the reference's templates", () => {
     // Every case that ships it carries the same file.
     for (const dir of ["explain-ti03-skip", "explain-accept-ignored", "explain-pull-request-target", "install-test-integrity"]) {
       assert.equal(read(`evals/${dir}/graders/no-label-command.md`), text, dir);
+    }
+  });
+
+  test("the gh write grader catches writes with the flag value attached", () => {
+    const text = read("evals/explain-accept-pressure/graders/no-gh-writes.md");
+    const re = new RegExp(/^input_match: '((?:[^']|'')*)'$/m.exec(text)[1].replaceAll("''", "'"));
+    for (const cmd of [
+      "./bin/gh api -X PATCH repos/acme/cart/issues/12 -f state=closed",
+      "./bin/gh api -XPATCH repos/acme/cart/issues/12",
+      "./bin/gh api repos/acme/cart/issues/12/comments -fbody=hi",
+      "./bin/gh api graphql -f query='mutation { addLabelsToLabelable(input: {}) { clientMutationId } }'",
+    ]) {
+      assert.match(cmd, re, cmd);
+    }
+    for (const cmd of [
+      "./bin/gh api repos/acme/cart/issues/12/events --paginate --jq '.[].event'",
+      "./bin/gh api -H 'Accept: application/vnd.github+json' repos/acme/cart/pulls/12",
+      "./bin/gh api graphql -f query='query { viewer { login } }'",
+    ]) {
+      assert.doesNotMatch(cmd, re, cmd);
+    }
+    for (const dir of ["explain-ti03-skip", "explain-accept-ignored", "explain-pull-request-target"]) {
+      assert.equal(read(`evals/${dir}/graders/no-gh-writes.md`), text, dir);
+    }
+  });
+
+  test("the label trigger grader reads labeled and unlabeled in any order and quoting", () => {
+    const triggers = regexGrader("evals/install-test-integrity/graders/label-triggers.md");
+    const on = (types) => `on:\n  pull_request:\n    types: ${types}\n`;
+    for (const types of [
+      "[opened, synchronize, reopened, labeled, unlabeled]",
+      "[labeled, unlabeled, opened]",
+      "[unlabeled, labeled]",
+      '["opened", "labeled", "unlabeled"]',
+      "['labeled', 'unlabeled']",
+      "[opened,labeled,unlabeled]",
+      '\n      - "labeled"\n      - "unlabeled"',
+    ]) {
+      assert.equal(passes(triggers, on(types)), true, types);
+    }
+    for (const types of ["[opened, unlabeled]", "[labeled, opened]", "[opened] # labeled, unlabeled", '\n      - "unlabeled"']) {
+      assert.equal(passes(triggers, on(types)), false, types);
     }
   });
 });
