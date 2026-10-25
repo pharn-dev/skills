@@ -1,7 +1,7 @@
 # Getting and reading a pharn-ci report (0.1.x Report v1, 0.2.x Report v2)
 
 Source: pharn-ci 0.1.0 (`schema/report.v1.json`) and pharn-ci 0.2.0 at commit
-`feb9cae77215c8a1cf34415addd972d9017427d8` on main, before its tag
+`0873ce23f3595a3497325635b7bf3ee93ea77687` on main, before its tag
 (`schema/report.v2.json`, `action.yml`, README, `docs/LIMITS.md`,
 `packages/core/src/report.ts` and `render/markdown.ts`). This file is shared
 by the `pharn-ci-explain` and `pharn-ci-cover` skills; keep the copies
@@ -94,7 +94,11 @@ rendering that drops detail.
 ## Reading the comment when there is no JSON
 
 - Heading: `## 🛡️ pharn-ci · <icon> Pass|Warn|Fail`, then a callout with the
-  numbers.
+  numbers (in v2 it also says `N test-integrity findings, M blocking` when
+  there are findings), then a summary table `| Verdict | Diff coverage | Test
+  integrity | Agent setup |` (v1: no Test integrity column). The Test
+  integrity cell is `off`, `none (<mode>)` or `<icon> N findings, M
+  blocking`.
 - `### 🧪 Diff coverage`: `**P%** of changed lines covered (covered/coverable,
   threshold T% | no threshold)`, then a table `| File | Coverage | Covered |
   Uncovered lines |`, worst file first. Uncovered lines are ranges (`5-7,
@@ -104,13 +108,15 @@ rendering that drops detail.
   the messages): one line per finding,
   ``- <icon> **<id>** `path:line` — <detail>``, where ❌ is `block`, ⚠️ `warn`,
   ℹ️ `info`, then a `Hint:` line. The path has no `:line` when the finding has
-  no line (a deleted file). Findings are sorted by id, then path and line, not
-  by severity; the list stops after 20 (`…and N more findings in
-  report.json`). With none it reads `No test-integrity findings (mode:
+  no line (a deleted file). Findings are listed `block` first, then `warn`,
+  then `info`; 10 are shown, the next 10 are in a collapsed `<details>` block,
+  and the rest are counted (`…and N more findings in report.json`). With none it reads `No test-integrity findings (mode:
   <mode>).` or `Test integrity is off for this run.`. An accepted PR ends the
   section with ``Accepted via label `<label>` by @<login>``.
 - `### 💬 Messages`: one line per message, ``- <icon> `CODE` text``, where ❌ is
-  `error`, ⚠️ `warn`, ℹ️ `info`, then a `Hint:` line.
+  `error`, ⚠️ `warn`, ℹ️ `info`, then a `Hint:` line. In v2 a
+  `TEST_INTEGRITY_TI*` message is left out when the 🔍 section lists that
+  signal (the finding and hint are there); the JSON and the job log keep it.
 - `### 🤖 Agent setup`: counts, tools, a `Missing:` line for expected tools,
   and a table of paths and kinds.
 - A comment over 65,000 characters ends with `_Truncated: ..._`.
@@ -147,7 +153,7 @@ Read the JSON with a parser (`node -e` or `jq`), not by eye, when it is long.
 | `testIntegrity.source` | Where the mode came from: `default` (`warn`), `input` (the workflow's `test-integrity` or the CLI's `--test-integrity`) or `config` (`test_integrity.mode` in `.pharn/ci.yml`, which only applies when it is stricter). `policy` is in the schema for a later release and not written by 0.2.x. |
 | `testIntegrity.verdict` | From the signals alone: `fail` if any is `block`, else `warn` if any is `warn`, else `pass`. The report's top-level `verdict` still comes from the messages. |
 | `testIntegrity.signals[]` | One finding each: `id` (`TI01`, ...), `severity` (`block`, `warn`, `info`) for the mode that applied, `path`, `line` (in the new file, or `null`), `detail` (a fixed sentence), and optional `base`/`head` excerpts. Sorted by id, path, line. |
-| `testIntegrity.languages` | Which detectors ran: `ts`, `js`, `py`, `go`. |
+| `testIntegrity.languages` | Which syntax-aware detectors ran: `ts`, `js`, `py`, `go`. Always empty in 0.2.x, whose signals read diff lines only. |
 | `testIntegrity.accepted` | Action only: `{label, by}` when a reviewer who is not the PR author applied the accept label; `by` is their login. Absent or `null` when nothing was accepted. |
 | `testIntegrity.acceptLabel` | Action only: the `accept-label` input, present only when it is not the default `pharn/accepted`. |
 | `meta` | Action only: the run (`event`, `repository`, `prNumber`, `headSha`, `baseSha`, `runId`, `runAttempt`, `actor`, ...). Absent from a CLI report. Compare `meta.headSha` with `git rev-parse HEAD` before trusting line numbers. |

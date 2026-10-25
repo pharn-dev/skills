@@ -1,16 +1,14 @@
 # Workflow and config templates (pharn-ci 0.2.0)
 
-From pharn-ci 0.2.0's README, `action.yml` and `examples/workflows/`, at
-commit `feb9cae77215c8a1cf34415addd972d9017427d8` on main. v0.2.0 is not
-tagged yet, so the pin comment reads `v0.2.0-pre`; it moves to the tag's
-commit when there is one. Copy the pins exactly; they are the only ones this
-skill writes.
+From pharn-ci 0.2.0's README, `action.yml` and `examples/workflows/`, at its
+release commit `0873ce23f3595a3497325635b7bf3ee93ea77687` (tag `v0.2.0`). Copy
+the pins exactly; they are the only ones this skill writes.
 
 ## Pins
 
 | Action | Pin |
 | ------ | --- |
-| pharn-ci | `pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8 # v0.2.0-pre` |
+| pharn-ci | `pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687 # v0.2.0` |
 | checkout | `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1` |
 | Node | `actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0` |
 | Python | `actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0` |
@@ -82,7 +80,7 @@ jobs:
       - run: npm ci
       - run: npm run test:coverage
       - id: pharn-ci
-        uses: pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8 # v0.2.0-pre
+        uses: pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687 # v0.2.0
         timeout-minutes: 5
         with:
           test-integrity: warn # or block; never in .pharn/ci.yml
@@ -129,7 +127,7 @@ only:
 ```yaml
       - id: pharn-ci
         if: (github.event_name == 'pull_request' || github.event_name == 'merge_group') && matrix.node == 24
-        uses: pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8 # v0.2.0-pre
+        uses: pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687 # v0.2.0
         timeout-minutes: 5
         with:
           test-integrity: warn
@@ -192,7 +190,7 @@ jobs:
           path: |
             coverage/lcov.info
             pr-number
-      - uses: pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8 # v0.2.0-pre
+      - uses: pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687 # v0.2.0
         timeout-minutes: 5
         with:
           comment: false
@@ -233,7 +231,7 @@ jobs:
         env:
           PR_FILE: ${{ runner.temp }}/pharn-ci-input/pr-number
         run: echo "number=$(tr -dc '0-9' < "$PR_FILE" | head -c 10)" >> "$GITHUB_OUTPUT"
-      - uses: pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8 # v0.2.0-pre
+      - uses: pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687 # v0.2.0
         timeout-minutes: 5
         with:
           coverage-file: ${{ runner.temp }}/pharn-ci-input/coverage/lcov.info

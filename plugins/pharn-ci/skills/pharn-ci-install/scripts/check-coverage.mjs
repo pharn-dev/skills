@@ -32,7 +32,7 @@ export class UsageError extends Error {}
 // Ported from pharn-ci 0.1.0 (a88e62a8febf5cd9a77b8e0252cd060c3b94782c, Apache-2.0): packages/core/src/paths.ts,
 // coverage/xml.ts, coverage/detect.ts, coverage/lcov.ts, coverage/cobertura.ts and coverage/merge.ts, so a
 // coverage file is detected, read and mapped to repository paths the way pharn-ci does it. These files are
-// unchanged in pharn-ci 0.2.0 (feb9cae77215c8a1cf34415addd972d9017427d8).
+// unchanged in pharn-ci 0.2.0 (0873ce23f3595a3497325635b7bf3ee93ea77687).
 
 // --- paths (paths.ts) ---
 

@@ -1,7 +1,7 @@
 ---
-# pharn-ci pinned to the 0.2.0 commit (v0.2.0-pre, before the tag)
+# pharn-ci pinned to the v0.2.0 release commit
 type: regex
-pattern: 'uses:\s*pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\s+#\s*v0\.2\.0-pre'
+pattern: 'uses:\s*pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687\s+#\s*v0\.2\.0\s'
 target:
   source: file
   path: .github/workflows/ci.yml
