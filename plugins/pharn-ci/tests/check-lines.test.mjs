@@ -118,9 +118,18 @@ describe("readReport", () => {
     assert.deepEqual(out.invalidPaths, ["/etc/passwd", "../outside.mjs", "a\0b.mjs", "C:\\x.mjs"]);
     assert.equal(isSafeRepoPath("src/a b.mjs"), true);
   });
+  test("reads a Report v2 the same way as v1", () => {
+    const v1 = readReport(JSON.stringify(report()));
+    const v2 = report();
+    v2.schemaVersion = 2;
+    v2.testIntegrity = { mode: "warn", source: "default", verdict: "pass", signals: [], languages: [] };
+    assert.deepEqual(readReport(JSON.stringify(v2)), v1);
+  });
   test("refuses non-reports and reports without diff coverage", () => {
     assert.throws(() => readReport("not json"), /not JSON/);
-    assert.throws(() => readReport(JSON.stringify({ schemaVersion: "2", tool: { name: "pharn-ci" } })), /Report v1/);
+    assert.throws(() => readReport(JSON.stringify({ schemaVersion: "2", tool: { name: "pharn-ci" } })), /Report v1 or v2/);
+    assert.throws(() => readReport(JSON.stringify({ ...report(), schemaVersion: 3 })), /Report v1 or v2/);
+    assert.throws(() => readReport(JSON.stringify({ ...report(), schemaVersion: 1 })), /Report v1 or v2/);
     assert.throws(() => readReport(JSON.stringify(report({ diffCoverage: null }))), /no diff coverage/);
     const bad = report();
     bad.diffCoverage.files = [{ path: "", uncoveredLines: [] }];

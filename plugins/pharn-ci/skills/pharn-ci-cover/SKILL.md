@@ -1,6 +1,6 @@
 ---
 name: pharn-ci-cover
-description: Write tests for the added lines that a pharn-ci report (the pharn-dev/pharn-ci GitHub Action or the `pharn-ci check` CLI, 0.1.x, Report v1) lists as uncovered, so a pull request's diff coverage meets its threshold. Use when pharn-ci fails with DIFF_COVERAGE_BELOW_THRESHOLD, or the person asks to cover the lines pharn-ci reports, raise diff coverage, get the pharn-ci coverage check passing, or exclude a file from, lower or switch off the pharn-ci coverage gate (it explains what that changes and asks first). Adds tests only - never lowers the threshold, excludes files, edits the pharn-ci config or workflow, or adds coverage-ignore comments. Not for adding pharn-ci to a repository (pharn-ci-install) or the PHARN CLI (pharn-cli).
+description: Write tests for the added lines that a pharn-ci report (the pharn-dev/pharn-ci GitHub Action or the `pharn-ci check` CLI, 0.1.x with Report v1 or 0.2.x with Report v2) lists as uncovered, so a pull request's diff coverage meets its threshold. Use when pharn-ci fails with DIFF_COVERAGE_BELOW_THRESHOLD, or the person asks to cover the lines pharn-ci reports, raise diff coverage, get the pharn-ci coverage check passing, or exclude a file from, lower or switch off the pharn-ci coverage gate (it explains what that changes and asks first). Adds tests only - never lowers the threshold, excludes files, edits the pharn-ci config or workflow (including the test-integrity and accept-label inputs), adds coverage-ignore comments, skips or focuses tests, weakens test scripts, or applies the accept label. Not for adding pharn-ci to a repository (pharn-ci-install) or the PHARN CLI (pharn-cli).
 compatibility: Node.js >=22 for scripts/check-lines.mjs; git; the project's own test runner.
 ---
 
@@ -8,7 +8,10 @@ compatibility: Node.js >=22 for scripts/check-lines.mjs; git; the project's own 
 
 Closes a diff coverage gap the honest way: tests that run the added lines
 pharn-ci reported as uncovered and check what those lines do. The gate stays
-where it is. Written for pharn-ci 0.1.x and Report v1.
+where it is. Written for pharn-ci 0.1.x (Report v1) and 0.2.x (Report v2);
+both carry `diffCoverage` the same way. In 0.2.x the check also reports
+test-integrity findings (a skipped, deleted or focused test, a weakened test
+script): the rules below keep this skill from causing any.
 
 - Getting the report and its fields: [references/report.md](references/report.md).
 - How to write tests that count, and what is never allowed:
@@ -143,18 +146,24 @@ need to merge today" do not change this.
 
 - Edit `.pharn/ci.yml`, the workflow, or the pharn-ci step's inputs
   (`threshold`, `exclude`, `coverage-root`, `coverage-file`,
-  `fail-on-threshold`, `comment`).
+  `fail-on-threshold`, `comment`, `test-integrity`, `accept-label`).
 - Narrow what the coverage tool measures, in its config or with
   coverage-ignore comments; set `-diff` or `binary` in `.gitattributes`.
-- Skip, delete, rename away or weaken existing tests.
+- Skip, delete, rename away or weaken existing tests, or add `.only`, `fit`
+  or `fdescribe` (it runs only the marked tests).
+- Edit the test scripts in `package.json` (or the runner's equivalent):
+  `|| true`, `--passWithNoTests`, a path or name filter, a removed `pretest`.
 - Write, edit or commit a coverage file.
 - Change production code, including exporting internals for a test.
 
 When the person asks for one of these **by name** (for example "exclude
 `src/generated/**`" or "export `round2`"), it is a separate decision from the
 tests: say that it changes what the check enforces and, for config or workflow
-files, that it shows up as `CONFIG_CHANGED_IN_DIFF` for their reviewers. Make
-it only after they confirm.
+files, that it shows up as `CONFIG_CHANGED_IN_DIFF` for their reviewers. With
+pharn-ci 0.2.x most of these also show up as a test-integrity finding (TI13
+for an ignore comment, TI14 for a lower threshold or a new exclusion, TI03
+for a skip, TI10 for a test script, TI11 for a workflow). Make it only after
+they confirm.
 
 ## Never
 
@@ -162,3 +171,7 @@ it only after they confirm.
 - Run `npx pharn-ci`, or download, install, clone or build anything without
   asking.
 - Post or edit PR comments, re-run workflows, commit or push.
+- Apply, remove or ask to apply the accept label (`pharn/accepted` or the
+  configured name) through `gh`, the API or any other tool. Done with the
+  person's token, it records them as signing off. It is their reviewers'
+  decision, and they apply it themselves.

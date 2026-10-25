@@ -1,13 +1,16 @@
-# Workflow and config templates (pharn-ci 0.1.0)
+# Workflow and config templates (pharn-ci 0.2.0)
 
-From pharn-ci 0.1.0's README and `examples/workflows/`. Copy the pins exactly;
-they are the only ones this skill writes.
+From pharn-ci 0.2.0's README, `action.yml` and `examples/workflows/`, at
+commit `feb9cae77215c8a1cf34415addd972d9017427d8` on main. v0.2.0 is not
+tagged yet, so the pin comment reads `v0.2.0-pre`; it moves to the tag's
+commit when there is one. Copy the pins exactly; they are the only ones this
+skill writes.
 
 ## Pins
 
 | Action | Pin |
 | ------ | --- |
-| pharn-ci | `pharn-dev/pharn-ci@a88e62a8febf5cd9a77b8e0252cd060c3b94782c # v0.1.0` |
+| pharn-ci | `pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8 # v0.2.0-pre` |
 | checkout | `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1` |
 | Node | `actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0` |
 | Python | `actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0` |
@@ -37,7 +40,12 @@ coverage:
 - `root: packages/core` only for package-relative paths in a single package.
 - `exclude:` a block list of globs, only for generated code the person agrees
   to leave out.
-- Only `coverage` and `setup` keys exist; no tabs; no `{}`, anchors or `|`.
+- Only `coverage`, `setup` and `test_integrity` keys exist; no tabs; no `{}`,
+  anchors or `|`. Leave `test_integrity` out: the mode is the workflow's
+  `test-integrity` input (see [Test integrity](#test-integrity-and-the-accept-label)).
+- An `exclude:` the setup PR adds shows up on that PR as
+  `TEST_INTEGRITY_TI14` (a new coverage exclusion): a warning in mode `warn`,
+  a failing check in mode `block`.
 
 ## New workflow: `.github/workflows/pharn-ci.yml`
 
@@ -45,6 +53,8 @@ coverage:
 name: pharn-ci
 on:
   pull_request:
+    # With test-integrity: block, also run when the accept label changes:
+    # types: [opened, synchronize, reopened, labeled, unlabeled]
   # merge_group:   # uncomment only when the repository uses a merge queue
 
 permissions:
@@ -72,8 +82,10 @@ jobs:
       - run: npm ci
       - run: npm run test:coverage
       - id: pharn-ci
-        uses: pharn-dev/pharn-ci@a88e62a8febf5cd9a77b8e0252cd060c3b94782c # v0.1.0
+        uses: pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8 # v0.2.0-pre
         timeout-minutes: 5
+        with:
+          test-integrity: warn # or block; never in .pharn/ci.yml
       # report.json for pharn-ci-explain and pharn-ci-cover: the comment cuts long lists.
       - if: always() && steps.pharn-ci.outputs.report-path != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -84,7 +96,8 @@ jobs:
 
 - `fetch-depth: 0` lets pharn-ci diff against the PR base locally; a shallow
   checkout falls back to the API and can end in `DIFF_UNAVAILABLE`.
-- The pharn-ci step has no `with:`: its settings are in `.pharn/ci.yml`.
+- The pharn-ci step's only input is `test-integrity`; every other setting is
+  in `.pharn/ci.yml`.
 - Toolchain lines per ecosystem (the coverage commands are in
   [coverage.md](coverage.md)):
   - Node: `setup-node` with `node-version`, then the lockfile's install
@@ -116,8 +129,10 @@ only:
 ```yaml
       - id: pharn-ci
         if: (github.event_name == 'pull_request' || github.event_name == 'merge_group') && matrix.node == 24
-        uses: pharn-dev/pharn-ci@a88e62a8febf5cd9a77b8e0252cd060c3b94782c # v0.1.0
+        uses: pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8 # v0.2.0-pre
         timeout-minutes: 5
+        with:
+          test-integrity: warn
       - if: always() && steps.pharn-ci.outputs.report-path != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -132,6 +147,15 @@ only:
 - Add no `concurrency:` block to someone else's workflow; it would cancel
   their push builds. Without one, an older run can write the comment last.
 - Change nothing else: triggers, `paths` filters, the matrix, other steps.
+  Adding `labeled` and `unlabeled` to the `pull_request` trigger for the
+  accept label re-runs this whole job on every label change: ask first.
+- Replacing `npm test` with `npm run test:coverage` (or any command pharn-ci
+  does not read as a test command) shows up on the setup PR as
+  `TEST_INTEGRITY_TI11`, "A step that runs tests was removed from a
+  workflow": a warning in mode `warn`, a failing check in mode `block`. Where
+  the runner takes extra flags through the test script, a command that still
+  starts with `npm test` (`npm test -- <coverage flags>`) does not fire it.
+  Otherwise say the setup PR shows it and why.
 
 ## Fork PRs: two workflows
 
@@ -148,6 +172,7 @@ on: pull_request
 
 permissions:
   contents: read
+  pull-requests: read # the accept label, read in test-integrity: block
 
 jobs:
   test:
@@ -167,10 +192,11 @@ jobs:
           path: |
             coverage/lcov.info
             pr-number
-      - uses: pharn-dev/pharn-ci@a88e62a8febf5cd9a77b8e0252cd060c3b94782c # v0.1.0
+      - uses: pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8 # v0.2.0-pre
         timeout-minutes: 5
         with:
           comment: false
+          test-integrity: warn
 ```
 
 `.github/workflows/pharn-ci-comment.yml`:
@@ -207,13 +233,14 @@ jobs:
         env:
           PR_FILE: ${{ runner.temp }}/pharn-ci-input/pr-number
         run: echo "number=$(tr -dc '0-9' < "$PR_FILE" | head -c 10)" >> "$GITHUB_OUTPUT"
-      - uses: pharn-dev/pharn-ci@a88e62a8febf5cd9a77b8e0252cd060c3b94782c # v0.1.0
+      - uses: pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8 # v0.2.0-pre
         timeout-minutes: 5
         with:
           coverage-file: ${{ runner.temp }}/pharn-ci-input/coverage/lcov.info
           pr-number: ${{ steps.pr.outputs.number }}
           head-sha: ${{ github.event.workflow_run.head_sha }}
           fail-on-threshold: false # the first workflow already gates
+          test-integrity: warn # the same mode as the first workflow
 ```
 
 - `workflows: [pharn-ci]` must equal the first workflow's `name:`.
@@ -229,6 +256,59 @@ jobs:
 - Never `pull_request_target`: it gives a fork's PR a write token, and
   checking out the PR there runs fork code with it. pharn-ci also refuses to
   measure on it (`DIFF_UNAVAILABLE`).
+
+## Test integrity and the accept label
+
+pharn-ci 0.2.x checks every PR for changes that weaken the tests: a test file
+deleted (TI01), a skip added (TI03), `.only`/`fit` added (TI04), a test script
+weakened (TI10), CI no longer running tests (TI11), a coverage-ignore comment
+(TI13), a lower threshold or a new exclusion in `.pharn/ci.yml` (TI14). Each
+finding asks for a reviewer to look; most have an ordinary reason.
+
+- **`test-integrity: warn`** (the default, and what this skill writes): the
+  findings are warnings in the comment. Nothing fails because of them.
+- **`test-integrity: block`**: a block finding fails the check until it is
+  fixed or a reviewer who is not the PR author signs it off with the accept
+  label.
+- **`off`**: no check. Never write it.
+
+The mode is an Action input, not a `.pharn/ci.yml` key, because the PR under
+review carries `.pharn/ci.yml`: pharn-ci lets `test_integrity.mode` there only
+make the check stricter than the input (a looser value is ignored with
+`TEST_INTEGRITY_MODE_IGNORED`). The workflow is where the floor is set, which
+is why CODEOWNERS on `.github/workflows/` matters.
+
+**The accept label** (block mode only). A reviewer who is not the PR author
+applies `pharn/accepted` to the PR; the next run turns that PR's block findings
+into warnings and the comment names who accepted them. It counts only when the
+newest `labeled` event for it was made by a user account other than the PR
+author; a bot's or the author's label is ignored with
+`TEST_INTEGRITY_ACCEPT_IGNORED`. The label is tied to the PR, not a commit, so
+a later push keeps it until someone removes it. Diff coverage is never
+affected. For it to work:
+
+- The label must exist in the repository. The person creates it, for example
+  `gh label create pharn/accepted --description "Test-integrity findings
+  accepted by a reviewer"`; do not run it for them.
+- The workflow runs again when the label changes:
+
+  ```yaml
+  on:
+    pull_request:
+      types: [opened, synchronize, reopened, labeled, unlabeled]
+  ```
+
+  Otherwise someone pushes or re-runs the check after labeling.
+- The token reads the PR and its issue events: `pull-requests: read` or
+  `issues: read`. The templates' `pull-requests: write` includes it, and the
+  fork template's first workflow has `pull-requests: read`.
+- A different label name goes in the `accept-label` input (at most 50
+  characters). It is never read from `.pharn/ci.yml`, which refuses
+  `test_integrity.accept_label`.
+- `push`, `merge_group` and `pull_request_target` runs never read the label,
+  so a block there stays a block. With a merge queue and `block`, a PR whose
+  findings were accepted still fails its `merge_group` run; say so before
+  writing `block` into a workflow that runs on `merge_group`.
 
 ## Dependabot
 
