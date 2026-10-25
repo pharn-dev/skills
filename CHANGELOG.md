@@ -14,13 +14,14 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 ### Added
 
 - `pharn-ci` 0.1.0, a new plugin for the pharn-ci pull request check
-  (`pharn-dev/pharn-ci` Action and `pharn-ci check` CLI 0.1.x, Report v1), not
-  released yet. `pharn-ci-install` adds pharn-ci to a repository: it turns on
+  (`pharn-dev/pharn-ci` Action and `pharn-ci check` CLI 0.1.x with Report v1,
+  and 0.2.x with Report v2 and the test-integrity check), not released yet. `pharn-ci-install` adds pharn-ci to a repository: it turns on
   lcov or Cobertura output with the project's own runner, runs it and checks
   the result with the bundled `scripts/check-coverage.mjs` the way pharn-ci
   reads it (auto-discovery, format, paths matched to tracked files, the
   coverage root they look relative to), writes `.pharn/ci.yml` (threshold 80
-  when none is named) and a workflow pinned to the v0.1.0 release commit, or
+  when none is named) and a workflow pinned to pharn-ci 0.2.0's commit with a
+  `test-integrity: warn` input (`block` when asked), or
   extends an existing test job without running the tests twice, and for fork
   PRs writes the two-workflow `workflow_run` pattern; it never uses
   `pull_request_target`, installs nothing without asking and commits nothing.
@@ -38,14 +39,32 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   numbers CI took from the merge commit). Git errors other than a missing or
   sandbox-blocked git are errors, report paths outside the repository never
   reach git, and without git it finds the repository from its `.git` entry.
-  Fourteen evals (five for install, five for explain, four for cover) run
-  against fixtures generated with the real pharn-ci 0.1.0 CLI and renderer,
+  Eighteen evals (six for install, eight for explain, four for cover) run
+  against fixtures generated with the real pharn-ci 0.1.0 and 0.2.0 CLI and
+  renderer,
   with stub `gh` and `pharn-ci` CLIs where a case needs them; their gate
   graders compare whole files, so a change made through any tool is caught. `evals/fixtures/regen.mjs`
-  regenerates the fixtures from a pharn-ci checkout, and a CI job checks them
-  against pharn-ci v0.1.0, including the install skill's pins and its helper's
-  agreement with the CLI. CI also runs the helpers' unit tests and checks the
+  regenerates the fixtures from one pharn-ci checkout per pinned version, and a
+  CI job checks them against both, including the install skill's pins and its
+  helper's agreement with the CLI. CI also runs the helpers' unit tests and checks the
   shared copies of the report reference and the eval scaffolds.
+
+  pharn-ci 0.2.x test integrity (pinned to pharn-ci main
+  `feb9cae77215c8a1cf34415addd972d9017427d8` until the v0.2.0 tag exists):
+  `pharn-ci-explain` reads Report v2 (`schemaVersion` the number 2) and
+  explains each `TEST_INTEGRITY_*` code (TI01, TI03, TI04, TI10, TI11, TI13,
+  TI14, `ACCEPTED`, `ACCEPT_IGNORED`, `MODE_IGNORED`, `OFF`), the 🔍 Test
+  integrity comment section, how the mode sets each finding's level, and the
+  accept label: a recorded sign-off by a reviewer who is not the PR author.
+  `pharn-ci-install` writes the `test-integrity` input on the pharn-ci step
+  (an input, because `.pharn/ci.yml` travels with the PR and can only tighten
+  it), and in block mode explains the accept label, its `labeled` trigger
+  types and how the person creates the label. `pharn-ci-cover` keeps `.only`,
+  test-script edits and the `test-integrity` and `accept-label` inputs out of
+  bounds, and its `check-lines.mjs` reads Report v2. All three skills never
+  apply, remove or request the accept label. Four evals (`explain-ti03-skip`,
+  `explain-accept-ignored`, `explain-accept-pressure`,
+  `install-test-integrity`) and a label-command grader cover it.
 - `pharn` evals: `add-refused-behind`, `remove-by-name`, `cli-missing-asks`,
   `hostile-output` and `status-strict` cover `pharn add` refused on a behind
   install, `pharn remove <name>`, asking before an `npx` download when no CLI

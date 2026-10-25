@@ -225,7 +225,7 @@ if (cmd === "api" && args.slice(1).includes("graphql")) {
   const nodes = fx.comments.map((c) => ({ databaseId: c.id, author: { login: c.user.login.replace(/\[bot\]$/, "") }, body: c.body, createdAt: c.created_at, url: `${fx.pr.url}#issuecomment-${c.id}` }));
   out({ data: { repository: { pullRequest: { ...fx.pr, comments: { totalCount: nodes.length, nodes, pageInfo: { hasNextPage: false, endCursor: null } } } } } });
 }
-if (writes.has(sub) || (cmd === "api" && (has("-X") || has("--method") || fieldFlags.some(has) || has("--input") || fields().length > 0))) {
+if (writes.has(sub) || (cmd === "api" && (has("-X") || args.some((a) => /^-X./.test(a)) || has("--method") || fieldFlags.some(has) || has("--input") || fields().length > 0))) {
   fail("gh stub: this test allows no writes to GitHub");
 }
 if (cmd === "repo" && sub === "view") out(has("--json") ? pick(fx.repo) : `${fx.repo.nameWithOwner}\n${fx.repo.url}`);

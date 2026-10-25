@@ -74,9 +74,16 @@ from the measurement:
   in vitest, `coveragePathIgnorePatterns` in jest, `omit` in `.coveragerc`,
   `--test-coverage-exclude`, and the like.
 - pharn-ci settings: `threshold`, `exclude`, `coverage-root`, `coverage-file`,
-  `fail-on-threshold`, `comment` in the workflow; anything in `.pharn/ci.yml`;
-  `-diff` or `binary` in `.gitattributes`.
-- Skipping or weakening tests: `.skip`, `.only`, `xit`, `xdescribe`,
-  `@pytest.mark.skip`, `[Ignore]`, `#[ignore]`, `t.Skip()`, deleting or
-  loosening an existing assertion.
+  `fail-on-threshold`, `comment`, `test-integrity`, `accept-label` in the
+  workflow; anything in `.pharn/ci.yml`; `-diff` or `binary` in
+  `.gitattributes`.
+- Skipping, focusing or weakening tests: `.skip`, `.only`, `fit`,
+  `fdescribe`, `xit`, `xdescribe`, `.todo`, `@pytest.mark.skip`, `xfail`,
+  `[Ignore]`, `#[ignore]`, `t.Skip()`, deleting or loosening an existing
+  assertion.
+- Test scripts that can pass without the tests passing: `|| true`, `echo` or
+  `exit 0` in place of the run, `--passWithNoTests`, `--testPathPattern`,
+  `-t`, a removed `pretest` or `posttest`.
+- The accept label: applying it is a reviewer's sign-off, never a step of
+  this skill.
 - Writing, editing or committing a coverage file by hand.

@@ -85,24 +85,37 @@ claude plugin eval plugins/pharn-ci --scaffold --allow-tools Bash Edit Write --t
 
 Each `pharn-ci` eval case builds a small git repository with a pull request
 branch. Reports, PR comments and CLI output in the scaffolds were generated
-with the real pharn-ci 0.1.0 CLI and renderer for that exact tree, so line
-numbers and message texts match. Regenerate them, and the whole-file graders
-built from the scaffolds' files, with
-`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci <checkout>`
-after changing a case's tree or the targeted pharn-ci version; `--check`
-reports drift without writing. The checkout must be pharn-ci at the commit
-pinned in `plugins/pharn-ci/evals/fixtures/manifest.json`, built with
+with the real pharn-ci CLI and renderer for that exact tree, so line numbers
+and message texts match. `plugins/pharn-ci/evals/fixtures/manifest.json` pins
+one pharn-ci commit per supported version line (`pharnCi`: 0.1.0 for Report
+v1, 0.2.0 for Report v2) and names the newest in `latest`, which is what
+`pharn-ci-install` writes; each case names the version it was generated with.
+Regenerate them, and the whole-file graders built from the scaffolds' files,
+with
+`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout>`
+after changing a case's tree or a targeted pharn-ci version; `--check` reports
+drift without writing. Each checkout must be pharn-ci at the commit pinned for
+its version, built with
 `pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build`, and
-Node must be the pinned version. The `pharn-ci fixtures` job in
-`.github/workflows/ci.yml` runs `--check` against that pinned commit; it is not
-one of the required checks above. Cases that need GitHub or a local CLI carry
+Node must be the pinned version. The Action-only accept-label codes are
+produced by applying pharn-ci core's own accept-label functions to the case's
+gh fixture (`acceptLabel` in the manifest), as the Action does. The
+`pharn-ci fixtures` job in `.github/workflows/ci.yml` builds every pinned
+commit and runs `--check`; it is not one of the required checks above. Cases that need GitHub or a local CLI carry
 a stub `gh` or `pharn-ci` in `./bin` that logs its calls and refuses writes.
 The `pharn-ci-cover` cases run the fixture's tests on Node's own test runner,
 so they need Node 22 or later and no network; `Edit` and `Write` are granted so
 the graders can check which files were and were not changed.
 `cover-below-threshold`, `cover-exclude-asks` and `explain-below-threshold`
-share one scaffold, as do `install-node-default` and `install-fork-comments`,
-and CI checks that the copies match. The `install-*` cases have no generated
+share one scaffold, as do `install-node-default`, `install-fork-comments` and
+`install-test-integrity`, and `explain-ti03-skip` and
+`explain-accept-pressure`; CI checks that the copies match. A case whose
+scaffold and manifest spec are both identical to an earlier case's says
+`"sameAs": "<case>"` in the manifest, and the fixture check reuses that case's
+regenerated files instead of building it twice (`explain-accept-pressure`
+does).
+`explain-accept-ignored` is the same scaffold with its own gh fixture, which
+a unit test checks. The `install-*` cases have no generated
 artifacts; for them the fixture check also compares `check-coverage.mjs` with
 the pinned CLI on the case's coverage (`helperParity` in the manifest) and
 checks every pin in `pharn-ci-install/references/workflows.md` against
@@ -115,12 +128,13 @@ copies together; a unit test compares them.
 
 To move the pharn-ci skills to a new pharn-ci release:
 
-1. Update `pharnCiSha` (and `cliVersion`, `node` if they change) in
-   `plugins/pharn-ci/evals/fixtures/manifest.json`, and the `ref:` of the
-   pharn-ci checkout in the `pharn-ci fixtures` job.
-2. Update the release commit in `pharn-ci-install`'s `SKILL.md`,
-   `references/workflows.md` and the `install-*` graders, and any action pins
-   pharn-ci's docs changed.
+1. In `plugins/pharn-ci/evals/fixtures/manifest.json`, update the version's
+   `sha`, `ref` and `cliVersion` under `pharnCi` (or add a version and move
+   `latest`, and `node` if it changes), and the matching checkout in the
+   `pharn-ci fixtures` job. `tests/pins.test.mjs` checks that they agree.
+2. For the `latest` version, update the commit and its `# <ref>` comment in
+   `pharn-ci-install`'s `SKILL.md`, `references/workflows.md` and the
+   `install-*` graders, and any action pins pharn-ci's docs changed.
 3. Re-check the ported code in the `shared:coverage` blocks and in
    `check-coverage.mjs` against pharn-ci's `packages/core/src`.
 4. Run `regen.mjs --write`, the unit tests and the evals, and review the
