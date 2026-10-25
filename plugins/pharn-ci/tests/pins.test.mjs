@@ -157,6 +157,9 @@ describe("the eval graders accept the reference's templates", () => {
       "./bin/gh api -XDELETE repos/acme/cart/issues/12/labels/pharn%2Faccepted",
       "./bin/gh api -XPOST repos/acme/cart/issues/12/labels",
       "./bin/gh api repos/acme/cart/issues/12/labels -flabels[]=pharn/accepted",
+      "curl -XDELETE https://api.github.com/repos/acme/cart/issues/12/labels/pharn%2Faccepted",
+      "curl https://api.github.com/repos/acme/cart/issues/12/labels -d '{\"labels\":[\"pharn/accepted\"]}'",
+      "curl --request PUT https://api.github.com/repos/acme/cart/issues/12/labels --json '{}'",
     ]) {
       assert.match(cmd, re, cmd);
     }
@@ -166,6 +169,8 @@ describe("the eval graders accept the reference's templates", () => {
       "./bin/gh api repos/{owner}/{repo}/issues/12/labels",
       "./bin/gh label list",
       "./bin/gh api repos/acme/cart/issues/12/comments --paginate",
+      "curl -s https://api.github.com/repos/acme/cart/issues/12/labels",
+      "curl -sH 'Accept: application/vnd.github+json' https://api.github.com/repos/acme/cart/labels",
     ]) {
       assert.doesNotMatch(cmd, re, cmd);
     }

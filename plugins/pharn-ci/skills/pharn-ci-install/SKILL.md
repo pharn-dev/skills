@@ -133,7 +133,10 @@ From [references/workflows.md](references/workflows.md):
   and never `off`. With `block` in a new workflow, also write the template's
   `types: [opened, synchronize, reopened, labeled, unlabeled]` under
   `pull_request`, so applying the label re-runs the check; in an existing
-  workflow, ask first. With the fork pattern both workflows get the same mode.
+  workflow, ask first. With the fork pattern both workflows get the same mode,
+  and with `block` the first workflow's `on: pull_request` becomes the mapping
+  with those `types` (the fork section of the reference shows it); the comment
+  workflow follows it and reads the label through `pr-number`.
 - Every `uses:` is pinned to a full commit SHA with its version as a comment,
   taken from the reference. An action the reference has no pin for: reuse
   the repository's own step for it, or leave a clearly marked placeholder and

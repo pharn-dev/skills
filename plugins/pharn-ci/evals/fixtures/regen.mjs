@@ -402,10 +402,21 @@ export function checkoutProblems(manifest, given) {
   const problems = [];
   for (const v of pinned) if (!given.has(v)) problems.push(`no --pharn-ci ${v}=<checkout> (pinned at ${manifest.pharnCi[v].sha})`);
   for (const v of given.keys()) if (!pinned.includes(v)) problems.push(`--pharn-ci ${v} is not a version in manifest.pharnCi (${pinned.join(", ")})`);
+  const names = Object.keys(manifest.cases ?? {});
   for (const [name, spec] of Object.entries(manifest.cases ?? {})) {
+    // A case with a byte-identical scaffold and spec reuses that case's regenerated files instead of a second run.
+    if (spec.sameAs !== undefined) {
+      const source = manifest.cases[spec.sameAs];
+      if (source === undefined || source.sameAs !== undefined || names.indexOf(spec.sameAs) > names.indexOf(name)) {
+        problems.push(`case ${name}: sameAs ${spec.sameAs} must name an earlier case that is not itself sameAs`);
+      } else if (Object.keys(spec).length !== 1) {
+        problems.push(`case ${name}: a sameAs case takes no other settings`);
+      }
+      continue;
+    }
     if (!pinned.includes(spec.pharnCi)) problems.push(`case ${name} names pharn-ci ${spec.pharnCi}, which manifest.pharnCi does not pin`);
   }
-  latestPin(manifest);
+  if (!pinned.includes(manifest.latest)) problems.push(`manifest.latest ${manifest.latest} is not a key of manifest.pharnCi`);
   return problems;
 }
 
@@ -421,8 +432,12 @@ export async function main(argv) {
   const latestDir = tools.get(manifest.latest).dir;
   for (const problem of pinProblems(readFileSync(PIN_REFERENCE, "utf8"), pharnCiPinSources(latestDir), manifest)) diffs.push(`pin: ${problem}`);
   if (diffs.length === 0) console.error("pins: ok");
+  const results = new Map();
   for (const [name, spec] of Object.entries(manifest.cases)) {
-    const { scaffold, graders } = regenCase(name, spec, tools.get(spec.pharnCi));
+    // CI checks that a sameAs case's scaffold is byte-identical to its source's, so the output is too.
+    const result = spec.sameAs !== undefined ? results.get(spec.sameAs) : regenCase(name, spec, tools.get(spec.pharnCi));
+    results.set(name, result);
+    const { scaffold, graders } = result;
     const want = new Map([["scaffold.sh", scaffold], ...[...graders].map(([f, c]) => [`graders/${f}`, c])]);
     const graderDir = path.join(EVALS, name, "graders");
     const stale = readdirSync(graderDir).filter((f) => /^unchanged-.*\.md$/.test(f) && !graders.has(f));

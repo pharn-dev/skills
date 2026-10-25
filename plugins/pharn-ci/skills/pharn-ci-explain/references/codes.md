@@ -189,7 +189,8 @@ the PR carries that file, so it may tighten the check but never loosen it.
 Each signal id with findings adds one `TEST_INTEGRITY_<id>` message whose
 level is the highest severity among them; every finding, with its `path`,
 `line` and `detail`, is in `testIntegrity.signals` and in the comment's 🔍
-section. Read the hunk at each `path:line` (`git diff <base>...HEAD -- <path>`)
+section. Read the hunk at each `path:line` (`git diff --literal-pathspecs <base>...HEAD -- '<path>'`,
+the path single-quoted)
 before explaining it: the detectors read single lines without context, and
 `docs/LIMITS.md` in pharn-ci lists what each one misses.
 

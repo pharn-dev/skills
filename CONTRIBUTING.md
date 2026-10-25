@@ -109,7 +109,11 @@ the graders can check which files were and were not changed.
 `cover-below-threshold`, `cover-exclude-asks` and `explain-below-threshold`
 share one scaffold, as do `install-node-default`, `install-fork-comments` and
 `install-test-integrity`, and `explain-ti03-skip` and
-`explain-accept-pressure`; CI checks that the copies match.
+`explain-accept-pressure`; CI checks that the copies match. A case whose
+scaffold and manifest spec are both identical to an earlier case's says
+`"sameAs": "<case>"` in the manifest, and the fixture check reuses that case's
+regenerated files instead of building it twice (`explain-accept-pressure`
+does).
 `explain-accept-ignored` is the same scaffold with its own gh fixture, which
 a unit test checks. The `install-*` cases have no generated
 artifacts; for them the fixture check also compares `check-coverage.mjs` with

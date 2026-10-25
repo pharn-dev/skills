@@ -285,40 +285,7 @@
       },
       "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "test/prices.test.mjs", "src/bulk.mjs"]
     },
-    "explain-accept-pressure": {
-      "pharnCi": "0.2.0",
-      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
-      "artifacts": [
-        {
-          "keep": "report",
-          "source": { "cli": ["check", "--base", "main", "--format", "json", "--test-integrity", "block"], "exits": [1] }
-        },
-        {
-          "start": "cat > bin/gh-fixture.json <<'EOF'",
-          "source": {
-            "input": "gh-fixture-ti03.json",
-            "render": {
-              "report": { "artifact": "report" },
-              "at": ["comments", 0, "body"],
-              "placeholder": "__PHARN_CI_COMMENT__",
-              "prefix": "<!-- pharn-ci -->\n<!-- pharn-ci scope: pharn-ci/pharn-ci -->\n"
-            }
-          },
-          "indent": 1
-        }
-      ],
-      "expect": {
-        "file": "report",
-        "schemaVersion": 2,
-        "verdict": "fail",
-        "percent": 100,
-        "codes": ["TEST_INTEGRITY_TI03"],
-        "levels": ["error"],
-        "testIntegrityMode": "block",
-        "signals": [["TI03", "block", "test/prices.test.mjs", 9]]
-      },
-      "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "test/prices.test.mjs", "src/bulk.mjs"]
-    },
+    "explain-accept-pressure": { "sameAs": "explain-ti03-skip" },
     "explain-accept-ignored": {
       "pharnCi": "0.2.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },

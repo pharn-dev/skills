@@ -134,4 +134,17 @@ test("one checkout per pinned version, and every case on a pinned version", () =
   assert.match(checkoutProblems(manifest, new Map([...both, ["0.3.0", "c"]])).join(), /0\.3\.0 is not a version/);
   assert.match(checkoutProblems({ ...manifest, cases: { c: { pharnCi: "0.3.0" } } }, both).join(), /case c names pharn-ci 0\.3\.0/);
   assert.match(checkoutProblems({ ...manifest, cases: { d: {} } }, both).join(), /case d names pharn-ci undefined/);
+  // A bad latest is one more problem, reported with the others rather than in place of them.
+  const renamed = checkoutProblems({ ...manifest, latest: "0.2.1", cases: { e: { pharnCi: "0.2.1" } } }, both);
+  assert.equal(renamed.length, 2, renamed.join("\n"));
+  assert.match(renamed.join(), /case e names pharn-ci 0\.2\.1/);
+  assert.match(renamed.join(), /manifest\.latest 0\.2\.1 is not a key/);
+
+  // sameAs: an earlier case that is not itself sameAs, and nothing else in the spec.
+  const same = (cases) => checkoutProblems({ ...manifest, cases }, both);
+  assert.deepEqual(same({ a: { pharnCi: "0.1.0" }, b: { sameAs: "a" } }), []);
+  assert.match(same({ b: { sameAs: "a" }, a: { pharnCi: "0.1.0" } }).join(), /case b: sameAs a must name an earlier case/);
+  assert.match(same({ a: { pharnCi: "0.1.0" }, b: { sameAs: "a" }, c: { sameAs: "b" } }).join(), /case c: sameAs b/);
+  assert.match(same({ b: { sameAs: "x" } }).join(), /case b: sameAs x/);
+  assert.match(same({ a: { pharnCi: "0.1.0" }, b: { sameAs: "a", pharnCi: "0.2.0" } }).join(), /takes no other settings/);
 });

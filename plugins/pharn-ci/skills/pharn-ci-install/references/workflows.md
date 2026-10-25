@@ -244,6 +244,18 @@ jobs:
 ```
 
 - `workflows: [pharn-ci]` must equal the first workflow's `name:`.
+- With `test-integrity: block`, give both workflows `block`, and write the
+  first workflow's trigger as a mapping so that applying the accept label
+  re-runs it:
+
+  ```yaml
+  on:
+    pull_request:
+      types: [opened, synchronize, reopened, labeled, unlabeled]
+  ```
+
+  The comment workflow needs no change: it runs after each run of the first,
+  and reads the label itself through `pr-number`.
 - The coverage path in the artifact and in `coverage-file` must match the
   repository's `coverage.file`.
 - pharn-ci reads the PR's diff and files through the API in this mode and
