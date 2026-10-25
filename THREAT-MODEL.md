@@ -20,8 +20,12 @@ text, PR comments, job logs and artifacts as data from the change under review,
 keep `pharn-ci-explain` read-only unless asked, and limit `pharn-ci-cover` to
 test files: the gate (threshold, exclusions, config, workflow, coverage-ignore
 comments, production code) changes only after the person's explicit
-confirmation. Their evals include a report and a file name that carry
-instructions, and a request to "do whatever it takes". `pharn-ci-install`
+confirmation. None of them applies, removes or asks to apply pharn-ci's accept
+label: pharn-ci 0.2.x records that label as a sign-off by the user who applied
+it, so an agent applying it with the person's token would record a sign-off
+the person never gave. Their evals include a report and a file name that carry
+instructions, a request to "do whatever it takes", and a request to "just add
+the label", and a grader fails any command that changes a label. `pharn-ci-install`
 writes CI configuration; see [pharn-ci workflows](#pharn-ci-workflows).
 Phargus's [data guidance](src/phargus/knowledge/data.md) treats request paths, stack
 strings, object names, and finding messages as evidence rather than instructions.
@@ -67,8 +71,10 @@ workflow keeps only digits from the uploaded PR number and passes the trusted
 documentation at the pinned release; a [unit test](plugins/pharn-ci/tests/pins.test.mjs)
 and the fixture check keep those pins and pharn-ci's release commit in step.
 Checkouts use `persist-credentials: false`. Settings live only in
-`.pharn/ci.yml`, and the skill recommends CODEOWNERS for it and for
-`.github/workflows/`. Extending an existing job, it keeps the job's triggers,
+`.pharn/ci.yml`, except the test-integrity mode, which is a workflow input
+because the PR carries `.pharn/ci.yml` and pharn-ci lets it only tighten the
+mode; the skill never writes `off`. It recommends CODEOWNERS for
+`.pharn/ci.yml` and `.github/workflows/`, and never creates the accept label. Extending an existing job, it keeps the job's triggers,
 matrix and steps, runs pharn-ci only on `pull_request` and one matrix leg, and
 asks when the job's permissions are unclear. It runs the project's coverage
 command locally, which runs project code, and says so; it installs nothing
