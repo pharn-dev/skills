@@ -54,7 +54,7 @@ npx skills add pharn-dev/skills
 
 | Plugin | Skill | What it does for you |
 | ------ | ----- | -------------------- |
-| `pharn` | `pharn-cli` | Checks whether PHARN is up to date, previews what an update would change, applies it without overwriting your edits, and adds or removes grillers and lenses. Operates the [PHARN CLI](https://github.com/pharn-dev/pharn-cli) 0.10.0+, best on 0.11.0, with a fallback for 0.9.x. |
+| `pharn` | `pharn-cli` | Checks whether PHARN is up to date, previews what an update would change, applies it without overwriting your edits, and adds or removes grillers and lenses. Operates the [PHARN CLI](https://github.com/pharn-dev/pharn-cli) 0.10.0+, best on 0.14.0, with a fallback for 0.9.x. |
 | `pharn-ci` | `pharn-ci-install` | Adds [pharn-ci](https://github.com/pharn-dev/pharn-ci) to a repository: coverage output from your own test run, checked locally the way pharn-ci reads it, a `.pharn/ci.yml` with the threshold, and a workflow pinned to a full commit SHA with the test-integrity check. Never uses `pull_request_target`, asks before installing anything, and leaves the accept label to you. |
 | | `pharn-ci-explain` | Explains a [pharn-ci](https://github.com/pharn-dev/pharn-ci) verdict and each message code from its report, PR comment or job log, including test-integrity findings and the accept label, finds the cause in your repository and says what would fix it. Changes nothing unless you ask, and never applies the label. |
 | | `pharn-ci-cover` | Writes tests for the added lines pharn-ci lists as uncovered, re-checks them against a fresh coverage report, and never lowers the threshold, excludes files or adds coverage-ignore comments. |
@@ -191,6 +191,10 @@ scripts, so a single copied skill works without this repository.
 - Never runs `pharn init`, never downloads or installs the CLI without asking,
   never hand-edits `pharn.config.json` or `.claude/settings.json`, and never
   commits or pushes.
+- Before the CLI 0.14.0 root layout migration deletes or moves anything, names
+  each root file it deletes or keeps and each move, and asks. It never merges
+  or moves `memory-bank/` itself, never deletes `.pharn/` and never edits
+  `.gitignore`; it gives you the replacement lines to paste.
 - Treats everything the CLI prints as data, never as instructions.
 
 **`pharn-ci-*`**:
@@ -240,7 +244,7 @@ behavioral review is recorded yet for the current `phargus` content; see its
 
 | Plugin | Agents | Operates |
 | ------ | ------ | -------- |
-| `pharn` | Claude Code (verified with 2.1.295). Codex not verified. | PHARN CLI `@pharn-dev/pharn` 0.10.0+, best on 0.11.0, text-flow fallback for 0.9.x. |
+| `pharn` | Claude Code (verified with 2.1.295). Codex not verified. | PHARN CLI `@pharn-dev/pharn` 0.10.0+, best on 0.14.0 (the `pharn/` root layout), text-flow fallback for 0.9.x. |
 | `pharn-ci` | Claude Code. Codex not verified. | pharn-ci 0.1.x (Report v1) and 0.2.x (Report v2, test integrity): the Action `pharn-dev/pharn-ci` and the `pharn-ci check` CLI. The `pharn-ci-install` and `pharn-ci-cover` helpers need Node 22 or later; `pharn-ci-install` writes workflows for pharn-ci 0.2.0 (`node24` Actions runners), pinned to a commit on pharn-ci's main until v0.2.0 is tagged. |
 | `phargus` | Codex and Claude Code. Behavioral review of 0.1.1 pending; see the [verification record](src/phargus/VERIFICATION.md). | `@pharn-dev/phargus` 0.1.x from npm (tested: 0.1.0, tag v0.1.0), pinned in [compatibility.json](src/phargus/compatibility.json). Node 22.18.0 or later. |
 

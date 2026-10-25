@@ -1,7 +1,7 @@
 # JSON reports (pharn CLI 0.10.0)
 
 Source: the CLI's `docs/commands/status.md` and `docs/commands/update.md` at
-0.10.0. Both reports have `schemaVersion: 1`; match it exactly. New keys may
+0.10.0, and at 0.14.0 for `plan.rootMigration`. Both reports have `schemaVersion: 1`; match it exactly. New keys may
 appear within 1, so ignore keys you do not know. The two schema versions are
 independent.
 
@@ -53,6 +53,9 @@ decides again.
 | `planned` | A real run would proceed. | object |
 | `up-to-date` | Installed is the latest; nothing re-opens the run. | `null` |
 | `ahead-of-release` | Install is newer than the newest verified release (`--ref latest`); nothing changes without `--force`. | `null` |
+| `ahead-of-main` | 0.13.0+: install is newer than pharn-oss `main` (it moved back); nothing changes without `--force`. | `null` |
+
+Treat any other `status` as "do not apply".
 
 Top level: `force`, `channel`, `channelChange` (`{from, to}` or `null`),
 `source`, `archetypes`, and `version`: `installed`, `latest`, and, with a
@@ -66,12 +69,13 @@ Inside `plan`:
 | `files[]` | `{rel, action, label, backup, forced}`. `action`: `write`, `noop`, `skip`. `label`: `restored`, `updated`, `ok`, or a skip reason `modified`, `unrecorded`, `unverifiable`, `unreadable`. |
 | `writes[]` | Files a real run would write. |
 | `skipped[]` | `{label, rels[]}`: the person's edits (or unprovable files) left alone. |
-| `backups[]` | Files copied to `.pharn-backup/<timestamp>/` first. Non-empty only under `--force` (or when `--force` would replace a `models` block). |
+| `backups[]` | Files copied first to `pharn/.backup/<timestamp>/` (CLI 0.14.0+) or `.pharn-backup/<timestamp>/` (older CLIs). Non-empty under `--force` (or when `--force` would replace a `models` block), and from 0.14.0 when a root layout migration moves files. |
 | `counts` | `updated`, `restored`, `ok`, `forced`, `skipped`. |
 | `capabilities` | `count` and `changes[{role, name, source, reason}]`; reason: `added`, `dropped-unselected`, `dropped-gone`, `kept-manual`, `kept-frozen`. |
 | `models` | `outcome` (`restored`, `updated`, `ok`, `kept`, `forced`, `upstream-absent`, `upstream-invalid`), `label`, `backup`, `conversion`, `problems[]`, `upstreamReasons[]`. The block itself is not included. |
 | `hooks` | Same shape as in `status`. `update` never writes settings files. |
 | `layout`, `abandonedLayout`, `featuresReadmeRelocation` | Layout moves. |
+| `rootMigration` | 0.14.0+ (absent before): the root layout migration, `null` when nothing applies. See below. |
 | `frozenCapabilities`, `unknownCapabilities` | Upstream capabilities this CLI cannot read, kept as they are. |
 | `recordsNote` | Why `pharn.records.json` was unusable (then every difference is `unverifiable`), else `null`. |
 
@@ -81,6 +85,19 @@ exactly the `skipped` files after backing each one up, plus `pharn.config.json`
 when the `models` block was kept (`models.label` is `modified`, `unrecorded` or
 `unverifiable`). That comes from the one plain dry run; no separate
 `--dry-run --force` run is needed, and none of it is consent to run `--force`.
+
+### `plan.rootMigration` (0.14.0+)
+
+`{docs, moves, scratchNotice, gitignoreHints}`, or `null`. Added within
+`schemaVersion` 1. What to tell the person is in SKILL.md, Root layout
+migration.
+
+| Key | Meaning |
+| --- | ------- |
+| `docs[]` | `{rel, action}` for the root `THREAT-MODEL.md` and `LIMITS.md`. `delete`: still exactly as pharn wrote it; deleted once its `pharn/` copy lands. `keep-edited`: the person edited it; kept, listed under `ORPHANED`. `unverifiable`: pharn cannot prove it wrote it; kept. `absent`: not there. |
+| `moves[]` | `{from, to, action}`: `memory-bank/` -> `pharn/memory-bank/`, `pharn.spec-template.md` -> `pharn/spec-template.md` (a directory ends in `/`). `move`: moved after a backup (the files are in `plan.backups`). `conflict`: `to` already exists; nothing is moved or merged. `refused-symlink`: it, or the way to `to`, is a symbolic link. `unreadable`: cannot be read or is the wrong type. `absent`: not there. `conflict`, `refused-symlink` and `unreadable` make the real run exit 1 after everything else it did. Empty below pharn-oss SKILLS 7. |
+| `scratchNotice` | `true` when the old `.pharn/` holds anything but pharn-ci's `ci.yml`; always `false` below pharn-oss SKILLS 7. The CLI never moves or deletes `.pharn/`. |
+| `gitignoreHints[]` | Replacement lines for the old entries `.gitignore` names: `pharn/.run/` for `.pharn/`, `pharn/.backup/` for `.pharn-backup`, `pharn/.lock*` for `.pharn.lock`. Empty when it names none, and below pharn-oss SKILLS 7. The CLI never edits `.gitignore`. |
 
 ## `pharn list --json`
 
