@@ -111,8 +111,10 @@ so report what the real run printed, not just the plan.
 - Your answer after an update always names: every SKIPPED file and why, the
   unwired hooks (with their paste-ready entries), and what was written. Do
   not say everything was updated when anything was skipped. After a root
-  layout migration it also names each root file deleted, each move made and
-  each one not made (below): `git status --short` shows them as deletions at
+  layout migration it also names, from what the real run printed (not the
+  plan), each root file deleted, each planned delete it kept instead
+  (`kept <file> — pharn/<file> did not land …`), each move made and each one
+  not made (below): `git status --short` shows them as deletions at
   the root and new paths under `pharn/`, which the plan already told the
   person to expect.
 
@@ -135,7 +137,9 @@ request to update does not cover by itself. Before asking to apply, your answer
 names:
 
 - **Root docs** (`docs[]`): each `delete` (still exactly as pharn wrote it, so
-  it is deleted once the `pharn/` copy lands) and each that stays: `keep-edited`
+  it is deleted only once the `pharn/` copy lands as upstream ships it; when
+  that copy is in `plan.skipped` because the person edited it, say the root
+  copy stays as well) and each that stays: `keep-edited`
   (the person edited it; it stays, is no longer managed and is listed under
   `ORPHANED`, for them to compare with the new `pharn/` copy and delete) or
   `unverifiable` (pharn cannot prove it wrote it; it stays). Skip `absent`.
@@ -162,14 +166,18 @@ Then ask. After the person agrees, run `pharn update --yes` as usual. An exit 1
 whose output has `NOT MOVED` lines and no refusal on stderr comes from the
 moves that were not made (a `conflict`, `refused-symlink`, `unreadable`, or a
 move that failed), not a failed update: everything else was applied. Report
-what was applied and each move still left to them. Under the lock the real run re-checks what it would delete or move and, if that
-changed since the preview, refuses with exit 1 and changes nothing; report it.
+what was applied and each move still left to them. Under the lock the real
+run re-checks what it would delete or move and, if that changed since the
+preview, refuses with exit 1 and changes nothing; report it.
 
 ## 4. Add and remove (by name only)
 
 - `pharn add <name>` or `pharn add <role>:<name>` (`griller:` or `lens:`).
-  `add` needs the install to match the current skills version; if it refuses,
-  run the update flow first.
+  `add` needs the install to match the current skills version; if it refuses
+  for that, run the update flow first. If it refuses with `This pharn is too
+  old for the current github.com/pharn-dev/pharn-oss`, an update refuses the
+  same way: tell the person to upgrade the CLI first
+  ([references/commands.md](references/commands.md#min_cli-refusal)).
 - `pharn remove <name>`. Takes no options. An `auto` capability may return on
   the next update if the project's archetypes still select it; say so.
 - The bare picker (no name) needs a terminal. Do not run it.

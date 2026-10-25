@@ -88,13 +88,12 @@ lock, so never run two CLI versions in one project at once.
 pharn-oss can declare the oldest CLI its content needs in a root `MIN_CLI`
 file. When the installed CLI is older, `init`, `add` and `update` (its dry run
 included) refuse before writing anything: exit 1, stdout empty in JSON mode,
-and on stderr (the same wording from 0.9.0 through 0.14.0; the versions vary):
+and one line on stderr (the same wording from 0.9.0 through 0.14.1; the two
+versions vary). Shown wrapped here; match on its start, `This pharn is too old
+for the current github.com/pharn-dev/pharn-oss`:
 
 ```text
-This pharn is too old for the current github.com/pharn-dev/pharn-oss: it
-requires @pharn-dev/pharn v0.14.0 or newer, and v0.13.0 is installed. Upgrade
-(`npm install -g @pharn-dev/pharn@latest`, or run `npx @pharn-dev/pharn@latest`),
-then re-run this command. Nothing was written.
+This pharn is too old for the current github.com/pharn-dev/pharn-oss: it requires @pharn-dev/pharn v0.14.0 or newer, and v0.13.0 is installed. Upgrade (`npm install -g @pharn-dev/pharn@latest`, or run `npx @pharn-dev/pharn@latest`), then re-run this command. Nothing was written.
 ```
 
 Tell the person to upgrade the CLI first, the way they installed it (for a

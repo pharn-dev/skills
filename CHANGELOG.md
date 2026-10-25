@@ -112,7 +112,8 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   `THREAT-MODEL.md` / `LIMITS.md` the update deletes or keeps because the
   person edited it, each move of `memory-bank/` and the spec template, and any
   conflict (both locations exist: the CLI never merges canon, the person
-  resolves it by hand, and the run exits 1 for that move alone). It says the
+  resolves it by hand, and the whole run exits 1 after applying everything
+  else). It says the
   old `.pharn/` scratch is the person's to delete and that `.pharn/ci.yml`
   stays for pharn-ci, and gives the `.gitignore` replacement lines as text.
   After the real run, an exit 1 with `NOT MOVED` lines is reported as the
