@@ -61,7 +61,7 @@ jobs:
           node-version: 24
       - run: npm run test:coverage
       - id: pharn-ci
-        uses: pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8 # v0.2.0-pre
+        uses: pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687 # v0.2.0
         timeout-minutes: 5
         with:
           test-integrity: block
@@ -186,7 +186,7 @@ cat > bin/gh-fixture.json <<'EOF'
    },
    "created_at": "2026-10-24T10:21:40Z",
    "updated_at": "2026-10-24T11:05:41Z",
-   "body": "<!-- pharn-ci -->\n<!-- pharn-ci scope: pharn-ci/pharn-ci -->\n<img src=\"https://raw.githubusercontent.com/pharn-dev/pharn-ci/main/docs/assets/pharn-logo.svg\" alt=\"pharn\" width=\"48\" height=\"48\">\n\n## 🛡️ pharn-ci · ❌ Fail\n\n> [!CAUTION]\n> **Fail** · Diff coverage of this change is 100% against a threshold of 80%; 1 agent setup file found.\n\n| Verdict | Diff coverage | Agent setup |\n| --- | --- | --- |\n| ❌ Fail | 100% (threshold 80%) | 1 file |\n\n### 🧪 Diff coverage\n\n**100%** of changed lines covered (6/6, threshold 80%)\n\n<details>\n<summary>Changed files (1)</summary>\n\n| File | Coverage | Covered | Uncovered lines |\n| --- | ---: | ---: | --- |\n| `src/bulk.mjs` | 100% | 6/6 |  |\n\n</details>\n\n### 🔍 Test integrity\n\n- ❌ **TI03** `test/prices.test.mjs:9` — An unconditional skip was added to a test that the diff shows existed before this change, so that test no longer runs.\n  - Hint: A reviewer must decide whether each skipped test may stay, for example one that fails in CI; a reviewer who is not the PR author records that sign-off by applying the accept label `pharn/accepted`.\n\n### 💬 Messages (2)\n\n- ❌ `TEST_INTEGRITY_TI03` This change skips tests or marks them as expected to fail: \\`test/prices.test.mjs\\`. Check that each skip was meant.\n  - Hint: A reviewer must decide whether each skipped test may stay, for example one that fails in CI; a reviewer who is not the PR author records that sign-off by applying the accept label `pharn/accepted`.\n- ⚠️ `TEST_INTEGRITY_ACCEPT_IGNORED` The accept label \"pharn/accepted\" was ignored: it was applied by the PR author, and a reviewer other than the author must apply it.\n  - Hint: The block findings stand. Fix them, or ask a reviewer who is not the PR author to apply the label; it counts only when a user account other than the author applied it last.\n\n### 🤖 Agent setup (1 file)\n\nAgent setup: 1 file · amp, codex, copilot, cursor, jules, opencode, zed\n\n<details>\n<summary>Agent setup files (1)</summary>\n\n| Path | Kind |\n| --- | --- |\n| `AGENTS.md` | agents-md |\n\n</details>\n\n---\n\n<sub>pharn-ci 0.1.0 · report schema v2 · coverage format lcov</sub>\n"
+   "body": "<!-- pharn-ci -->\n<!-- pharn-ci scope: pharn-ci/pharn-ci -->\n<img src=\"https://raw.githubusercontent.com/pharn-dev/pharn-ci/main/docs/assets/pharn-logo.svg\" alt=\"pharn\" width=\"48\" height=\"48\">\n\n## 🛡️ pharn-ci · ❌ Fail\n\n> [!CAUTION]\n> **Fail** · Diff coverage of this change is 100% against a threshold of 80%; 1 test-integrity finding, 1 blocking; 1 agent setup file found.\n\n| Verdict | Diff coverage | Test integrity | Agent setup |\n| --- | --- | --- | --- |\n| ❌ Fail | 100% (threshold 80%) | ❌ 1 finding, 1 blocking | 1 file |\n\n### 🧪 Diff coverage\n\n**100%** of changed lines covered (6/6, threshold 80%)\n\n<details>\n<summary>Changed files (1)</summary>\n\n| File | Coverage | Covered | Uncovered lines |\n| --- | ---: | ---: | --- |\n| `src/bulk.mjs` | 100% | 6/6 |  |\n\n</details>\n\n### 🔍 Test integrity\n\n- ❌ **TI03** `test/prices.test.mjs:9` — An unconditional skip was added to a test that the diff shows existed before this change, so that test no longer runs.\n  - Hint: A reviewer must decide whether each skipped test may stay, for example one that fails in CI; a reviewer who is not the PR author records that sign-off by applying the accept label `pharn/accepted`.\n\n### 💬 Messages (1)\n\n- ⚠️ `TEST_INTEGRITY_ACCEPT_IGNORED` The accept label \"pharn/accepted\" was ignored: it was applied by the PR author, and a reviewer other than the author must apply it.\n  - Hint: The block findings stand. Fix them, or ask a reviewer who is not the PR author to apply the label; it counts only when a user account other than the author applied it last.\n\n### 🤖 Agent setup (1 file)\n\nAgent setup: 1 file · amp, codex, copilot, cursor, jules, opencode, zed\n\n<details>\n<summary>Agent setup files (1)</summary>\n\n| Path | Kind |\n| --- | --- |\n| `AGENTS.md` | agents-md |\n\n</details>\n\n---\n\n<sub>pharn-ci 0.2.0 · report schema v2 · coverage format lcov</sub>\n"
   }
  ],
  "runs": [
@@ -254,20 +254,20 @@ cat > bin/gh-fixture.json <<'EOF'
    "pharn-ci\tSet up job\t2026-10-24T10:21:05Z Current runner version: 2.330.0",
    "pharn-ci\tRun npm run test:coverage\t2026-10-24T10:21:19Z ℹ tests 5",
    "pharn-ci\tRun npm run test:coverage\t2026-10-24T10:21:19Z ℹ skipped 1",
-   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T10:21:38Z coverage: lcov (auto-detected)",
-   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T10:21:39Z created pharn-ci comment",
-   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T10:21:40Z pharn-ci verdict: fail",
-   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T10:21:40Z ##[error]pharn-ci: This change skips tests or marks them as expected to fail: `test/prices.test.mjs`. Check that each skip was meant."
+   "pharn-ci\tRun pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687\t2026-10-24T10:21:38Z coverage: lcov (auto-detected)",
+   "pharn-ci\tRun pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687\t2026-10-24T10:21:39Z created pharn-ci comment",
+   "pharn-ci\tRun pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687\t2026-10-24T10:21:40Z pharn-ci verdict: fail",
+   "pharn-ci\tRun pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687\t2026-10-24T10:21:40Z ##[error]pharn-ci: This change skips tests or marks them as expected to fail: `test/prices.test.mjs`. Check that each skip was meant."
   ],
   "1203": [
    "pharn-ci\tSet up job\t2026-10-24T11:05:05Z Current runner version: 2.330.0",
    "pharn-ci\tRun npm run test:coverage\t2026-10-24T11:05:19Z ℹ tests 5",
    "pharn-ci\tRun npm run test:coverage\t2026-10-24T11:05:19Z ℹ skipped 1",
-   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T11:05:38Z coverage: lcov (auto-detected)",
-   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T11:05:39Z accept label ignored: author",
-   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T11:05:39Z updated pharn-ci comment 3101",
-   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T11:05:40Z pharn-ci verdict: fail",
-   "pharn-ci\tRun pharn-dev/pharn-ci@feb9cae77215c8a1cf34415addd972d9017427d8\t2026-10-24T11:05:40Z ##[error]pharn-ci: This change skips tests or marks them as expected to fail: `test/prices.test.mjs`. Check that each skip was meant."
+   "pharn-ci\tRun pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687\t2026-10-24T11:05:38Z coverage: lcov (auto-detected)",
+   "pharn-ci\tRun pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687\t2026-10-24T11:05:39Z accept label ignored: author",
+   "pharn-ci\tRun pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687\t2026-10-24T11:05:39Z updated pharn-ci comment 3101",
+   "pharn-ci\tRun pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687\t2026-10-24T11:05:40Z pharn-ci verdict: fail",
+   "pharn-ci\tRun pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687\t2026-10-24T11:05:40Z ##[error]pharn-ci: This change skips tests or marks them as expected to fail: `test/prices.test.mjs`. Check that each skip was meant."
   ]
  },
  "events": [

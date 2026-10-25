@@ -8,9 +8,8 @@ compatibility: Node.js >=22 for scripts/check-coverage.mjs; git optional; the pr
 
 Sets pharn-ci up so its first pull request measures something: coverage the
 check can read, settings in one place, and a workflow that is safe to run on
-pull requests. Writes pharn-ci 0.2.0, pinned to commit
-`feb9cae77215c8a1cf34415addd972d9017427d8` on main (v0.2.0 is not tagged yet;
-the pin comment reads `v0.2.0-pre`). pharn-ci 0.1.x (release commit
+pull requests. Writes pharn-ci 0.2.0, pinned to its release commit
+`0873ce23f3595a3497325635b7bf3ee93ea77687` (tag `v0.2.0`). pharn-ci 0.1.x (release commit
 `a88e62a8febf5cd9a77b8e0252cd060c3b94782c`, Report v1) has no test integrity
 and no `test-integrity` input; 0.2.x writes Report v2 (`schemaVersion` 2).
 

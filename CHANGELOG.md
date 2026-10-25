@@ -49,12 +49,13 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   helper's agreement with the CLI. CI also runs the helpers' unit tests and checks the
   shared copies of the report reference and the eval scaffolds.
 
-  pharn-ci 0.2.x test integrity (pinned to pharn-ci main
-  `feb9cae77215c8a1cf34415addd972d9017427d8` until the v0.2.0 tag exists):
+  pharn-ci 0.2.x test integrity (pinned to the pharn-ci v0.2.0 release commit
+  `0873ce23f3595a3497325635b7bf3ee93ea77687`):
   `pharn-ci-explain` reads Report v2 (`schemaVersion` the number 2) and
   explains each `TEST_INTEGRITY_*` code (TI01, TI03, TI04, TI10, TI11, TI13,
-  TI14, `ACCEPTED`, `ACCEPT_IGNORED`, `MODE_IGNORED`, `OFF`), the 🔍 Test
-  integrity comment section, how the mode sets each finding's level, and the
+  TI14, `ACCEPTED`, `ACCEPT_IGNORED`, `MODE_IGNORED`, `OFF`, `TEXT_TRUNCATED`),
+  the 🔍 Test integrity comment section and the summary table's Test integrity
+  column, how the mode sets each finding's level, and the
   accept label: a recorded sign-off by a reviewer who is not the PR author.
   `pharn-ci-install` writes the `test-integrity` input on the pharn-ci step
   (an input, because `.pharn/ci.yml` travels with the PR and can only tighten

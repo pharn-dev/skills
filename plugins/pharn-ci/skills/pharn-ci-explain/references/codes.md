@@ -1,7 +1,7 @@
 # Message codes (pharn-ci 0.1.x and 0.2.x)
 
 Source: pharn-ci 0.1.0, and pharn-ci 0.2.0 at commit
-`feb9cae77215c8a1cf34415addd972d9017427d8` on main, before its tag:
+`0873ce23f3595a3497325635b7bf3ee93ea77687` on main, before its tag:
 `packages/core/src/report.ts`, the detectors under `packages/core/src/signals/`,
 the renderer's hints, `schema/report.v2.json`, README and `docs/LIMITS.md`.
 Every 0.1.x code keeps its meaning and level in 0.2.x. The
@@ -189,7 +189,9 @@ the PR carries that file, so it may tighten the check but never loosen it.
 Each signal id with findings adds one `TEST_INTEGRITY_<id>` message whose
 level is the highest severity among them; every finding, with its `path`,
 `line` and `detail`, is in `testIntegrity.signals` and in the comment's 🔍
-section. Read the hunk at each `path:line` (`git diff --literal-pathspecs <base>...HEAD -- '<path>'`,
+section. The comment's Messages section leaves those messages out, since the
+🔍 section lists each finding with its hint; the JSON and the job log keep
+them. Read the hunk at each `path:line` (`git diff --literal-pathspecs <base>...HEAD -- '<path>'`,
 the path single-quoted)
 before explaining it: the detectors read single lines without context, and
 `docs/LIMITS.md` in pharn-ci lists what each one misses.
@@ -226,9 +228,10 @@ themselves.
 
 ### `TEST_INTEGRITY_TI01` (block; info for the cases below)
 
-A test file was deleted, or renamed to a path that is not a test file, and its
-removed lines define tests (`it(`, `test(`, `describe(`, `def test_`,
-`func Test`, ...). `line` is `null`; the `detail` says which case it is.
+A test file was deleted and its removed lines define tests (`it(`, `test(`,
+`describe(`, `def test_`, `func Test`, ...), or a test file was renamed to a
+path that is not a test file (whatever the rename edited: a rename shows only
+the lines it changes). `line` is `null`; the `detail` says which case it is.
 
 - `info` when the same change deletes a source file of the same name,
   deletes other files of the test's package, or adds a test file of the same
@@ -270,10 +273,12 @@ leftover from local debugging, not something to accept.
 ### `TEST_INTEGRITY_TI10` (block)
 
 A test script in a modified `package.json` (root or nested) was weakened: in a
-script whose key starts with `test`, an added `|| true`, an `echo` or
-`exit 0` as a command, `--passWithNoTests`, `--testPathPattern`, `-t` or
-`--testNamePattern`; or a removed `pretest` or `posttest`. The run can then
-pass without the tests passing.
+script whose key starts with `test`, an added `|| true`, `|| :`, `; true`,
+an `echo` or `exit 0` as a command, `--passWithNoTests`, `--testPathPattern`,
+`-t` or `--testNamePattern`; or a removed `pretest` or `posttest`. The run can
+then pass without the tests passing. An `echo` banner joined by `&&`
+(`echo start && vitest run`) does not fire, and neither does mocha's `-t`
+(its timeout).
 
 - `--passWithNoTests` does not fire when the repository has no test files.
   A weakening that a removed line of the same key already had is excused.
@@ -288,9 +293,10 @@ pass without the tests passing.
 A workflow under `.github/workflows/` was edited so that CI may run fewer
 tests or ignore their failures.
 
-- **block**: a removed test command (`npm test`, `pnpm test`, `vitest`,
-  `jest`, `pytest`, `go test`, ...) that no workflow in the diff adds again,
-  or a removed `pull_request` trigger.
+- **block**: a removed test command (`npm test`, `pnpm -r test`,
+  `pnpm vitest`, `jest`, `node --test`, `pytest`, `uv run pytest`, `tox`,
+  `go test`, ...) that no workflow in the diff adds again, or a removed
+  `pull_request` trigger (the `on` key may be quoted).
 - **warn** in every mode but off (the line cannot be tied to a test step):
   a shrunk one-line matrix, an added `continue-on-error: true`, an added `if:`
   that is literally false or leaves pull requests out, and `timeout-minutes`
@@ -302,8 +308,8 @@ tests or ignore their failures.
 ### `TEST_INTEGRITY_TI13` (block)
 
 A coverage-ignore comment was added to a source file that is not a test: an
-Istanbul, V8 or C8 ignore hint in a JS/TS comment, or `# pragma: no cover` in
-Python. It hides lines from diff coverage. Fix: write a test for the code.
+Istanbul, V8 or C8 ignore hint in a JS/TS comment, or `# pragma: no cover`
+(also `#pragma nocover`) in Python. It hides lines from diff coverage. Fix: write a test for the code.
 For a line that truly cannot be tested (a platform branch), say why in the PR;
 the accept label records the reviewers' sign-off.
 
@@ -338,6 +344,20 @@ stand. The text gives the reason (the log says `accept label ignored:
 
 Fix: a reviewer who is not the PR author applies the label, then the check
 runs again.
+
+### `TEST_INTEGRITY_TEXT_TRUNCATED` (warn)
+
+A file a test-integrity signal reads (a test file, a workflow, a modified
+`package.json`, a JS/TS or Python source file, or the pharn-ci config) has
+more than 5000 changed lines. The detectors read only the first 5000, so a
+finding past them is not seen; the message names the files. It is not given
+in mode `off`, and the accept label does not change it.
+
+- Look at: the named files past their first 5000 changed lines, for skipped,
+  focused or weakened tests and coverage-ignore comments. A generated or
+  vendored file is the usual honest case.
+- Fix: review those files by hand, or split the change so each file stays
+  under the limit. It is a warning, never a failure.
 
 ### `TEST_INTEGRITY_MODE_IGNORED` (warn)
 

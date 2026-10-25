@@ -3,7 +3,7 @@
   "latest": "0.2.0",
   "pharnCi": {
     "0.1.0": { "sha": "a88e62a8febf5cd9a77b8e0252cd060c3b94782c", "ref": "v0.1.0", "cliVersion": "0.1.0" },
-    "0.2.0": { "sha": "feb9cae77215c8a1cf34415addd972d9017427d8", "ref": "v0.2.0-pre", "cliVersion": "0.1.0" }
+    "0.2.0": { "sha": "0873ce23f3595a3497325635b7bf3ee93ea77687", "ref": "v0.2.0", "cliVersion": "0.2.0" }
   },
   "cases": {
     "cover-below-threshold": {
