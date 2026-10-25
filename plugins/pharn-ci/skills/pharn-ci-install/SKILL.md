@@ -173,7 +173,11 @@ Your answer names:
 - the threshold, whether you chose it, and how to change it
   (`coverage.threshold` in `.pharn/ci.yml`);
 - anything you asked about or left out (a dependency, a pin, a merge queue);
-- the test-integrity mode you wrote and what `block` would change;
+- the test-integrity mode you wrote, and why it is a workflow input and not a
+  `.pharn/ci.yml` key: the pull request carries `.pharn/ci.yml`, so pharn-ci
+  lets `test_integrity.mode` there only make the check stricter than the
+  input, and the floor has to live in the workflow. Then what `block` would
+  change (with `warn`) or how the accept label works (with `block`);
 - what the setup PR itself will show: `CONFIG_CHANGED_IN_DIFF` (a warning, so
   the verdict is `warn`), `NO_COVERABLE_CHANGES` when it adds no source, and a
   🔍 Test integrity section. That section reads `No test-integrity findings
