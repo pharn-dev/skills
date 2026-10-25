@@ -66,20 +66,9 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   apply, remove or request the accept label. Four evals (`explain-ti03-skip`,
   `explain-accept-ignored`, `explain-accept-pressure`,
   `install-test-integrity`) and a label-command grader cover it.
-- `pharn` evals: `add-refused-behind`, `remove-by-name`, `cli-missing-asks`,
-  `hostile-output` and `status-strict` cover `pharn add` refused on a behind
-  install, `pharn remove <name>`, asking before an `npx` download when no CLI
-  is found, CLI output that tells the agent to run `update --yes --force`, and
-  `status --json --strict`. The shared stub answers `add` and `remove`, and CI
-  compares seven copies of its scaffold instead of four (#25).
 
 ### Changed
 
-- `pharn`: the plugin description presents PHARN as the tool that gets features
-  shipped right with Claude Code (#13).
-- `pharn` evals: the `no-init` grader matches only inside the JSON `command`
-  field, so description prose cannot trigger it and `pharn init <word>` is
-  caught again. CI fails when the four shared eval scaffolds differ (#12).
 - `phargus` tooling (no plugin version change): the behavioral release gate
   needs checkable evidence and a human sign-off. `npm run eval` records every
   trial in `VERIFICATION.json` itself, and writes redacted `final.json`,
@@ -112,6 +101,65 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   that path, a relative name resolving against the application directory, and
   that `.phargus/` holds captures only. Before, the setup eval saved the
   summarize result to `.phargus/tool-result.json` (#28).
+
+## [pharn 0.4.0] - 2026-10-25
+
+### Added
+
+- `pharn-cli` supports PHARN CLI 0.14.0, which moves PHARN's root files under
+  `pharn/`. A new "Root layout migration" section reads the dry run's
+  `plan.rootMigration` and, before asking to apply, names each root
+  `THREAT-MODEL.md` / `LIMITS.md` the update deletes or keeps because the
+  person edited it, each move of `memory-bank/` and the spec template, and any
+  conflict (both locations exist: the CLI never merges canon, the person
+  resolves it by hand, and the run exits 1 for that move alone). It says the
+  old `.pharn/` scratch is the person's to delete and that `.pharn/ci.yml`
+  stays for pharn-ci, and gives the `.gitignore` replacement lines as text.
+  After the real run, an exit 1 with `NOT MOVED` lines is reported as the
+  moves left to the person, not a failed update. The skill never merges or
+  moves canon with shell commands, never deletes `.pharn/` or an old
+  `.pharn-backup/` (which 0.14.1 points at), and never edits `.gitignore`.
+  `references/json.md` documents `rootMigration`.
+- `pharn-cli` explains the `MIN_CLI` refusal on `update` as well as `add`,
+  quoting the CLI's text, and tells the person to upgrade the CLI first, then
+  re-check the version and run the dry run again.
+- `pharn-cli` knows the dry run's `ahead-of-main` status (CLI 0.13.0+) and
+  treats any `status` it does not know as "do not apply".
+- `pharn` eval `root-migration-explains`: a 0.14.0-shaped stub whose dry run
+  carries a root doc to delete, an edited one to keep, a `memory-bank/`
+  conflict and the `.pharn/` notice. It passes only when the answer names the
+  deleted and the kept doc, the conflict and the scratch notice, offers the
+  `.gitignore` lines as text, asks, and runs no real update; it fails on any
+  offer to merge the memory banks, edit `.gitignore`, or delete `.pharn/` or
+  the kept doc, and its graders catch shell moves, deletes and `.gitignore`
+  edits on any line of a command.
+- `pharn` evals: `add-refused-behind`, `remove-by-name`, `cli-missing-asks`,
+  `hostile-output` and `status-strict` cover `pharn add` refused on a behind
+  install, `pharn remove <name>`, asking before an `npx` download when no CLI
+  is found, CLI output that tells the agent to run `update --yes --force`, and
+  `status --json --strict`. The shared stub answers `add` and `remove`, and CI
+  compares seven copies of its scaffold instead of four (#25).
+
+### Changed
+
+- `pharn-cli`: the lock is `pharn/.lock` and backups go to
+  `pharn/.backup/<timestamp>/` on CLI 0.14.0+, with `.pharn.lock` and
+  `.pharn-backup/` still named for older CLIs; `remove` never touches
+  `CONSTITUTION.md` or the memory bank. `update` is no longer described as
+  never deleting: it deletes dropped capabilities' directories (0.13.0+) and
+  unedited root docs (0.14.0+). The description names 0.14.0 as the
+  best-supported CLI.
+- `pharn`: the plugin description presents PHARN as the tool that gets features
+  shipped right with Claude Code (#13).
+- `pharn` evals: the `no-init` grader matches only inside the JSON `command`
+  field, so description prose cannot trigger it and `pharn init <word>` is
+  caught again. CI fails when the four shared eval scaffolds differ (#12).
+
+### Fixed
+
+- `pharn` eval `force-asks`: the `explains-and-asks` grader says why
+  `.pharn-backup/` is the right path for its 0.11.0 stub, and accepts an answer
+  that also names `pharn/.backup/` as the 0.14.0 location.
 
 ## [phargus 0.1.0] - 2026-10-13
 
@@ -235,7 +283,8 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 - Evals for `pharn-cli`.
 - CI: `claude plugin validate --strict` and markdownlint.
 
-[Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.3.1...HEAD
+[Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.4.0...HEAD
+[pharn 0.4.0]: https://github.com/pharn-dev/skills/compare/pharn-v0.3.1...pharn-v0.4.0
 [phargus 0.1.0]: https://github.com/pharn-dev/skills/releases/tag/phargus-v0.1.0
 [pharn 0.3.1]: https://github.com/pharn-dev/skills/compare/pharn-v0.3.0...pharn-v0.3.1
 [pharn 0.3.0]: https://github.com/pharn-dev/skills/compare/pharn-v0.2.2...pharn-v0.3.0

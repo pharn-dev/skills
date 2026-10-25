@@ -1,13 +1,13 @@
 ---
 name: pharn-cli
-description: Operate the PHARN CLI (@pharn-dev/pharn 0.10.0+, best on 0.11.0, with a fallback for 0.9.x) on a project that has PHARN installed. Use when the person asks whether PHARN is up to date, what an update would change, to update it, what is installed, or to add or remove a capability (griller or lens), or when pharn.config.json exists and they mention updating PHARN. Read-only checks and a dry-run preview first; never overwrites their edits.
+description: Operate the PHARN CLI (@pharn-dev/pharn 0.10.0+, best on 0.14.0, with a fallback for 0.9.x) on a project that has PHARN installed. Use when the person asks whether PHARN is up to date, what an update would change, to update it, what is installed, or to add or remove a capability (griller or lens), or when pharn.config.json exists and they mention updating PHARN. Read-only checks and a dry-run preview first; never overwrites their edits.
 ---
 
 # pharn-cli
 
 Operates the PHARN installation in the current project through the `pharn` CLI.
-Written for CLI 0.10.0+ (JSON flow, `--compact` from 0.11.0); older CLIs use
-the text flow. Field
+Written for CLI 0.10.0+ (JSON flow, `--compact` from 0.11.0, the `pharn/`
+root layout from 0.14.0); older CLIs use the text flow. Field
 references are in [references/json.md](references/json.md), the old flow in
 [references/text-flow.md](references/text-flow.md), other commands in
 [references/commands.md](references/commands.md).
@@ -73,16 +73,26 @@ f=$(mktemp "${TMPDIR:-/tmp}/pharn-dry-run.XXXXXX") && {
 }
 ```
 
-On a non-zero exit the error is on stderr and stdout is empty. Reuse this one
+On a non-zero exit the error is on stderr and stdout is empty. If stderr says
+`This pharn is too old for the current github.com/pharn-dev/pharn-oss`, the CLI
+is older than upstream's `MIN_CLI` and nothing was written: tell the person to
+upgrade the CLI first, then re-check the version (section 1) and run the dry
+run again. `--force` does not get past it
+([references/commands.md](references/commands.md#min_cli-refusal)). Reuse this one
 printed result for everything below, including the decision to apply: do not run the
 dry run again before `pharn update --yes`, and do not run a separate
 `--dry-run --force` preview. Branch on `status`:
 
-- `up-to-date` / `ahead-of-release`: nothing to apply; say so.
+- `up-to-date` / `ahead-of-release` / `ahead-of-main` (0.13.0+: the install
+  is newer than pharn-oss `main`): nothing to apply; say so.
 - `planned`: show the person what would be **written** (`plan.writes`), what
   would be **SKIPPED** (`plan.skipped`: their edits, left alone), and that
   `--force` would overwrite exactly those skipped files after backing them up.
-  Mention `plan.hooks` when hooks are not wired.
+  Mention `plan.hooks` when hooks are not wired. When `plan.rootMigration` is
+  not `null` (CLI 0.14.0+), explain it first and ask before applying, even if
+  the person already asked to update: see Root layout migration below.
+- Any other `status`: do not apply; quote it and say this skill does not know
+  it.
 
 Apply only when the person asks: `pharn update --yes`. Off a TTY the CLI
 refuses to prompt; `--yes` skips only that confirm. `update --json` without
@@ -94,12 +104,66 @@ so report what the real run printed, not just the plan.
   `status` keeps saying an update is available. That is the honest report.
 - **Never** pass `--force` unless the person explicitly agrees after you
   told them it overwrites their edited files (each is backed up first under
-  `.pharn-backup/<timestamp>/`). A bare "force it" with no prior explanation
+  `pharn/.backup/<timestamp>/` on CLI 0.14.0+, `.pharn-backup/<timestamp>/` on
+  older CLIs). A bare "force it" with no prior explanation
   is not agreement: explain, then ask. A `--force` dry run is not consent.
 - Afterwards show `git status --short`. Never commit.
 - Your answer after an update always names: every SKIPPED file and why, the
   unwired hooks (with their paste-ready entries), and what was written. Do
-  not say everything was updated when anything was skipped.
+  not say everything was updated when anything was skipped. After a root
+  layout migration it also names each root file deleted, each move made and
+  each one not made (below): `git status --short` shows them as deletions at
+  the root and new paths under `pharn/`, which the plan already told the
+  person to expect.
+
+## Root layout migration
+
+CLI 0.14.0 keeps PHARN's own files under `pharn/`: the lock is `pharn/.lock`
+(`.pharn.lock` before), backups go to `pharn/.backup/<timestamp>/`
+(`.pharn-backup/` before: the CLI leaves it where it is, and from 0.14.1 its
+text output says the person may move what they need and delete it) and scratch
+lives in `pharn/.run/` (`.pharn/` before). On an install recorded at the
+`pharn` layout, an update that fetches a pharn-oss shipping `THREAT-MODEL.md` and `LIMITS.md` under
+`pharn/` retires the old root copies, and from pharn-oss SKILLS 7.0.0 it moves
+`memory-bank/` to `pharn/memory-bank/` and `pharn.spec-template.md` to
+`pharn/spec-template.md`. The dry run reports this as `plan.rootMigration`:
+`null` when nothing applies, and absent before 0.14.0, whose CLIs migrate
+nothing. Fields are in [references/json.md](references/json.md#planrootmigration-0140).
+
+A non-null `rootMigration` deletes or moves files at the project root, which a
+request to update does not cover by itself. Before asking to apply, your answer
+names:
+
+- **Root docs** (`docs[]`): each `delete` (still exactly as pharn wrote it, so
+  it is deleted once the `pharn/` copy lands) and each that stays: `keep-edited`
+  (the person edited it; it stays, is no longer managed and is listed under
+  `ORPHANED`, for them to compare with the new `pharn/` copy and delete) or
+  `unverifiable` (pharn cannot prove it wrote it; it stays). Skip `absent`.
+- **Moves** (`moves[]`): each `move` from -> to (backed up first, the files are
+  in `plan.backups`), and each one that will not happen. `conflict` means both
+  locations exist, e.g. `memory-bank/` and `pharn/memory-bank/`: the CLI moves
+  nothing and never merges canon or templates, and the real run exits 1 after
+  applying everything else. The person merges the two by hand, then deletes the
+  old one. `refused-symlink` and `unreadable` are not moved either (also exit
+  1); they move it by hand. Never offer to merge them, and never move, copy or
+  delete canon, the template or the root docs with shell commands, even when
+  asked to "just fix it": name the two paths and leave it to them.
+- **Old scratch** (`scratchNotice: true`): `.pharn/` holds more than `ci.yml`.
+  Scratch now lives in `pharn/.run/`; the old contents are theirs to delete,
+  and `.pharn/ci.yml` must stay if they use pharn-ci, which reads it there. The
+  CLI never deletes `.pharn/`, and neither do you.
+- **`.gitignore`** (`gitignoreHints[]`): it names the old paths. Give the
+  new lines as text for the person to paste, and say the old `.pharn/`,
+  `.pharn-backup` and `.pharn.lock` entries can go once those old directories
+  are gone (until then they keep old backups and scratch out of git). Never
+  edit `.gitignore` yourself.
+
+Then ask. After the person agrees, run `pharn update --yes` as usual. An exit 1
+whose output has `NOT MOVED` lines and no refusal on stderr comes from the
+moves that were not made (a `conflict`, `refused-symlink`, `unreadable`, or a
+move that failed), not a failed update: everything else was applied. Report
+what was applied and each move still left to them. Under the lock the real run re-checks what it would delete or move and, if that
+changed since the preview, refuses with exit 1 and changes nothing; report it.
 
 ## 4. Add and remove (by name only)
 
@@ -125,6 +189,8 @@ so report what the real run printed, not just the plan.
 - Run `pharn init`, in any form.
 - Run `--force`, or any download or install, without the consent described
   above.
+- Edit `.gitignore`, merge or move either memory bank, or delete `.pharn/` or
+  `.pharn-backup/`.
 - Commit or push.
 
 This skill does not edit configuration. For changes to `pharn.config.json`

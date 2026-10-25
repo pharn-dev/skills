@@ -2,7 +2,8 @@
 
 Source: the CLI's own README and `docs/commands/*` at 0.9.0. Where 0.10.0
 changes a command (`status --json`, `update --dry-run`, `update --json`), see
-[json.md](json.md); the rest below still holds.
+[json.md](json.md); the rest below still holds, except where a line names
+0.14.0, which moved PHARN's root files under `pharn/`.
 
 ## Command surface
 
@@ -18,8 +19,10 @@ changes a command (`status --json`, `update --dry-run`, `update --json`), see
 Any other option is refused (on 0.9.0 that includes `status --json`): ``Unsupported option for `status`: "--json"`` on
 stderr, usage text, exit 1.
 
-`init`, `add`, `remove` and `update` take an advisory lock at `.pharn.lock`; a
-second writer refuses with exit 1. `list` and `status` never take it.
+`init`, `add`, `remove` and `update` take an advisory lock at `pharn/.lock`
+(CLI 0.14.0+) or `.pharn.lock` (older CLIs); a second writer refuses with
+exit 1. `list` and `status` never take it. An older CLI does not see the new
+lock, so never run two CLI versions in one project at once.
 
 ## status
 
@@ -47,7 +50,13 @@ second writer refuses with exit 1. `list` and `status` never take it.
   identical to what pharn recorded -> write (updated); edited
   (`modified`), no record (`unrecorded`) or no records file
   (`unverifiable`) -> SKIP, or back up then overwrite with `--force`.
-- Never deletes. Never touches `.claude/settings.json`; it prints a `HOOKS`
+- Never overwrites your edits. It does delete in two cases: from 0.13.0 the
+  directories of capabilities it drops (`plan.capabilities.changes`), and from
+  0.14.0, on a `pharn`-layout install, root `THREAT-MODEL.md` / `LIMITS.md`
+  copies still exactly as pharn wrote them. From pharn-oss SKILLS 7 it also
+  moves `memory-bank/` and `pharn.spec-template.md` under `pharn/` (SKILL.md,
+  Root layout migration). Never touches
+  `.claude/settings.json`; it prints a `HOOKS`
   note naming hooks upstream wires that the project does not, each as JSON
   ready to paste under its event.
 - Capabilities added with `pharn add` (`manual`) survive an update. Membership
@@ -59,16 +68,42 @@ second writer refuses with exit 1. `list` and `status` never take it.
   every differing file as `unverifiable`.
 - `--ref latest` follows verified releases and is recorded in the config;
   `--ref main` switches back. Only use when the person asks for the channel.
-- `.pharn-backup/` is never pruned and `.gitignore` is never edited.
+- Backups go to `pharn/.backup/<timestamp>/` (CLI 0.14.0+) or
+  `.pharn-backup/<timestamp>/` (older CLIs; 0.14.0 leaves existing ones where
+  they are). Neither is ever pruned, and `.gitignore` is never edited.
 
 ## add and remove
 
 - `add` refuses when the upstream `SKILLS_VERSION` or layout differs from the
-  recorded one, or when the CLI is older than upstream's `MIN_CLI`. It backs up
-  any destination file it would overwrite with different bytes.
+  recorded one, or when the CLI is older than upstream's `MIN_CLI` (below). It
+  backs up any destination file it would overwrite with different bytes.
 - `remove` needs no network, deletes only that capability's directory, prunes
-  its records, and never touches `CONSTITUTION.md` or `memory-bank/`.
+  its records, and never touches `CONSTITUTION.md` (`pharn/CONSTITUTION.md` on
+  the `pharn` layout) or the memory bank (`pharn/memory-bank/` after the 0.14.0
+  migration, `memory-bank/` before).
 - A name installed as both griller and lens needs `griller:` or `lens:`.
+
+## MIN_CLI refusal
+
+pharn-oss can declare the oldest CLI its content needs in a root `MIN_CLI`
+file. When the installed CLI is older, `init`, `add` and `update` (its dry run
+included) refuse before writing anything: exit 1, stdout empty in JSON mode,
+and on stderr (the same wording from 0.9.0 through 0.14.0; the versions vary):
+
+```text
+This pharn is too old for the current github.com/pharn-dev/pharn-oss: it
+requires @pharn-dev/pharn v0.14.0 or newer, and v0.13.0 is installed. Upgrade
+(`npm install -g @pharn-dev/pharn@latest`, or run `npx @pharn-dev/pharn@latest`),
+then re-run this command. Nothing was written.
+```
+
+Tell the person to upgrade the CLI first, the way they installed it (for a
+project-local install, `npm i -D @pharn-dev/pharn@latest`; never run it
+yourself). Then re-check the version (SKILL.md section 1) and run the update
+flow again. `status` does not check `MIN_CLI`, so it cannot confirm the fix;
+`npx @pharn-dev/pharn@latest <command>` runs the newest CLI without
+installing it, but downloads: ask first. `--force` does
+not get past `MIN_CLI`. A missing or malformed `MIN_CLI` file refuses nothing.
 
 ## list --json
 
