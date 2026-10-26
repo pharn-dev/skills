@@ -14,6 +14,513 @@
       "summary": "argus 0.1.0 review before the Phargus rename by an AI assistant delegated by the maintainer; evidence never committed."
     }
   ],
-  "runs": [],
-  "trials": []
+  "runs": [
+    {
+      "id": "0.1.1",
+      "startedAt": "2026-10-25T13:10:35.865Z",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "version": "0.1.1",
+      "node": "24.13.1",
+      "platform": "darwin",
+      "models": "client defaults",
+      "cleanCodex": false,
+      "timeoutMs": 180000,
+      "clients": [
+        "codex",
+        "claude"
+      ],
+      "cases": [
+        "setup",
+        "diagnose",
+        "verify",
+        "memory",
+        "rules",
+        "missing",
+        "sse",
+        "percentile"
+      ],
+      "runtime": {
+        "commit": "819a795875fc547e7daeccc0f0b50846ba642286",
+        "tag": "v0.1.0",
+        "tagVerified": true,
+        "tarballSha256": "b6d893d1b8124185f9660a9a00ec9d0205afd3e6e7fd51e5277a43bb02b81f16",
+        "reusedDependencies": false
+      }
+    },
+    {
+      "id": "0.1.1-codex",
+      "startedAt": "2026-10-25T13:20:43.189Z",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "version": "0.1.1",
+      "node": "24.13.1",
+      "platform": "darwin",
+      "models": "client defaults",
+      "cleanCodex": true,
+      "timeoutMs": 180000,
+      "clients": [
+        "codex"
+      ],
+      "cases": [
+        "setup",
+        "diagnose",
+        "verify",
+        "memory",
+        "rules",
+        "missing",
+        "sse",
+        "percentile"
+      ],
+      "runtime": {
+        "commit": "819a795875fc547e7daeccc0f0b50846ba642286",
+        "tag": "v0.1.0",
+        "tagVerified": true,
+        "tarballSha256": "b6d893d1b8124185f9660a9a00ec9d0205afd3e6e7fd51e5277a43bb02b81f16",
+        "reusedDependencies": false
+      }
+    }
+  ],
+  "trials": [
+    {
+      "run": "0.1.1",
+      "client": "codex",
+      "case": "setup",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client exited 1",
+      "evidence": [
+        {
+          "path": "src/phargus/verification/0.1.1/codex/setup/commands.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        }
+      ],
+      "automaticDigest": "0b58ed904556a32e98866444c857d4979301107d4715549f73dfa70f15a3e092",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "codex",
+      "case": "diagnose",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "e297a3b351e378a15dcc19eee827b8ab2ba5ee9642d5b6f0d8e0b5b06b5afe5f",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "codex",
+      "case": "verify",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "efee46b7242854da80ab9b7b6f62d6a8fd68e08dcfdbbc4929308d2e575a6517",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "codex",
+      "case": "memory",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "469f525662192a29009d89814dc56550dde2e2e4440fe935a2b0fc3193f064ae",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "codex",
+      "case": "rules",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "90c641ad1019711e790e16ce4729f970ff4d02182462c3f67ba7650dfa97ab23",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "codex",
+      "case": "missing",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "e353a7a1abc7994eacc43fdf59d40f2b2cd8e5b2519cec7b78397050d449baa0",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "codex",
+      "case": "sse",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "8428fdb4070715e21b4cf572c23ce2ec031c813971a05752b327954d11019c0b",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "codex",
+      "case": "percentile",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "8c2afa7fd2f810534ed8b9b6752d37b9dae308cd3e03d1abae1db61e30590872",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "claude",
+      "case": "setup",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "passed-automatic",
+      "evidence": [
+        {
+          "path": "src/phargus/verification/0.1.1/claude/setup/final.json",
+          "sha256": "68a065e004ccb2693e7e82bba28d0397c2f11adb3b1b18d983bb528d2c3e5a3a"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/setup/tool-result.json",
+          "sha256": "ef88716c78570ffd0443b1ac89c74e8b31e83c28a0583341dd98d8a87c8b50d8"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/setup/commands.json",
+          "sha256": "dc21bae3496b6000433710446f11c595be8a6818dacf67b2555a2f0e9c7404e2"
+        }
+      ],
+      "automaticDigest": "a9ae54d97569b1156882307996c1c5ac2621772c202fb2a1d4acf2b972da4450",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "claude",
+      "case": "diagnose",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "passed-automatic",
+      "evidence": [
+        {
+          "path": "src/phargus/verification/0.1.1/claude/diagnose/final.json",
+          "sha256": "865484c7fdf61072af645b59dfcf5bebcf117f1f88dccc4e281da2da5a19fb01"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/diagnose/tool-result.json",
+          "sha256": "0c97fdd752e36492c487af25f5f6917e5694c2e2788f187258f90ef13f3d6c71"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/diagnose/commands.json",
+          "sha256": "ecc8af3c5082766d237c98d69fd8b25fa99c8e582a1383327649319934fce66c"
+        }
+      ],
+      "automaticDigest": "617e6752bab4192febf5e33b2e159baee92a251a19e957731133197e53b2232f",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "claude",
+      "case": "verify",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "passed-automatic",
+      "evidence": [
+        {
+          "path": "src/phargus/verification/0.1.1/claude/verify/final.json",
+          "sha256": "ef64500e1a8b3db9acf3dd834d6a7a952b350da64a85efa502d547322293929f"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/verify/tool-result.json",
+          "sha256": "063669f854e39088218a076f33c41bba5d3a2a9507ec1246acff8c4f15d33e52"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/verify/commands.json",
+          "sha256": "86d6cedde8aad1e4799ff3dfb686a706aa3af671617de6be53967b745e32ded7"
+        }
+      ],
+      "automaticDigest": "54b642cb7cc62dde8a26ee60238fddd4e63703a90b5b9d2e19d61605b0b2a509",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "claude",
+      "case": "memory",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "passed-automatic",
+      "evidence": [
+        {
+          "path": "src/phargus/verification/0.1.1/claude/memory/final.json",
+          "sha256": "7660202f3cc5bd31257d097ca3c6f2d99e23f395babdc1518a473701eb50b351"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/memory/tool-result.json",
+          "sha256": "c9c157bbac17bb978508c6b26d1af61b669f8987c18bc26b8a08d6945fc005bc"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/memory/commands.json",
+          "sha256": "065b4bb9d3b0747ed5bfba5c545f3f0b48365a34e35190c72546920f092ac925"
+        }
+      ],
+      "automaticDigest": "9b4a2eb88f524cc9219b3f7baa2130a18a19da8e82d5dcdad0a4c120b4df3f27",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "claude",
+      "case": "rules",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "passed-automatic",
+      "evidence": [
+        {
+          "path": "src/phargus/verification/0.1.1/claude/rules/final.json",
+          "sha256": "ed06162e3bfe902410388d188de93530dad1512dbeab40cc6c6b23a9a12f30f3"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/rules/tool-result.json",
+          "sha256": "74c6cdbc70955da344f1cafc143852d4604dd06d224aef6816b52187125feec4"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/rules/commands.json",
+          "sha256": "bb5e0727f3d8af38604d173bbfc42fb6c0d03cd006b79bef998ff0413c875589"
+        }
+      ],
+      "automaticDigest": "52ed759bb2a695b90a300b56decf4221aa228f722de94782dac479edcb25e992",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "claude",
+      "case": "missing",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "passed-automatic",
+      "evidence": [
+        {
+          "path": "src/phargus/verification/0.1.1/claude/missing/final.json",
+          "sha256": "2aaf54b811daafb2e48b78ae6de071d20a31951eb510d8a04f49c895c84a5953"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/missing/tool-result.json",
+          "sha256": "8896717868d74c317430b583ebe570834ba049ea9b13ce092f2b7bdb274c93a9"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/missing/commands.json",
+          "sha256": "10c883b9efe55a9a7e4eccd1c152779c3a2618e5992411b375b337ff30bb0513"
+        }
+      ],
+      "automaticDigest": "3e57ecac1b60d0ecb3e587aa6a41121a8da8e40a84f9a92627e1c1129dc8e8e1",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "claude",
+      "case": "sse",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "passed-automatic",
+      "evidence": [
+        {
+          "path": "src/phargus/verification/0.1.1/claude/sse/final.json",
+          "sha256": "2285b711911522de0f2c9e3d7a9935d981f7ed99b0bcafef46ed322ead637682"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/sse/tool-result.json",
+          "sha256": "dc6f67c05c5248529687a323a1ca8eeaccbfea95375f01da89602e74ee712e04"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/sse/commands.json",
+          "sha256": "f4991ae375741571efb5a84c39ed30f0e071f2e8f6bbb2709d2ad373ebe1971f"
+        }
+      ],
+      "automaticDigest": "dad546e99908061806a9b4c0df839f10486f1c996b38b70871ead814c2b460fc",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1",
+      "client": "claude",
+      "case": "percentile",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "passed-automatic",
+      "evidence": [
+        {
+          "path": "src/phargus/verification/0.1.1/claude/percentile/final.json",
+          "sha256": "e1476d65a18d44fd26a856e2eb70ba7681563a98281e1020a41a8470aa79f0dc"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/percentile/tool-result.json",
+          "sha256": "5721a96be954a83ae6b198bfbdaf06315666bfd16a510894877b91419f7e2cee"
+        },
+        {
+          "path": "src/phargus/verification/0.1.1/claude/percentile/commands.json",
+          "sha256": "ea9704498ed601d0a892e76d616e1801c66887ca7d8e2283924fb6f2f076fc5c"
+        }
+      ],
+      "automaticDigest": "607580dd7fec284c61f789720561448331a70c468667e4eb858c066369e9c813",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1-codex",
+      "client": "codex",
+      "case": "setup",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client exited 1",
+      "evidence": [
+        {
+          "path": "src/phargus/verification/0.1.1-codex/codex/setup/commands.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        }
+      ],
+      "automaticDigest": "223c825c41e8dcf7c0df23ced2240f64f2a5451ea9a80368761bed815033840a",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1-codex",
+      "client": "codex",
+      "case": "diagnose",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "6ada2517ec6965ba9010ba5ad81f13f513d328ce69e6e99ddfd5d5a9713c211e",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1-codex",
+      "client": "codex",
+      "case": "verify",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "75da5c1535e6ef7ea853d412775c4042dcb9bd06081de74e1b0d526e669ab88c",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1-codex",
+      "client": "codex",
+      "case": "memory",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "64b1894210d202278973f919ef0ebeb048d8d36f0bfde72be98c5f81f889d2fc",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1-codex",
+      "client": "codex",
+      "case": "rules",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "533d1ffc48e903eb113b85486aab3a5925fb997feeb2b62c9d57fd173dcbee9c",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1-codex",
+      "client": "codex",
+      "case": "missing",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "f4c5f98b76aeabf8c2b08282196c70b8677a3aaad28256478d9558d2e0b6916b",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1-codex",
+      "client": "codex",
+      "case": "sse",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "c545d0c2edcdbdae06dc56e4cd95249a1aa31ad627ff32593fa128780d5ab262",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    },
+    {
+      "run": "0.1.1-codex",
+      "client": "codex",
+      "case": "percentile",
+      "behaviorFingerprint": "c82836f62853b4d7ac22fba5af45e08587dec96ff6128e541a2211cd7cafedc8",
+      "status": "blocked",
+      "reason": "client access failed in the previous trial",
+      "evidence": [],
+      "automaticDigest": "9fc25118c087ec27739065f6fec279c299ad87a8ad5d0430cfce5de971ad99f4",
+      "semanticReview": "pending",
+      "signedOffBy": null,
+      "signedOffAt": null,
+      "reviewNote": null
+    }
+  ]
 }
