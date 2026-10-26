@@ -295,11 +295,11 @@ both hooks re-test that same set in their own code (the `isWrite` test in each o
 `protect-trusted-paths.cjs`). A write issued through the **`Bash`** tool therefore never reaches
 either hook. Probed rather than read off the wiring — §1d's quantifier is precisely why:
 
-| payload                                                       | hook                        | verdict                   |
-| ------------------------------------------------------------- | --------------------------- | ------------------------- |
-| `{"tool_name":"Bash",…{"command":"printf x >> LIMITS.md"}}` (pre-7.0.0 root path; migration) | `protect-trusted-paths.cjs` | **exit 0** — not denied   |
-| `{"tool_name":"Bash",…{"command":"printf x >> README.md"}}`   | `enforce-writes-scope.cjs`  | **exit 0** — not denied   |
-| `{"tool_name":"Edit","tool_input":{"file_path":"LIMITS.md"}}` (pre-7.0.0 root path; migration) | `protect-trusted-paths.cjs` | exit 2 — denied (control) |
+Probe results:
+
+- Payload `{"tool_name":"Bash",…{"command":"printf x >> LIMITS.md"}}` (pre-7.0.0 root path; migration): `protect-trusted-paths.cjs` returns **exit 0** — not denied.
+- Payload `{"tool_name":"Bash",…{"command":"printf x >> README.md"}}`: `enforce-writes-scope.cjs` returns **exit 0** — not denied.
+- Payload `{"tool_name":"Edit","tool_input":{"file_path":"LIMITS.md"}}` (pre-7.0.0 root path; migration): `protect-trusted-paths.cjs` returns exit 2 — denied (control).
 
 (Both probe tables in this file were measured when the doc sat at the root as `LIMITS.md`; migration: it is
 `pharn/LIMITS.md` since 7.0.0, and the verdicts carry over to that path.)
@@ -349,8 +349,8 @@ either hook. Probed rather than read off the wiring — §1d's quantifier is pre
   bounds, all in `pharn/pharn-contracts/reconciliation-record.md`: ignored paths are outside the
   reconciled set; the window is anchor-to-verify; the model is **one worktree per session** (two sessions
   sharing a tree share `pharn/.run/`, so a second session's writes can surface as this one's escape —
-  [[L38]], which this inherits and cannot fix); and there is **no attribution** — it reports *what*,
-  never *who*.
+  [[L38]], which this inherits and cannot fix); and there is **no attribution** — it reports _what_,
+  never _who_.
 - **DELETING it is loud; FORGING it is silent — and that bounds the whole claim.** The baseline lives
   under `pharn/.run/`, which `Bash` reaches, and nothing authenticates it. Deleting it does not yield a quiet
   green: `/pharn-*verify` passes `--require-baseline`, which makes an absent baseline `INCONCLUSIVE`, and
@@ -448,10 +448,10 @@ non-blocking error. Until `SKILLS_VERSION` 6.1.0 the shipped wiring was a relati
 so after any persisted `cd` into a subdirectory **both guards silently stopped running**. Probed rather than
 read off the wiring:
 
-| hook command run from               | payload          | exit                                             |
-| ----------------------------------- | ---------------- | ------------------------------------------------ |
-| `pharn/pharn-core`, relative wiring | `Edit LIMITS.md` (pre-7.0.0 root path; migration) | **1** — `Cannot find module`; the write proceeds |
-| repo root, relative wiring          | `Edit LIMITS.md` (pre-7.0.0 root path; migration) | 2 — denied                                       |
+Probe results:
+
+- From `pharn/pharn-core` with relative wiring, `Edit LIMITS.md` (pre-7.0.0 root path; migration) exits **1** — `Cannot find module`; the write proceeds.
+- From the repo root with relative wiring, `Edit LIMITS.md` (pre-7.0.0 root path; migration) exits 2 — denied.
 
 6.1.0 anchors both commands on `${CLAUDE_PROJECT_DIR}`. The bounds that remain:
 
