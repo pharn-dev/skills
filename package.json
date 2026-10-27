@@ -1,0 +1,38 @@
+{
+  "name": "pharn-skills",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Repo tooling for the pharn-dev skills marketplace: tests, ESLint, Prettier and markdownlint for the files outside src/phargus.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pharn-dev/skills.git"
+  },
+  "engines": {
+    "node": ">=24.2.0",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "test": "node --test .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
+    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
+    "lint": "eslint .",
+    "lint:md": "markdownlint-cli2",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check:pins": "node .github/scripts/check-action-pins.mjs",
+    "check": "npm run format:check && npm run lint && npm run lint:md && npm run check:pins && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "markdownlint-cli2": "^0.24.0",
+    "prettier": "^3.9.10"
+  },
+  "overrides": {
+    "smol-toml": "~1.9.0",
+    "katex": "~0.18.2"
+  }
+}

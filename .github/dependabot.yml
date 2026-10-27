@@ -1,6 +1,15 @@
 version: 2
 updates:
   - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+  - package-ecosystem: npm
     directory: /src/phargus
     schedule:
       interval: weekly
@@ -18,3 +27,9 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+    # codeql-action/init and /analyze must share one version; separate PRs fail
+    # Analyze with "Loaded a configuration file for version X, but running Y".
+    groups:
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"

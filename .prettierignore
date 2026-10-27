@@ -1,0 +1,19 @@
+node_modules
+dist
+.cache
+coverage
+evals/results
+package-lock.json
+LICENSE
+# Markdown is linted by markdownlint (npm run lint:md), not reformatted.
+*.md
+# Captured gh API responses, kept as recorded.
+plugins/pharn-ci/evals/fixtures/inputs
+# src/phargus formats itself and plugins/phargus (npm run format there).
+src/phargus
+plugins/phargus
+# Installed and updated by the PHARN CLI (pharn.records.json); not edited by hand.
+pharn
+.claude
+pharn.config.json
+pharn.records.json

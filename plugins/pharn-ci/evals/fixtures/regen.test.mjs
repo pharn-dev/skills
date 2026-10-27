@@ -5,7 +5,19 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { checkoutProblems, extractPins, parseArgs, parsePharnCiArg, pinProblems, readHeredoc, RegenError, replaceHeredoc, wholeFileGrader, wholeFilePattern, yamlSingleQuoted } from "./regen.mjs";
+import {
+  checkoutProblems,
+  extractPins,
+  parseArgs,
+  parsePharnCiArg,
+  pinProblems,
+  readHeredoc,
+  RegenError,
+  replaceHeredoc,
+  wholeFileGrader,
+  wholeFilePattern,
+  yamlSingleQuoted,
+} from "./regen.mjs";
 
 const EVALS = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const scaffold = (name) => readFileSync(path.join(EVALS, name, "scaffold.sh"), "utf8");
@@ -105,7 +117,7 @@ test("pins are read from text and checked against pharn-ci's own", () => {
     [
       ["pharn-dev/pharn-ci", "v0.1.0"],
       ["actions/checkout", "v7.0.1"],
-    ],
+    ]
   );
   assert.deepEqual(pinProblems(reference, [`uses: actions/checkout@${other} # v7.0.1`], manifest), []);
   assert.match(pinProblems(reference, [`uses: actions/checkout@${other} # v7.0.0`], manifest).join(), /appears nowhere/);
@@ -127,8 +139,15 @@ test("one checkout per pinned version, and every case on a pinned version", () =
   assert.throws(() => parseArgs(["--check"]), /usage/);
 
   const pin = { sha: "a".repeat(40), ref: "v0.1.0", cliVersion: "0.1.0" };
-  const manifest = { latest: "0.2.0", pharnCi: { "0.1.0": pin, "0.2.0": pin }, cases: { a: { pharnCi: "0.1.0" }, b: { pharnCi: "0.2.0" } } };
-  const both = new Map([["0.1.0", "a"], ["0.2.0", "b"]]);
+  const manifest = {
+    latest: "0.2.0",
+    pharnCi: { "0.1.0": pin, "0.2.0": pin },
+    cases: { a: { pharnCi: "0.1.0" }, b: { pharnCi: "0.2.0" } },
+  };
+  const both = new Map([
+    ["0.1.0", "a"],
+    ["0.2.0", "b"],
+  ]);
   assert.deepEqual(checkoutProblems(manifest, both), []);
   assert.match(checkoutProblems(manifest, new Map([["0.1.0", "a"]])).join(), /no --pharn-ci 0\.2\.0=/);
   assert.match(checkoutProblems(manifest, new Map([...both, ["0.3.0", "c"]])).join(), /0\.3\.0 is not a version/);

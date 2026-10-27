@@ -1,15 +1,21 @@
 {
+  "globs": ["**/*.md"],
   "config": {
     "default": true,
     "MD013": false,
     "MD024": { "siblings_only": true },
     "MD033": false,
-    "MD041": false
+    "MD041": false,
   },
   "ignores": [
+    ".git/**",
+    // Other Claude Code sessions' worktrees and Codex's import: untracked, never this repo's markdown.
+    ".claude/worktrees",
+    ".agents",
     "**/node_modules/**",
     "**/.cache/**",
     "**/dist/**",
-    "**/evals/results/**"
-  ]
+    "**/evals/results/**",
+    "**/coverage/**",
+  ],
 }

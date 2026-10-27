@@ -22,30 +22,16 @@ function needsFullSync(path) {
   );
 }
 
-export function changedSkills({
-  cwd = process.cwd(),
-  before,
-  head = "HEAD",
-  all = false,
-}) {
+export function changedSkills({ cwd = process.cwd(), before, head = "HEAD", all = false }) {
   // Resolve revisions before passing them to other Git commands.
   const after = git(cwd, ["rev-parse", "--verify", `${head}^{commit}`]).trim();
-  const skillFiles = git(cwd, [
-    "ls-tree",
-    "-r",
-    "--name-only",
-    "-z",
-    after,
-    "--",
-    "plugins",
-  ])
+  const skillFiles = git(cwd, ["ls-tree", "-r", "--name-only", "-z", after, "--", "plugins"])
     .split("\0")
     .filter((path) => skillFilePattern.test(path));
 
   let changedPaths = [];
   if (!all && before && !/^0+$/.test(before)) {
-    if (!/^[a-f0-9]{40}$/.test(before))
-      throw new Error("Invalid before commit SHA");
+    if (!/^[a-f0-9]{40}$/.test(before)) throw new Error("Invalid before commit SHA");
     try {
       git(cwd, ["cat-file", "-e", `${before}^{commit}`]);
     } catch {
@@ -53,16 +39,7 @@ export function changedSkills({
       all = true;
     }
     if (!all) {
-      changedPaths = git(cwd, [
-        "diff",
-        "--no-renames",
-        "--name-only",
-        "-z",
-        before,
-        after,
-      ])
-        .split("\0")
-        .filter(Boolean);
+      changedPaths = git(cwd, ["diff", "--no-renames", "--name-only", "-z", before, after]).split("\0").filter(Boolean);
       all = changedPaths.some(needsFullSync);
     }
   } else {
@@ -77,25 +54,18 @@ export function changedSkills({
     if (name.length > 64 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
       throw new Error(`Invalid skill directory name: ${path}`);
     }
-    if (names.has(name))
-      throw new Error(`Duplicate skill directory name: ${name}`);
+    if (names.has(name)) throw new Error(`Duplicate skill directory name: ${name}`);
     names.add(name);
 
     const directory = path.slice(0, -"SKILL.md".length);
-    if (
-      all ||
-      changedPaths.some((changedPath) => changedPath.startsWith(directory))
-    ) {
+    if (all || changedPaths.some((changedPath) => changedPath.startsWith(directory))) {
       selected.push(name);
     }
   }
   return selected.sort();
 }
 
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"));
   const names = changedSkills({
     before: event.before,

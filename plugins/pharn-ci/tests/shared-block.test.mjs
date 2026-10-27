@@ -20,6 +20,6 @@ test("check-lines.mjs and check-coverage.mjs carry the same shared:coverage bloc
   assert.equal(
     block("../skills/pharn-ci-install/scripts/check-coverage.mjs"),
     block("../skills/pharn-ci-cover/scripts/check-lines.mjs"),
-    "copy the block from one helper to the other",
+    "copy the block from one helper to the other"
   );
 });

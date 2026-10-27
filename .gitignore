@@ -8,3 +8,4 @@ src/*/dist/
 src/*/evals/results/
 src/*/coverage/
 .cache/
+/coverage/
