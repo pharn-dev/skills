@@ -1,0 +1,7 @@
+{
+  "schema": "pharn-entry-result/1",
+  "status": "no-gates",
+  "feature": "add-package-json",
+  "nonce": "d41ef2eeb35fed6cef1a349661874dd1",
+  "detail": "no gates: --gates was not supplied and the allowlist ∩ package.json scripts is empty"
+}
