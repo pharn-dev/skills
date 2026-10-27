@@ -19,7 +19,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
-const USAGE = "usage: check-coverage.mjs [--coverage <path|glob>]... [--coverage-root <dir>] [--format lcov|cobertura|auto]";
+const USAGE =
+  "usage: check-coverage.mjs [--coverage <path|glob>]... [--coverage-root <dir>] [--format lcov|cobertura|auto]";
 
 export class UsageError extends Error {}
 
@@ -44,8 +45,7 @@ function toPosixPath(p) {
   for (const segment of rest.split("/")) {
     if (segment === "" || segment === ".") continue;
     if (segment === ".." && out.length > 0 && out[out.length - 1] !== "..") out.pop();
-    else if (segment === ".." && absolute)
-      continue; // `..` above the filesystem root stays at the root.
+    else if (segment === ".." && absolute) continue; // `..` above the filesystem root stays at the root.
     else out.push(segment);
   }
   const prefix = drive !== "" ? drive.toUpperCase() : absolute ? "/" : "";
@@ -905,9 +905,7 @@ export function checkCoverage({ entries, coverageRoot, format = "auto" }, repo, 
   if (blocking === null && maps.length > 0) {
     const merged = mergeCoverageMaps(maps);
     const match = matchCoveragePaths([...merged.keys()], repoFiles, coverageRoot);
-    const onDisk = tracked
-      ? match.unmatched.filter((p) => !isAbsolutePath(p) && !p.startsWith("../") && existsSync(path.join(repoRoot, p)))
-      : [];
+    const onDisk = tracked ? match.unmatched.filter((p) => !isAbsolutePath(p) && !p.startsWith("../") && existsSync(path.join(repoRoot, p))) : [];
     paths = {
       total: match.total,
       matched: match.total - match.unmatched.length,
@@ -917,8 +915,7 @@ export function checkCoverage({ entries, coverageRoot, format = "auto" }, repo, 
       suggestedRoot: match.suggestedRoot,
     };
     if (match.total > 0 && match.unmatched.length === match.total) blocking = "COVERAGE_PATHS_UNMATCHED";
-    if (onDisk.length > 0)
-      notes.push("some coverage paths are files on disk that git does not track yet (untrackedOnDisk); they match once committed");
+    if (onDisk.length > 0) notes.push("some coverage paths are files on disk that git does not track yet (untrackedOnDisk); they match once committed");
   }
 
   const codes = [];
@@ -929,13 +926,10 @@ export function checkCoverage({ entries, coverageRoot, format = "auto" }, repo, 
   }
   if (trackedFile !== null) codes.push("COVERAGE_FILE_TRACKED");
   for (const c of coverage) {
-    if (c.tracked === false && c.ignored === false)
-      notes.push(`${c.path} is not git-ignored; ignore it so it is never committed (a committed one raises COVERAGE_FILE_TRACKED)`);
+    if (c.tracked === false && c.ignored === false) notes.push(`${c.path} is not git-ignored; ignore it so it is never committed (a committed one raises COVERAGE_FILE_TRACKED)`);
   }
   if (paths?.suggestedRoot) {
-    notes.push(
-      `the coverage paths look relative to ${paths.suggestedRoot}: set coverage.root: ${paths.suggestedRoot} in .pharn/ci.yml, or have the runner write repo-relative paths`
-    );
+    notes.push(`the coverage paths look relative to ${paths.suggestedRoot}: set coverage.root: ${paths.suggestedRoot} in .pharn/ci.yml, or have the runner write repo-relative paths`);
   }
   return {
     discovery: { kind: discovery.kind, files: discovery.files },

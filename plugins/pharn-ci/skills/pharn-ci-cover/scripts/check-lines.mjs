@@ -49,8 +49,7 @@ function toPosixPath(p) {
   for (const segment of rest.split("/")) {
     if (segment === "" || segment === ".") continue;
     if (segment === ".." && out.length > 0 && out[out.length - 1] !== "..") out.pop();
-    else if (segment === ".." && absolute)
-      continue; // `..` above the filesystem root stays at the root.
+    else if (segment === ".." && absolute) continue; // `..` above the filesystem root stays at the root.
     else out.push(segment);
   }
   const prefix = drive !== "" ? drive.toUpperCase() : absolute ? "/" : "";
@@ -939,9 +938,7 @@ export function compare(report, coverageFiles, { tracked, diff = null }) {
     estimate = estimateOf(covered, report.coverableLines, report.threshold, "listed-lines");
   } else {
     const added = new Map(measured.map((f) => [f.path, new Set(f.addedLines)]));
-    notAdded = groupByPath(
-      report.files.flatMap((f) => f.lines.filter((line) => !added.get(f.path)?.has(line)).map((line) => ({ path: f.path, line })))
-    );
+    notAdded = groupByPath(report.files.flatMap((f) => f.lines.filter((line) => !added.get(f.path)?.has(line)).map((line) => ({ path: f.path, line }))));
     const local = new Map();
     let covered = 0;
     let coverable = 0;
@@ -1058,22 +1055,11 @@ function resolveBase(git, repoRoot, ref) {
 function diffAgainst(git, repoRoot, sha) {
   try {
     return parseUnifiedDiff(
-      git(repoRoot, [
-        "diff",
-        "--unified=0",
-        "--no-color",
-        "--no-ext-diff",
-        "--find-renames",
-        "--src-prefix=a/",
-        "--dst-prefix=b/",
-        "--end-of-options",
-        `${sha}...HEAD`,
-      ])
+      git(repoRoot, ["diff", "--unified=0", "--no-color", "--no-ext-diff", "--find-renames", "--src-prefix=a/", "--dst-prefix=b/", "--end-of-options", `${sha}...HEAD`]),
     );
   } catch (err) {
     const msg = gitMessage(err);
-    if (/no merge base/i.test(msg))
-      throw new UsageError(`no merge base between ${sha} and HEAD; is this a shallow clone? fetch more history`);
+    if (/no merge base/i.test(msg)) throw new UsageError(`no merge base between ${sha} and HEAD; is this a shallow clone? fetch more history`);
     throw new UsageError(`git diff failed: ${msg}`);
   }
 }
@@ -1081,12 +1067,7 @@ function diffAgainst(git, repoRoot, sha) {
 /** Paths among `paths` that the base changed since the merge base (HEAD...base). */
 function baseChangedPaths(git, repoRoot, sha, paths) {
   if (paths.length === 0) return [];
-  const out = runGit(
-    git,
-    repoRoot,
-    ["diff", "--name-only", "-z", "--no-renames", "--end-of-options", `HEAD...${sha}`, "--", ...paths],
-    "git diff failed"
-  );
+  const out = runGit(git, repoRoot, ["diff", "--name-only", "-z", "--no-renames", "--end-of-options", `HEAD...${sha}`, "--", ...paths], "git diff failed");
   return out.split("\0").filter(Boolean);
 }
 
@@ -1124,9 +1105,7 @@ export function run(argv, { cwd = process.cwd(), git = realGit } = {}) {
     const format = opts.format === "auto" ? detectCoverageFormat(text) : opts.format;
     if (format === "empty") throw new UsageError(`${p} is empty (pharn-ci reports COVERAGE_FILE_EMPTY)`);
     if (format === "unknown") {
-      throw new UsageError(
-        `${p} is neither lcov nor Cobertura XML as pharn-ci detects them (COVERAGE_FORMAT_UNSUPPORTED); pass --format if it is`
-      );
+      throw new UsageError(`${p} is neither lcov nor Cobertura XML as pharn-ci detects them (COVERAGE_FORMAT_UNSUPPORTED); pass --format if it is`);
     }
     return { file: p, format, parsed: parseCoverage(text, format, { repoRoot, coverageRoot: opts.coverageRoot }) };
   });
@@ -1142,15 +1121,13 @@ export function run(argv, { cwd = process.cwd(), git = realGit } = {}) {
     diff = diffAgainst(git, repoRoot, resolved.sha);
     const renamedFrom = new Map(diff.filter((f) => f.status === "renamed").map((f) => [f.path, f.oldPath]));
     const reportPaths = report.files.map((f) => f.path);
-    const asked = [
-      ...new Set([...reportPaths, ...reportPaths.map((p) => renamedFrom.get(p)).filter((p) => p !== undefined && isSafeRepoPath(p))]),
-    ];
+    const asked = [...new Set([...reportPaths, ...reportPaths.map((p) => renamedFrom.get(p)).filter((p) => p !== undefined && isSafeRepoPath(p))])];
     const changed = new Set(baseChangedPaths(git, repoRoot, resolved.sha, asked));
     const changedFiles = reportPaths.filter((p) => changed.has(p) || changed.has(renamedFrom.get(p) ?? ""));
     base = { ref: resolved.ref, sha: resolved.sha, changedFiles };
     if (changedFiles.length > 0) {
       notes.push(
-        "the base branch changed listed files since the merge base (base.changedFiles); on pull_request CI measured the merge commit, so its line numbers for those files can differ from this checkout"
+        "the base branch changed listed files since the merge base (base.changedFiles); on pull_request CI measured the merge commit, so its line numbers for those files can differ from this checkout",
       );
     }
   } else if (opts.base !== null) {
@@ -1166,9 +1143,7 @@ export function run(argv, { cwd = process.cwd(), git = realGit } = {}) {
     ? null
     : listed.length === 0
       ? []
-      : parseStatusZ(
-          runGit(git, repoRoot, ["status", "--porcelain=v1", "-z", "--untracked-files=no", "--", ...listed], "git status failed")
-        );
+      : parseStatusZ(runGit(git, repoRoot, ["status", "--porcelain=v1", "-z", "--untracked-files=no", "--", ...listed], "git status failed"));
   return {
     schemaVersion: 1,
     report: {

@@ -9,8 +9,9 @@ export default [
       "**/.cache/**",
       "**/dist/**",
       "**/evals/results/**",
-      // src/phargus has its own package.json, ESLint config and CI job.
+      // src/phargus has its own package.json, ESLint config and CI job, and generates plugins/phargus.
       "src/phargus/**",
+      "plugins/phargus/**",
       // Installed and updated by the PHARN CLI (pharn.records.json); not edited by hand.
       "pharn/**",
       ".claude/**",

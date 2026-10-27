@@ -30,38 +30,38 @@ jobs:
       # Run each gate independently so one failure can't mask the others, but skip
       # them cleanly if install failed — no cascade of misleading "deps missing" errors.
       - name: Format check
-        if: ${{ always() && steps.install.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run format:check
       - name: Lint
-        if: ${{ always() && steps.install.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run lint
       - name: Action pins
-        if: ${{ always() && steps.install.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run check:pins
       # skills.sh change detection, the pharn-ci helpers and the pharn-ci eval fixtures.
       - name: Test
-        if: ${{ always() && steps.install.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm test
       - name: Install Claude Code
         id: claude
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: npm install --global @anthropic-ai/claude-code@2.1.295
       - name: Validate marketplace
-        if: ${{ always() && steps.claude.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.claude.outcome == 'success' }}
         run: claude plugin validate --strict .
       - name: Validate plugin pharn
-        if: ${{ always() && steps.claude.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.claude.outcome == 'success' }}
         run: claude plugin validate --strict plugins/pharn
       - name: Validate plugin phargus
-        if: ${{ always() && steps.claude.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.claude.outcome == 'success' }}
         run: claude plugin validate --strict plugins/phargus
       - name: Validate plugin pharn-ci
-        if: ${{ always() && steps.claude.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.claude.outcome == 'success' }}
         run: claude plugin validate --strict plugins/pharn-ci
       # Each pharn-ci skill carries its own copy of the report reference, and
       # eval cases carry copies of shared scaffolds. Keep them identical.
       - name: Check shared pharn-ci files
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: |
           cmp plugins/pharn-ci/skills/pharn-ci-explain/references/report.md plugins/pharn-ci/skills/pharn-ci-cover/references/report.md
           for case in cover-exclude-asks explain-below-threshold; do
@@ -75,11 +75,30 @@ jobs:
       # claude plugin eval only runs a scaffold inside its own case directory,
       # so these seven cases carry copies of one script. Keep them identical.
       - name: Check shared pharn eval scaffolds
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: |
           for case in update-yes force-asks status-readonly status-strict add-refused-behind remove-by-name; do
             cmp plugins/pharn/evals/update-preview/scaffold.sh "plugins/pharn/evals/$case/scaffold.sh"
           done
+
+  # The pharn-ci skill scripts promise Node >=22 and package.json's engines floor is 22.18.0, so the root
+  # tests also run there. Not a required check; Validate runs them on Node 24.
+  node-floor:
+    name: Root tests (Node 22.18.0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22.18.0
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Test
+        run: npm test
 
   markdown-lint:
     name: Markdown lint

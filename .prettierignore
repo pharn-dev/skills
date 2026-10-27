@@ -1,7 +1,6 @@
 node_modules
 dist
 .cache
-coverage
 evals/results
 package-lock.json
 LICENSE
@@ -9,11 +8,13 @@ LICENSE
 *.md
 # Captured gh API responses, kept as recorded.
 plugins/pharn-ci/evals/fixtures/inputs
+# Scripts shipped inside skills: a formatting-only change would make skills.sh republish the skill.
+plugins/*/skills/*/scripts
 # src/phargus formats itself and plugins/phargus (npm run format there).
-src/phargus
-plugins/phargus
+/src/phargus
+/plugins/phargus
 # Installed and updated by the PHARN CLI (pharn.records.json); not edited by hand.
-pharn
-.claude
-pharn.config.json
-pharn.records.json
+/pharn
+/.claude
+/pharn.config.json
+/pharn.records.json

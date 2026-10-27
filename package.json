@@ -10,12 +10,11 @@
     "url": "git+https://github.com/pharn-dev/skills.git"
   },
   "engines": {
-    "node": ">=24.2.0",
+    "node": ">=22.18.0",
     "npm": ">=10"
   },
   "scripts": {
     "test": "node --test .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
-    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
     "lint": "eslint .",
     "lint:md": "markdownlint-cli2",
     "format": "prettier --write .",
@@ -32,7 +31,6 @@
     "prettier": "^3.9.10"
   },
   "overrides": {
-    "smol-toml": "~1.9.0",
-    "katex": "~0.18.2"
+    "katex": ">=0.18.2"
   }
 }
