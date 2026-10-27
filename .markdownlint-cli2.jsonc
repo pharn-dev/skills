@@ -12,6 +12,8 @@
     // Other Claude Code sessions' worktrees and Codex's import: untracked, never this repo's markdown.
     ".claude/worktrees",
     ".agents",
+    // Installed and updated by the PHARN CLI (pharn.records.json); not edited by hand.
+    "pharn",
     "**/node_modules/**",
     "**/.cache/**",
     "**/dist/**",
