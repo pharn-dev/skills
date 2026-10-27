@@ -51,7 +51,10 @@ function gitError(stderr, code) {
   return Object.assign(new Error(stderr || code), { stderr, ...(code ? { code } : {}), status: code ? null : 128 });
 }
 
-const lcov = (file, lines) => `TN:\nSF:${file}\n${Object.entries(lines).map(([n, h]) => `DA:${n},${h}`).join("\n")}\nend_of_record\n`;
+const lcov = (file, lines) =>
+  `TN:\nSF:${file}\n${Object.entries(lines)
+    .map(([n, h]) => `DA:${n},${h}`)
+    .join("\n")}\nend_of_record\n`;
 
 /** An in-memory directory lister over a list of file paths. */
 function memoryListDir(files) {
@@ -148,7 +151,7 @@ describe("checkCoverage", () => {
       [
         ["empty.info", true, "empty"],
         ["gone.info", false, null],
-      ],
+      ]
     );
   });
 
@@ -171,11 +174,18 @@ describe("checkCoverage", () => {
     const out = checkCoverage(
       { entries: ["coverage/lcov.info"] },
       repo(["src/a.ts", "coverage/lcov.info"]),
-      deps({ "coverage/lcov.info": text }),
+      deps({ "coverage/lcov.info": text })
     );
     assert.equal(out.blocking, null);
     assert.deepEqual(out.codes, ["COVERAGE_PATHS_PARTIALLY_UNMATCHED", "COVERAGE_LINES_SKIPPED", "COVERAGE_FILE_TRACKED"]);
-    assert.deepEqual(out.paths, { total: 2, matched: 1, unmatched: 1, unmatchedExample: "gen/x.ts", untrackedOnDisk: 0, suggestedRoot: null });
+    assert.deepEqual(out.paths, {
+      total: 2,
+      matched: 1,
+      unmatched: 1,
+      unmatchedExample: "gen/x.ts",
+      untrackedOnDisk: 0,
+      suggestedRoot: null,
+    });
     assert.equal(out.coverage[0].tracked, true);
   });
 
@@ -184,7 +194,7 @@ describe("checkCoverage", () => {
     const out = checkCoverage(
       { entries: ["packages/core/coverage.xml"], coverageRoot: "packages/core" },
       repo(["packages/core/src/a.ts"]),
-      deps({ "packages/core/coverage.xml": xml }),
+      deps({ "packages/core/coverage.xml": xml })
     );
     assert.deepEqual(out.codes, []);
     assert.equal(out.paths.matched, 1);
@@ -224,7 +234,10 @@ describe("run", () => {
     const out = run([], { cwd: path.join(root, "src") });
     assert.equal(out.git, true);
     assert.deepEqual(out.discovery, { kind: "found", files: ["coverage/lcov.info"] });
-    assert.deepEqual(out.coverage.map((c) => [c.path, c.format, c.tracked, c.ignored]), [["coverage/lcov.info", "lcov", false, true]]);
+    assert.deepEqual(
+      out.coverage.map((c) => [c.path, c.format, c.tracked, c.ignored]),
+      [["coverage/lcov.info", "lcov", false, true]]
+    );
     assert.deepEqual(out.paths, { total: 1, matched: 1, unmatched: 0, unmatchedExample: null, untrackedOnDisk: 0, suggestedRoot: null });
     assert.equal(JSON.stringify(out).includes(root), false);
   });
@@ -247,7 +260,10 @@ describe("run", () => {
     const out = run(["--coverage", "lcov.info"], { cwd: path.join(root, "src"), git: blocked });
     assert.equal(out.git, false);
     assert.equal(out.repoFiles, "on-disk");
-    assert.deepEqual(out.coverage.map((c) => [c.tracked, c.ignored]), [[null, null]]);
+    assert.deepEqual(
+      out.coverage.map((c) => [c.tracked, c.ignored]),
+      [[null, null]]
+    );
     assert.equal(out.blocking, null);
     assert.equal(out.paths.untrackedOnDisk, null);
     assert.match(out.notes[0], /git could not run here/);
@@ -256,9 +272,36 @@ describe("run", () => {
 
   test("any other git failure is an error, and so is a directory outside a repository", () => {
     const root = tempDir();
-    assert.throws(() => run([], { cwd: root, git: () => { throw gitError("fatal: detected dubious ownership in repository"); } }), /git failed: fatal: detected dubious ownership/);
-    assert.throws(() => run([], { cwd: root, git: () => { throw gitError("fatal: not a git repository"); } }), /not inside a git repository/);
-    assert.throws(() => run([], { cwd: root, git: () => { throw gitError("", "ENOENT"); } }), /not inside a git repository/);
+    assert.throws(
+      () =>
+        run([], {
+          cwd: root,
+          git: () => {
+            throw gitError("fatal: detected dubious ownership in repository");
+          },
+        }),
+      /git failed: fatal: detected dubious ownership/
+    );
+    assert.throws(
+      () =>
+        run([], {
+          cwd: root,
+          git: () => {
+            throw gitError("fatal: not a git repository");
+          },
+        }),
+      /not inside a git repository/
+    );
+    assert.throws(
+      () =>
+        run([], {
+          cwd: root,
+          git: () => {
+            throw gitError("", "ENOENT");
+          },
+        }),
+      /not inside a git repository/
+    );
   });
 
   test("the CLI prints JSON and exits 2 on a usage error", () => {

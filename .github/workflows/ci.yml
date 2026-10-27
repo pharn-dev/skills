@@ -8,32 +8,60 @@ on:
 permissions:
   contents: read
 
+# The job names Validate, Markdown lint and Phargus (Node …) are required status checks in
+# .github/rulesets/main.json: renaming one blocks every PR until the ruleset is edited to match.
+
 jobs:
   validate:
     name: Validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
-      - name: Test skills.sh change detection
-        run: node --test .github/scripts/changed-skills.test.mjs
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install
+        id: install
+        run: npm ci
+      # Run each gate independently so one failure can't mask the others, but skip
+      # them cleanly if install failed — no cascade of misleading "deps missing" errors.
+      - name: Format check
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run format:check
+      - name: Lint
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run lint
+      - name: Action pins
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run check:pins
+      # skills.sh change detection, the pharn-ci helpers and the pharn-ci eval fixtures.
+      - name: Test
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm test
       - name: Install Claude Code
+        id: claude
+        if: ${{ !cancelled() }}
         run: npm install --global @anthropic-ai/claude-code@2.1.295
       - name: Validate marketplace
+        if: ${{ !cancelled() && steps.claude.outcome == 'success' }}
         run: claude plugin validate --strict .
       - name: Validate plugin pharn
+        if: ${{ !cancelled() && steps.claude.outcome == 'success' }}
         run: claude plugin validate --strict plugins/pharn
       - name: Validate plugin phargus
+        if: ${{ !cancelled() && steps.claude.outcome == 'success' }}
         run: claude plugin validate --strict plugins/phargus
       - name: Validate plugin pharn-ci
+        if: ${{ !cancelled() && steps.claude.outcome == 'success' }}
         run: claude plugin validate --strict plugins/pharn-ci
-      - name: Test pharn-ci helpers
-        run: node --test plugins/pharn-ci/tests/*.test.mjs
       # Each pharn-ci skill carries its own copy of the report reference, and
       # eval cases carry copies of shared scaffolds. Keep them identical.
       - name: Check shared pharn-ci files
+        if: ${{ !cancelled() }}
         run: |
           cmp plugins/pharn-ci/skills/pharn-ci-explain/references/report.md plugins/pharn-ci/skills/pharn-ci-cover/references/report.md
           for case in cover-exclude-asks explain-below-threshold; do
@@ -47,21 +75,47 @@ jobs:
       # claude plugin eval only runs a scaffold inside its own case directory,
       # so these seven cases carry copies of one script. Keep them identical.
       - name: Check shared pharn eval scaffolds
+        if: ${{ !cancelled() }}
         run: |
           for case in update-yes force-asks status-readonly status-strict add-refused-behind remove-by-name; do
             cmp plugins/pharn/evals/update-preview/scaffold.sh "plugins/pharn/evals/$case/scaffold.sh"
           done
+
+  # The pharn-ci skill scripts promise Node >=22 and package.json's engines floor is 22.18.0, so the root
+  # tests also run there. Not a required check; Validate runs them on Node 24.
+  node-floor:
+    name: Root tests (Node 22.18.0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22.18.0
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Test
+        run: npm test
 
   markdown-lint:
     name: Markdown lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
-      - name: Lint Markdown
-        run: npx --yes markdownlint-cli2@0.23.3 "**/*.md"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Markdown lint
+        run: npm run lint:md
 
   phargus:
     name: Phargus (Node ${{ matrix.node }})
@@ -69,7 +123,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['22.18.0', '24']
+        node: ["22.18.0", "24"]
     defaults:
       run:
         working-directory: src/phargus

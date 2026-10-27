@@ -113,7 +113,7 @@ describe("readReport", () => {
     const out = readReport(JSON.stringify(r));
     assert.deepEqual(
       out.files.map((f) => f.path),
-      ["src/discount.mjs"],
+      ["src/discount.mjs"]
     );
     assert.deepEqual(out.invalidPaths, ["/etc/passwd", "../outside.mjs", "a\0b.mjs", "C:\\x.mjs"]);
     assert.equal(isSafeRepoPath("src/a b.mjs"), true);
@@ -151,8 +151,22 @@ describe("parsers", () => {
     assert.equal(detectCoverageFormat(""), "empty");
   });
   test("lcov skips malformed and orphan DA records, sums repeats and maps paths", () => {
-    const p = parseLcov("DA:1,1\nSF:a.js\nDA:2,1\nDA:x,1\nDA:3,-1\nDA:4\r\nDA:5,0\nend_of_record\nSF:/repo/a.js\nDA:2,3\nSF:b.js\nend_of_record\n", { repoRoot: "/repo" });
-    assert.deepEqual([...p.map].map(([f, lines]) => [f, [...lines]]), [["a.js", [[2, 4], [5, 0]]]]);
+    const p = parseLcov(
+      "DA:1,1\nSF:a.js\nDA:2,1\nDA:x,1\nDA:3,-1\nDA:4\r\nDA:5,0\nend_of_record\nSF:/repo/a.js\nDA:2,3\nSF:b.js\nend_of_record\n",
+      { repoRoot: "/repo" }
+    );
+    assert.deepEqual(
+      [...p.map].map(([f, lines]) => [f, [...lines]]),
+      [
+        [
+          "a.js",
+          [
+            [2, 4],
+            [5, 0],
+          ],
+        ],
+      ]
+    );
     assert.equal(p.skipped, 4);
     const rooted = parseLcov("SF:src/a.ts\nDA:1,1\nSF:/repo/x.ts\nDA:1,1\n", { repoRoot: "/repo", coverageRoot: "packages/core" });
     assert.deepEqual([...rooted.map.keys()], ["packages/core/src/a.ts", "x.ts"]);
@@ -166,7 +180,19 @@ describe("parsers", () => {
 <lines><line number="2" hits="1"/><line number="3" hits="0"/><line number="x" hits="1"/><line number="4"/></lines></class>
 </classes></package></packages></coverage>`;
     const withoutRoot = parseCobertura(xml);
-    assert.deepEqual([...withoutRoot.map].map(([f, lines]) => [f, [...lines]]), [["pkg/a&b.py", [[2, 1], [3, 0], [4, 0]]]]);
+    assert.deepEqual(
+      [...withoutRoot.map].map(([f, lines]) => [f, [...lines]]),
+      [
+        [
+          "pkg/a&b.py",
+          [
+            [2, 1],
+            [3, 0],
+            [4, 0],
+          ],
+        ],
+      ]
+    );
     assert.equal(withoutRoot.skipped, 1);
     // The first source whose join stays under the repo root wins, whether or not that file exists.
     assert.deepEqual([...parseCobertura(xml, { repoRoot: "/repo" }).map.keys()], ["src/pkg/a&b.py"]);
@@ -183,7 +209,7 @@ describe("parsers", () => {
       "+nine",
       "+++ b/looks like a header",
       'diff --git "a/src/sp\\303\\251cial.mjs" "b/src/sp\\303\\251cial.mjs"',
-      'index 1..2 100644',
+      "index 1..2 100644",
       '--- "a/src/sp\\303\\251cial.mjs"',
       '+++ "b/src/sp\\303\\251cial.mjs"',
       "@@ -1 +1 @@",
@@ -212,7 +238,7 @@ describe("parsers", () => {
         ["src/with space.mjs", "src/with space.mjs", "modified", [1], false],
         ["src/gone.mjs", "src/gone.mjs", "deleted", [], false],
         ["img.png", "img.png", "modified", [], true],
-      ],
+      ]
     );
   });
   test("git status -z records keep both paths of a rename", () => {
@@ -265,15 +291,26 @@ describe("compare", () => {
     assert.equal(out.lines.notAdded, null);
     assert.equal(out.lines.regressed, null);
     assert.equal(out.coverableMismatch, null);
-    assert.deepEqual(out.estimate, { coveredLines: 22, coverableLines: 25, percent: 88, threshold: 80, meetsThreshold: true, basis: "listed-lines" });
+    assert.deepEqual(out.estimate, {
+      coveredLines: 22,
+      coverableLines: 25,
+      percent: 88,
+      threshold: 80,
+      meetsThreshold: true,
+      basis: "listed-lines",
+    });
   });
 
   test("sums hits across files, maps absolute paths and reports paths outside the repo", () => {
     const r = readReport(JSON.stringify(report()));
     const out = compare(
       r,
-      [parsed(lcov("/repo/src/discount.mjs", { 8: 0 })), parsed(lcov("src/discount.mjs", { 8: 1 })), parsed(lcov("/app/src/discount.mjs", { 9: 5 }))],
-      opts,
+      [
+        parsed(lcov("/repo/src/discount.mjs", { 8: 0 })),
+        parsed(lcov("src/discount.mjs", { 8: 1 })),
+        parsed(lcov("/app/src/discount.mjs", { 9: 5 })),
+      ],
+      opts
     );
     assert.deepEqual(out.lines.nowCovered, [{ path: "src/discount.mjs", lines: [8] }]);
     assert.equal(out.coverage.unmatchedPaths, 1);
@@ -292,8 +329,8 @@ describe("compare", () => {
             coverableLines: 2,
             files: [{ path: "packages/core/src/a.ts", percent: 50, coveredLines: 1, coverableLines: 2, uncoveredLines: [3] }],
           },
-        }),
-      ),
+        })
+      )
     );
     const rooted = compare(r, [parsed(lcov("src/a.ts", { 3: 1 }), { coverageRoot: "packages/core" })], opts);
     assert.deepEqual(rooted.lines.nowCovered, [{ path: "packages/core/src/a.ts", lines: [3] }]);
@@ -303,7 +340,7 @@ describe("compare", () => {
     assert.deepEqual(unrooted.lines.notInCoverage, [{ path: "packages/core/src/a.ts", lines: [3] }]);
     const cob = parseCobertura(
       '<coverage><sources><source>/elsewhere</source><source>/repo/packages/core</source></sources><classes><class filename="src/a.ts"><lines><line number="3" hits="2"/></lines></class></classes></coverage>',
-      { repoRoot: "/repo" },
+      { repoRoot: "/repo" }
     );
     const out = compare(r, [{ parsed: cob }], opts);
     assert.deepEqual(out.lines.nowCovered, [{ path: "packages/core/src/a.ts", lines: [3] }]);
@@ -324,7 +361,8 @@ describe("git classification", () => {
 
 /** A small repository: main, a feature branch with an edit, a new line in a renamed file, then main moves on. */
 function makeRepo(dir) {
-  const git = (...args) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.com", ...args], { cwd: dir, stdio: "ignore" });
+  const git = (...args) =>
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.com", ...args], { cwd: dir, stdio: "ignore" });
   git("init", "-q", "-b", "main");
   mkdirSync(path.join(dir, "src"));
   mkdirSync(path.join(dir, "coverage"));
@@ -333,7 +371,10 @@ function makeRepo(dir) {
   git("add", "-A");
   git("commit", "-qm", "base");
   git("checkout", "-qb", "feature");
-  writeFileSync(path.join(dir, "src", "a.mjs"), "export const a = 1;\nexport const b = 2;\nexport const c = 3;\nexport const d = 4;\nexport const e = 5;\nexport const f = 6;\n");
+  writeFileSync(
+    path.join(dir, "src", "a.mjs"),
+    "export const a = 1;\nexport const b = 2;\nexport const c = 3;\nexport const d = 4;\nexport const e = 5;\nexport const f = 6;\n"
+  );
   git("mv", "src/old.mjs", "src/new.mjs");
   writeFileSync(path.join(dir, "src", "new.mjs"), "one\ntwo\nthree\nfour\nfive\nsix\nseven\neight\nnine\n");
   git("add", "-A");
@@ -379,7 +420,14 @@ describe("--base (in a git repository)", () => {
     assert.deepEqual(out.lines.notAdded, []);
     assert.deepEqual(out.lines.regressed, [{ path: "src/new.mjs", lines: [9] }]);
     assert.deepEqual(out.coverableMismatch, []);
-    assert.deepEqual(out.estimate, { coveredLines: 2, coverableLines: 4, percent: 50, threshold: 80, meetsThreshold: false, basis: "added-lines" });
+    assert.deepEqual(out.estimate, {
+      coveredLines: 2,
+      coverableLines: 4,
+      percent: 50,
+      threshold: 80,
+      meetsThreshold: false,
+      basis: "added-lines",
+    });
   });
 
   test("names the listed files the base changed, through the rename source too", () => {
@@ -459,14 +507,23 @@ describe("run (in a git repository)", () => {
       assert.equal(out.coverage.unmatchedPaths, 0);
     }
     assert.equal(findGitRoot(path.join(dir, "src")), dir);
-    const fromSubdir = run(["--report", "../report.json", "--coverage", "../coverage/lcov.info"], { cwd: path.join(dir, "src"), git: throwing(gitError(XCRUN)) });
+    const fromSubdir = run(["--report", "../report.json", "--coverage", "../coverage/lcov.info"], {
+      cwd: path.join(dir, "src"),
+      git: throwing(gitError(XCRUN)),
+    });
     assert.deepEqual(fromSubdir.lines.stillUncovered, [{ path: "src/discount.mjs", lines: [20] }]);
     assert.equal(fromSubdir.coverage.unmatchedPaths, 0);
   });
 
   test("any other git failure is an error, not a silent fallback", () => {
-    assert.throws(() => run(args, { cwd: dir, git: throwing(gitError("fatal: detected dubious ownership in repository at '/x'\n")) }), /git failed: fatal: detected dubious ownership/);
-    assert.throws(() => run(args, { cwd: dir, git: throwing(gitError("fatal: not a git repository (or any of the parent directories): .git\n")) }), /not inside a git repository/);
+    assert.throws(
+      () => run(args, { cwd: dir, git: throwing(gitError("fatal: detected dubious ownership in repository at '/x'\n")) }),
+      /git failed: fatal: detected dubious ownership/
+    );
+    assert.throws(
+      () => run(args, { cwd: dir, git: throwing(gitError("fatal: not a git repository (or any of the parent directories): .git\n")) }),
+      /not inside a git repository/
+    );
     assert.throws(() => run(args, { cwd: dir, git: throwing(gitError("", "ENOBUFS")) }), /git failed: ENOBUFS/);
   });
 
@@ -480,11 +537,17 @@ describe("run (in a git repository)", () => {
   });
 
   test("the command line exits 2 with a message on bad input, 0 with JSON otherwise", () => {
-    const bad = spawnSync(process.execPath, [SCRIPT, "--report", "missing.json", "--coverage", "coverage/lcov.info"], { cwd: dir, encoding: "utf8" });
+    const bad = spawnSync(process.execPath, [SCRIPT, "--report", "missing.json", "--coverage", "coverage/lcov.info"], {
+      cwd: dir,
+      encoding: "utf8",
+    });
     assert.equal(bad.status, 2);
     assert.match(bad.stderr, /^check-lines: cannot read report missing\.json/);
     writeFileSync(path.join(dir, "clover.xml"), '<?xml version="1.0"?><coverage clover="4"></coverage>');
-    const clover = spawnSync(process.execPath, [SCRIPT, "--report", "report.json", "--coverage", "clover.xml"], { cwd: dir, encoding: "utf8" });
+    const clover = spawnSync(process.execPath, [SCRIPT, "--report", "report.json", "--coverage", "clover.xml"], {
+      cwd: dir,
+      encoding: "utf8",
+    });
     assert.equal(clover.status, 2);
     assert.match(clover.stderr, /neither lcov nor Cobertura/);
     const ok = spawnSync(process.execPath, [SCRIPT, ...args], { cwd: dir, encoding: "utf8" });

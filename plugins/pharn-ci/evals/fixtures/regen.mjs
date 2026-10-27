@@ -51,7 +51,10 @@ export function yamlSingleQuoted(text) {
 }
 
 export function graderSlug(file) {
-  return file.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return file
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export function wholeFileGrader(file, content) {
@@ -96,7 +99,10 @@ export function findHeredoc(script, start) {
 
 export function readHeredoc(script, start) {
   const { lines, first, end } = findHeredoc(script, start);
-  return lines.slice(first, end).map((l) => `${l}\n`).join("");
+  return lines
+    .slice(first, end)
+    .map((l) => `${l}\n`)
+    .join("");
 }
 
 export function replaceHeredoc(script, start, content) {
@@ -118,7 +124,12 @@ function heredocTarget(start) {
 
 /** Every `owner/repo@<40-hex sha> # v<version>` in a text, in order. */
 export function extractPins(text) {
-  return [...text.matchAll(/([\w.-]+\/[\w.-]+)@([0-9a-f]{40}) # (v\d[\w.-]*)/g)].map((m) => ({ action: m[1], sha: m[2], version: m[3], text: m[0] }));
+  return [...text.matchAll(/([\w.-]+\/[\w.-]+)@([0-9a-f]{40}) # (v\d[\w.-]*)/g)].map((m) => ({
+    action: m[1],
+    sha: m[2],
+    version: m[3],
+    text: m[0],
+  }));
 }
 
 /** The pinned commit of the newest pharn-ci version the manifest names: the one the install skill writes. */
@@ -164,7 +175,13 @@ function pharnCiPinSources(pharnCi) {
 function childEnv() {
   // A small, fixed environment: no GITHUB_*, CI or NODE_* variables that could change what
   // pharn-ci or the test runner print, and no user or system git config.
-  const env = { PATH: process.env.PATH ?? "", HOME: process.env.HOME ?? "", LC_ALL: "C", GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1" };
+  const env = {
+    PATH: process.env.PATH ?? "",
+    HOME: process.env.HOME ?? "",
+    LC_ALL: "C",
+    GIT_CONFIG_GLOBAL: "/dev/null",
+    GIT_CONFIG_NOSYSTEM: "1",
+  };
   if (process.env.TMPDIR !== undefined) env.TMPDIR = process.env.TMPDIR;
   return env;
 }
@@ -214,7 +231,9 @@ function checkExpect(name, expect, reports) {
   const wanted = Object.fromEntries(Object.entries(expect).filter(([k]) => k !== "file"));
   const got = Object.fromEntries(Object.keys(wanted).map((k) => [k, facts[k]]));
   if (JSON.stringify(got) !== JSON.stringify(wanted)) {
-    throw new RegenError(`${name}: ${expect.file} no longer has the facts the graders rely on\n  expected ${JSON.stringify(wanted)}\n  got      ${JSON.stringify(got)}`);
+    throw new RegenError(
+      `${name}: ${expect.file} no longer has the facts the graders rely on\n  expected ${JSON.stringify(wanted)}\n  got      ${JSON.stringify(got)}`
+    );
   }
 }
 
@@ -265,7 +284,8 @@ function regenCase(name, spec, tools) {
         const value = readInput(src.input);
         const r = src.render;
         if (r !== undefined) {
-          if (getIn(value, r.at) !== r.placeholder) throw new RegenError(`${name}: ${src.input} has no ${r.placeholder} at ${r.at.join(".")}`);
+          if (getIn(value, r.at) !== r.placeholder)
+            throw new RegenError(`${name}: ${src.input} has no ${r.placeholder} at ${r.at.join(".")}`);
           const rendered = typeof r.report === "string" ? readInput(r.report) : reports.get(r.report.artifact);
           if (rendered === undefined) throw new RegenError(`${name}: no kept report ${JSON.stringify(r.report)} to render`);
           setIn(value, r.at, r.prefix + tools.renderMarkdown(rendered));
@@ -299,10 +319,14 @@ function applyAcceptLabel(name, report, spec, tools) {
   const label = spec.label ?? "pharn/accepted";
   const labelled = withAcceptLabel(report, label);
   const { mode, signals } = labelled.testIntegrity;
-  if (mode !== "block" || !signals.some((s) => s.severity === "block")) throw new RegenError(`${name}: the accept label is only read in mode block with a block finding`);
-  if (carriesAcceptLabel(fixture.pr.labels, label) !== true) throw new RegenError(`${name}: ${spec.fixture} pr.labels does not carry ${label}`);
+  if (mode !== "block" || !signals.some((s) => s.severity === "block"))
+    throw new RegenError(`${name}: the accept label is only read in mode block with a block finding`);
+  if (carriesAcceptLabel(fixture.pr.labels, label) !== true)
+    throw new RegenError(`${name}: ${spec.fixture} pr.labels does not carry ${label}`);
   const decision = decideAcceptLabel({ label, authorLogin: fixture.pr.author.login, events: fixture.events });
-  return decision.honoured ? acceptTestIntegrity(labelled, { label, by: decision.by }) : ignoreAcceptLabel(labelled, label, decision.reason);
+  return decision.honoured
+    ? acceptTestIntegrity(labelled, { label, by: decision.by })
+    : ignoreAcceptLabel(labelled, label, decision.reason);
 }
 
 const COVERAGE_CODES = new Set([
@@ -324,7 +348,9 @@ function checkHelperParity(name, parity, tmp, tools) {
     const args = parity.coverage.flatMap((c) => ["--coverage", c]);
     const rootArgs = root === null ? [] : ["--coverage-root", root];
     const helper = JSON.parse(run(["node", HELPER, ...args, ...rootArgs], tmp));
-    const report = JSON.parse(run(["node", tools.cli, "check", "--base", "HEAD", "--format", "json", ...args, ...rootArgs], tmp, { exits: [0, 1] }));
+    const report = JSON.parse(
+      run(["node", tools.cli, "check", "--base", "HEAD", "--format", "json", ...args, ...rootArgs], tmp, { exits: [0, 1] })
+    );
     const cliCodes = report.messages.map((m) => m.code).filter((c) => COVERAGE_CODES.has(c));
     const unmatched = report.messages.find((m) => m.code === "COVERAGE_PATHS_UNMATCHED");
     const cliRoot = unmatched === undefined ? null : (/look relative to `([^`]+)`/.exec(unmatched.text)?.[1] ?? null);
@@ -332,7 +358,9 @@ function checkHelperParity(name, parity, tmp, tools) {
     const wanted = { codes: cliCodes, suggestedRoot: cliRoot };
     if (JSON.stringify(got) !== JSON.stringify(wanted)) {
       const label = root === null ? "" : ` with --coverage-root ${root}`;
-      throw new RegenError(`${name}: check-coverage.mjs disagrees with pharn-ci${label}\n  pharn-ci ${JSON.stringify(wanted)}\n  helper   ${JSON.stringify(got)}`);
+      throw new RegenError(
+        `${name}: check-coverage.mjs disagrees with pharn-ci${label}\n  pharn-ci ${JSON.stringify(wanted)}\n  helper   ${JSON.stringify(got)}`
+      );
     }
     return cliRoot;
   };
@@ -359,7 +387,8 @@ async function loadTools(pharnCi, version, pin) {
   const cli = path.join(pharnCi, "packages/cli/dist/index.js");
   const core = path.join(pharnCi, "packages/core/dist/index.js");
   for (const f of [cli, core]) {
-    if (!existsSync(f)) throw new RegenError(`${f} is missing: run pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build in ${pharnCi}`);
+    if (!existsSync(f))
+      throw new RegenError(`${f} is missing: run pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build in ${pharnCi}`);
   }
   const cliVersion = run(["node", cli, "--version"], pharnCi).trim();
   if (cliVersion !== pin.cliVersion) throw new RegenError(`pharn-ci ${version}: the CLI prints ${cliVersion}, expected ${pin.cliVersion}`);
@@ -401,7 +430,8 @@ export function checkoutProblems(manifest, given) {
   const pinned = Object.keys(manifest.pharnCi ?? {});
   const problems = [];
   for (const v of pinned) if (!given.has(v)) problems.push(`no --pharn-ci ${v}=<checkout> (pinned at ${manifest.pharnCi[v].sha})`);
-  for (const v of given.keys()) if (!pinned.includes(v)) problems.push(`--pharn-ci ${v} is not a version in manifest.pharnCi (${pinned.join(", ")})`);
+  for (const v of given.keys())
+    if (!pinned.includes(v)) problems.push(`--pharn-ci ${v} is not a version in manifest.pharnCi (${pinned.join(", ")})`);
   const names = Object.keys(manifest.cases ?? {});
   for (const [name, spec] of Object.entries(manifest.cases ?? {})) {
     // A case with a byte-identical scaffold and spec reuses that case's regenerated files instead of a second run.
@@ -430,7 +460,8 @@ export async function main(argv) {
   for (const [version, dir] of pharnCi) tools.set(version, await loadTools(dir, version, manifest.pharnCi[version]));
   const diffs = [];
   const latestDir = tools.get(manifest.latest).dir;
-  for (const problem of pinProblems(readFileSync(PIN_REFERENCE, "utf8"), pharnCiPinSources(latestDir), manifest)) diffs.push(`pin: ${problem}`);
+  for (const problem of pinProblems(readFileSync(PIN_REFERENCE, "utf8"), pharnCiPinSources(latestDir), manifest))
+    diffs.push(`pin: ${problem}`);
   if (diffs.length === 0) console.error("pins: ok");
   const results = new Map();
   for (const [name, spec] of Object.entries(manifest.cases)) {
@@ -463,7 +494,7 @@ export async function main(argv) {
   return 0;
 }
 
-let isMain = false;
+let isMain;
 try {
   isMain = process.argv[1] !== undefined && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 } catch {
@@ -478,6 +509,6 @@ if (isMain) {
       if (!(err instanceof RegenError)) throw err;
       console.error(`regen: ${err.message}`);
       process.exitCode = 2;
-    },
+    }
   );
 }

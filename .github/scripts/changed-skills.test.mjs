@@ -25,10 +25,7 @@ function repository(t) {
     writeFileSync(target, content);
   };
   const skill = (name, plugin = "phargus") =>
-    write(
-      `plugins/${plugin}/skills/${name}/SKILL.md`,
-      `---\nname: ${name}\ndescription: Test skill\n---\n`,
-    );
+    write(`plugins/${plugin}/skills/${name}/SKILL.md`, `---\nname: ${name}\ndescription: Test skill\n---\n`);
   const commit = () => {
     git("add", ".");
     git("commit", "--quiet", "--message", "Test change");
@@ -43,20 +40,13 @@ function repository(t) {
 
 test("selects changed definitions, support files, and new skills across a whole push", (t) => {
   const repo = repository(t);
-  repo.write(
-    "plugins/phargus/skills/phargus-setup/SKILL.md",
-    "Changed definition\n",
-  );
+  repo.write("plugins/phargus/skills/phargus-setup/SKILL.md", "Changed definition\n");
   repo.commit();
   repo.write("plugins/phargus/skills/phargus-memory/references/memory.md");
   repo.write("plugins/phargus/skills/phargus-memory/scripts/phargus.mjs");
   repo.skill("phargus-new");
   repo.commit();
-  assert.deepEqual(changedSkills(repo), [
-    "phargus-memory",
-    "phargus-new",
-    "phargus-setup",
-  ]);
+  assert.deepEqual(changedSkills(repo), ["phargus-memory", "phargus-new", "phargus-setup"]);
 });
 
 test("unrelated docs and eval changes do not select skills", (t) => {
@@ -79,15 +69,8 @@ test("deleted skills are skipped, but removed support files select their skill",
 
 test("a rename selects the surviving new skill name", (t) => {
   const repo = repository(t);
-  repo.git(
-    "mv",
-    "plugins/phargus/skills/phargus-setup",
-    "plugins/phargus/skills/phargus-renamed",
-  );
-  repo.write(
-    "plugins/phargus/skills/phargus-renamed/SKILL.md",
-    "---\nname: phargus-renamed\ndescription: Renamed\n---\n",
-  );
+  repo.git("mv", "plugins/phargus/skills/phargus-setup", "plugins/phargus/skills/phargus-renamed");
+  repo.write("plugins/phargus/skills/phargus-renamed/SKILL.md", "---\nname: phargus-renamed\ndescription: Renamed\n---\n");
   repo.commit();
   assert.deepEqual(changedSkills(repo), ["phargus-renamed"]);
 });
@@ -96,14 +79,8 @@ test("manual runs, first pushes, and unavailable previous tips select all skills
   const repo = repository(t);
   const expected = ["phargus-memory", "phargus-setup", "pharn-cli"];
   assert.deepEqual(changedSkills({ ...repo, all: true }), expected);
-  assert.deepEqual(
-    changedSkills({ ...repo, before: "0".repeat(40) }),
-    expected,
-  );
-  assert.deepEqual(
-    changedSkills({ ...repo, before: "f".repeat(40) }),
-    expected,
-  );
+  assert.deepEqual(changedSkills({ ...repo, before: "0".repeat(40) }), expected);
+  assert.deepEqual(changedSkills({ ...repo, before: "f".repeat(40) }), expected);
 });
 
 for (const path of [
@@ -117,11 +94,7 @@ for (const path of [
     const repo = repository(t);
     repo.write(path);
     repo.commit();
-    assert.deepEqual(changedSkills(repo), [
-      "phargus-memory",
-      "phargus-setup",
-      "pharn-cli",
-    ]);
+    assert.deepEqual(changedSkills(repo), ["phargus-memory", "phargus-setup", "pharn-cli"]);
   });
 }
 

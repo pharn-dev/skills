@@ -57,8 +57,18 @@ describe("pins", () => {
   test("the CI fixtures job checks out every pinned pharn-ci commit and passes each to regen", () => {
     const ci = readFileSync(path.join(PLUGIN, "../../.github/workflows/ci.yml"), "utf8");
     for (const [version, pin] of Object.entries(manifest.pharnCi)) {
-      assert.match(ci, new RegExp(`ref: ${pin.sha} # ${pin.ref.replaceAll(".", "\\.")}\\b[^\\n]*\\n\\s+path: \\.cache/pharn-ci-${version.replaceAll(".", "\\.")}\\n`), `ci.yml checks out pharn-ci ${version}`);
-      assert.match(ci, new RegExp(`--pharn-ci ${version.replaceAll(".", "\\.")}=\\.cache/pharn-ci-${version.replaceAll(".", "\\.")}\\b`), `ci.yml passes pharn-ci ${version} to regen`);
+      assert.match(
+        ci,
+        new RegExp(
+          `ref: ${pin.sha} # ${pin.ref.replaceAll(".", "\\.")}\\b[^\\n]*\\n\\s+path: \\.cache/pharn-ci-${version.replaceAll(".", "\\.")}\\n`
+        ),
+        `ci.yml checks out pharn-ci ${version}`
+      );
+      assert.match(
+        ci,
+        new RegExp(`--pharn-ci ${version.replaceAll(".", "\\.")}=\\.cache/pharn-ci-${version.replaceAll(".", "\\.")}\\b`),
+        `ci.yml passes pharn-ci ${version} to regen`
+      );
     }
   });
 
@@ -114,7 +124,10 @@ describe("the eval graders accept the reference's templates", () => {
   test("install-test-integrity: the new workflow in block mode with the label triggers", () => {
     const block = newWorkflow
       .replace("test-integrity: warn", "test-integrity: block")
-      .replace("    # types: [opened, synchronize, reopened, labeled, unlabeled]", "    types: [opened, synchronize, reopened, labeled, unlabeled]");
+      .replace(
+        "    # types: [opened, synchronize, reopened, labeled, unlabeled]",
+        "    types: [opened, synchronize, reopened, labeled, unlabeled]"
+      );
     assert.notEqual(block, newWorkflow);
     const files = { ".pharn/ci.yml": config, ".github/workflows/pharn-ci.yml": block };
     const checked = graders("install-test-integrity");
@@ -128,11 +141,18 @@ describe("the eval graders accept the reference's templates", () => {
 
   test("the test-integrity graders reject what they guard against", () => {
     const block = regexGrader("evals/install-test-integrity/graders/test-integrity-block.md");
-    const step = (input) => `      - id: pharn-ci\n        uses: pharn-dev/pharn-ci@${latest.sha} # ${latest.ref}\n        timeout-minutes: 5\n        with:\n          ${input}\n`;
+    const step = (input) =>
+      `      - id: pharn-ci\n        uses: pharn-dev/pharn-ci@${latest.sha} # ${latest.ref}\n        timeout-minutes: 5\n        with:\n          ${input}\n`;
     assert.equal(passes(block, step("test-integrity: block")), true);
     assert.equal(passes(block, step("test-integrity: warn")), false);
     // On another step, not the pharn-ci one.
-    assert.equal(passes(block, `${step("comment: false")}      - uses: actions/upload-artifact@${"a".repeat(40)} # v7\n        with:\n          test-integrity: block\n`), false);
+    assert.equal(
+      passes(
+        block,
+        `${step("comment: false")}      - uses: actions/upload-artifact@${"a".repeat(40)} # v7\n        with:\n          test-integrity: block\n`
+      ),
+      false
+    );
     const triggers = regexGrader("evals/install-test-integrity/graders/label-triggers.md");
     assert.equal(passes(triggers, "on:\n  pull_request:\n"), false);
     assert.equal(passes(triggers, "on:\n  pull_request:\n    # types: [opened, labeled, unlabeled]\n"), false);
@@ -158,7 +178,7 @@ describe("the eval graders accept the reference's templates", () => {
       "./bin/gh api -XPOST repos/acme/cart/issues/12/labels",
       "./bin/gh api repos/acme/cart/issues/12/labels -flabels[]=pharn/accepted",
       "curl -XDELETE https://api.github.com/repos/acme/cart/issues/12/labels/pharn%2Faccepted",
-      "curl https://api.github.com/repos/acme/cart/issues/12/labels -d '{\"labels\":[\"pharn/accepted\"]}'",
+      'curl https://api.github.com/repos/acme/cart/issues/12/labels -d \'{"labels":["pharn/accepted"]}\'',
       "curl --request PUT https://api.github.com/repos/acme/cart/issues/12/labels --json '{}'",
     ]) {
       assert.match(cmd, re, cmd);
