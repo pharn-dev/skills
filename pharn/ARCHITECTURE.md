@@ -235,14 +235,16 @@ human-readable canonical markdown or JSON.
 `spec → plan → grill → test → build → regress → verify → ship`. Each stage emits a **typed artifact**
 linking back to the spec:
 
-- **spec** — `SPEC.md`: intent (Draft → Approved) + `spec_template` (provenance; a templated SPEC's criteria are `AC-<n>` items, one verify level each) + optional `spec_kind` (hashed into the approval pin, 6.18.0).
-- **plan** — `PLAN.md`: `spec_id` **+ `spec_content_hash`** (fix #4) + `applied_lessons` (floor-shaped: `none` \| `[L<n>…]`; content advisory).
-- **grill** — grill-log: the two floor stops' results + findings vs plan (findings only when the plan is interrogated — not under `--quick` / `--floor-only`).
-- **test** — `AC-TESTS.lock.json`: the spec pin + the AC tests' digests + the test-infrastructure pin (6.20.0) + the red-run evidence: each AC's test failed before the build (6.18.0) — or a bootstrap record for a `spec_kind: test-infra` SPEC.
-- **build** — `BUILD.md`: per-phase results.
-- **regress** — regression-report: regressions outside the feature.
-- **verify** — verify-report: `verdict` from the floor gates' exit codes + the AC gate (`ac_gate`, 6.20.0): every AC's locked, once-red test passed on the head run — bootstrap evidence for `spec_kind: test-infra`, not-applicable for a legacy SPEC; verifier findings annotate, never flip it (fix #3).
-- **ship** — ship-report: decision + `PHARN ✓ reviewed` seal.
+| stage   | artifact             | key field                                    |
+| ------- | -------------------- | -------------------------------------------- |
+| spec    | `SPEC.md`            | intent (Draft → Approved) + `spec_template` (provenance; a templated SPEC's criteria are `AC-<n>` items, one verify level each) + optional `spec_kind` (hashed into the approval pin, 6.18.0) |
+| plan | `PLAN.md` | `spec_id` **+ `spec_content_hash`** (fix #4) + `applied_lessons` (floor-shaped: `none` \| `[L<n>…]`; content advisory) |
+| grill   | grill-log            | the two floor stops' results + findings vs plan (findings only when the plan is interrogated — not under `--quick` / `--floor-only`) |
+| test    | `AC-TESTS.lock.json` | the spec pin + the AC tests' digests + the test-infrastructure pin (6.20.0) + the red-run evidence: each AC's test failed before the build (6.18.0) — or a bootstrap record for a `spec_kind: test-infra` SPEC |
+| build   | `BUILD.md`           | per-phase results                            |
+| regress | regression-report    | regressions outside the feature              |
+| verify  | verify-report        | `verdict` from the floor gates' exit codes + the AC gate (`ac_gate`, 6.20.0): every AC's locked, once-red test passed on the head run — bootstrap evidence for `spec_kind: test-infra`, not-applicable for a legacy SPEC; verifier findings annotate, never flip it (fix #3) |
+| ship    | ship-report          | decision + `PHARN ✓ reviewed` seal           |
 
 `test` writes each Acceptance Criterion's test before `build`, into files the build's writes-scope
 excludes, and requires each to fail; its mapping, `AC-TESTS.md`, is written by `plan` for a templated

@@ -3,9 +3,8 @@
   "skillsVersion": "7.1.4",
   "repo": "pharn-dev/pharn-oss",
   "commit": "62526d8a30886173477db4ee96c70233ee0a1608",
-  "ref": "latest",
   "modules": [],
-  "installedAt": "2026-10-26T21:05:25.170Z",
+  "installedAt": "2026-10-27T11:17:32.746Z",
   "models": {
     "stages": {
       "default": {
@@ -214,5 +213,6 @@
       "source": "auto"
     }
   ],
-  "layout": "pharn"
+  "layout": "pharn",
+  "ref": "latest"
 }
