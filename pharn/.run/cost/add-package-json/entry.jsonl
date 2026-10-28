@@ -1,2 +1,0 @@
-{"schema":"pharn-entry-observation/1","event":"start","nonce":"d41ef2eeb35fed6cef1a349661874dd1","run":{"seq":1,"ts":"2026-10-27T10:39:13.275Z"},"ts":"2026-10-27T10:39:17.675Z","end_ts":"2026-10-27T10:39:17.739Z","elapsed_ms":64,"outcome":"no-gates","session_id":"dba03e9b-efbf-4bc5-ae7a-48a303e94cb3"}
-{"schema":"pharn-entry-observation/1","event":"abort","nonce":"d41ef2eeb35fed6cef1a349661874dd1","call":"aacd3ae7747aa87c","ts":"2026-10-27T10:39:22.520Z","stopped":false,"wrote_result":false,"session_id":"dba03e9b-efbf-4bc5-ae7a-48a303e94cb3"}

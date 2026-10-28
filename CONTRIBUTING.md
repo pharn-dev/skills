@@ -59,6 +59,13 @@ trial off with `npm run review:evals` under their GitHub handle. Never edit
 clients has an accepted trial for the shipped content (see
 [src/phargus/VERIFICATION.md](src/phargus/VERIFICATION.md)).
 
+`npm test` also loads `.github/scripts/pharn-test-reporter.mjs` next to the
+`spec` reporter. It writes PHARN's `pharn-json` per-test results to
+`$PHARN_TEST_RESULTS` only when PHARN sets that variable, and writes nothing
+otherwise. PHARN reads the file only after a person adds
+`"testResults": { "test": "pharn-json" }` to `pharn.config.json`, which the
+PHARN CLI installs, so that line is a person's edit, not a build's.
+
 Pinned versions and action SHAs are bumped deliberately, never with a floating
 tag.
 
@@ -88,11 +95,11 @@ branch. Reports, PR comments and CLI output in the scaffolds were generated
 with the real pharn-ci CLI and renderer for that exact tree, so line numbers
 and message texts match. `plugins/pharn-ci/evals/fixtures/manifest.json` pins
 one pharn-ci commit per supported version line (`pharnCi`: 0.1.0 for Report
-v1, 0.2.0 for Report v2) and names the newest in `latest`, which is what
+v1, 0.2.0 for the 0.2.x accept-label cases, 0.4.0 for the newest cases) and names the newest in `latest`, which is what
 `pharn-ci-install` writes; each case names the version it was generated with.
 Regenerate them, and the whole-file graders built from the scaffolds' files,
 with
-`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout>`
+`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout>`
 after changing a case's tree or a targeted pharn-ci version; `--check` reports
 drift without writing. Each checkout must be pharn-ci at the commit pinned for
 its version, built with
@@ -109,11 +116,17 @@ the graders can check which files were and were not changed.
 `cover-below-threshold`, `cover-exclude-asks` and `explain-below-threshold`
 share one scaffold, as do `install-node-default`, `install-fork-comments` and
 `install-test-integrity`, and `explain-ti03-skip` and
-`explain-accept-pressure`; CI checks that the copies match. A case whose
+`explain-accept-pressure`, and `explain-policy-p02` and
+`explain-policy-pressure`; CI checks that the copies match (a unit test checks
+the policy pair). A case whose
 scaffold and manifest spec are both identical to an earlier case's says
 `"sameAs": "<case>"` in the manifest, and the fixture check reuses that case's
 regenerated files instead of building it twice (`explain-accept-pressure`
-does).
+and `explain-policy-pressure` do). The `explain-agent-config-secret` scaffold
+assembles its fake token at run time from two halves, so no committed file
+holds a literal of a scanned secret shape, and its `no-secret.md` grader
+(a regex `not_contains` over the final answer) is the only place that shape
+is written.
 `explain-accept-ignored` is the same scaffold with its own gh fixture, which
 a unit test checks. The `install-*` cases have no generated
 artifacts; for them the fixture check also compares `check-coverage.mjs` with
@@ -137,7 +150,12 @@ To move the pharn-ci skills to a new pharn-ci release:
    `install-*` graders, and any action pins pharn-ci's docs changed.
 3. Re-check the ported code in the `shared:coverage` blocks and in
    `check-coverage.mjs` against pharn-ci's `packages/core/src`.
-4. Run `regen.mjs --write`, the unit tests and the evals, and review the
+4. Re-copy `schema/policy.v1.json` byte for byte to
+   `pharn-ci-policy/scripts/policy.v1.json` when the release changes it, update
+   the sha256 in `tests/check-policy.test.mjs` and in the header of
+   `check-policy.mjs`, and extend the checker only if the schema uses a new
+   JSON Schema keyword (it refuses one it does not implement).
+5. Run `regen.mjs --write`, the unit tests and the evals, and review the
    skills' text against the release's changelog.
 
 `phargus` evals run in Codex and in Claude Code from `src/phargus`

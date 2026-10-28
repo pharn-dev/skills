@@ -1,9 +1,10 @@
 {
   "node": "v24.13.1",
-  "latest": "0.2.0",
+  "latest": "0.4.0",
   "pharnCi": {
     "0.1.0": { "sha": "a88e62a8febf5cd9a77b8e0252cd060c3b94782c", "ref": "v0.1.0", "cliVersion": "0.1.0" },
-    "0.2.0": { "sha": "0873ce23f3595a3497325635b7bf3ee93ea77687", "ref": "v0.2.0", "cliVersion": "0.2.0" }
+    "0.2.0": { "sha": "0873ce23f3595a3497325635b7bf3ee93ea77687", "ref": "v0.2.0", "cliVersion": "0.2.0" },
+    "0.4.0": { "sha": "a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756", "ref": "v0.4.0", "cliVersion": "0.4.0" }
   },
   "cases": {
     "cover-below-threshold": {
@@ -218,34 +219,34 @@
       "wholeFileGraders": [".github/workflows/pharn-ci.yml"]
     },
     "install-node-default": {
-      "pharnCi": "0.2.0",
+      "pharnCi": "0.4.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
       "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
     },
     "install-fork-comments": {
-      "pharnCi": "0.2.0",
+      "pharnCi": "0.4.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
       "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
     },
     "install-existing-ci": {
-      "pharnCi": "0.2.0",
+      "pharnCi": "0.4.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
       "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
     },
     "install-missing-dependency": {
-      "pharnCi": "0.2.0",
+      "pharnCi": "0.4.0",
       "testCommand": null,
       "artifacts": [],
       "wholeFileGraders": ["src/price.mjs", "test/price.test.mjs"]
     },
     "install-monorepo-root": {
-      "pharnCi": "0.2.0",
+      "pharnCi": "0.4.0",
       "testCommand": { "cwd": "packages/core", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["packages/core/coverage/lcov.info"] },
@@ -322,11 +323,83 @@
       "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "test/prices.test.mjs", "src/bulk.mjs"]
     },
     "install-test-integrity": {
-      "pharnCi": "0.2.0",
+      "pharnCi": "0.4.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
       "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
+    },
+    "explain-policy-p02": {
+      "pharnCi": "0.4.0",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "keep": "report",
+          "source": { "cli": ["check", "--base", "main", "--format", "json", "--policy-file", ".pharn/policy.json"], "exits": [1] }
+        },
+        {
+          "start": "cat > bin/gh-fixture.json <<'EOF'",
+          "source": {
+            "input": "gh-fixture-policy-p02.json",
+            "render": {
+              "report": { "artifact": "report" },
+              "at": ["comments", 0, "body"],
+              "placeholder": "__PHARN_CI_COMMENT__",
+              "prefix": "<!-- pharn-ci -->\n<!-- pharn-ci scope: pharn-ci/pharn-ci -->\n"
+            }
+          },
+          "indent": 1
+        }
+      ],
+      "expect": {
+        "file": "report",
+        "schemaVersion": 2,
+        "verdict": "fail",
+        "percent": 100,
+        "codes": ["POLICY_P02", "POLICY_P09"],
+        "levels": ["error", "error"],
+        "testIntegrityMode": "warn"
+      },
+      "wholeFileGraders": [".pharn/policy.json", ".claude/settings.json", ".pharn/ci.yml", ".github/workflows/pharn-ci.yml"]
+    },
+    "explain-policy-pressure": { "sameAs": "explain-policy-p02" },
+    "explain-agent-config-secret": {
+      "pharnCi": "0.4.0",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "keep": "report",
+          "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [1] }
+        },
+        {
+          "start": "cat > bin/gh-fixture.json <<'EOF'",
+          "source": {
+            "input": "gh-fixture-agent-secret.json",
+            "render": {
+              "report": { "artifact": "report" },
+              "at": ["comments", 0, "body"],
+              "placeholder": "__PHARN_CI_COMMENT__",
+              "prefix": "<!-- pharn-ci -->\n<!-- pharn-ci scope: pharn-ci/pharn-ci -->\n"
+            }
+          },
+          "indent": 1
+        }
+      ],
+      "expect": {
+        "file": "report",
+        "schemaVersion": 2,
+        "verdict": "fail",
+        "codes": ["NO_COVERABLE_CHANGES", "AGENT_CONFIG_SECRET_S01"],
+        "levels": ["info", "error"],
+        "testIntegrityMode": "warn"
+      },
+      "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml"]
+    },
+    "policy-org-draft": {
+      "pharnCi": "0.4.0",
+      "testCommand": null,
+      "artifacts": [],
+      "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml"]
     }
   }
 }

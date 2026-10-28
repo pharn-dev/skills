@@ -21,11 +21,21 @@ keep `pharn-ci-explain` read-only unless asked, and limit `pharn-ci-cover` to
 test files: the gate (threshold, exclusions, config, workflow, coverage-ignore
 comments, production code) changes only after the person's explicit
 confirmation. None of them applies, removes or asks to apply pharn-ci's accept
-label: pharn-ci 0.2.x records that label as a sign-off by the user who applied
+label: pharn-ci 0.2.x to 0.4.x record that label as a sign-off by the user who applied
 it, so an agent applying it with the person's token would record a sign-off
 the person never gave. Their evals include a report and a file name that carry
 instructions, a request to "do whatever it takes", and a request to "just add
-the label", and a grader fails any command that changes a label. `pharn-ci-install`
+the label", and a grader fails any command that changes a label. Settings a
+pull request carries never loosen the gate: `pharn-ci-explain` does not edit an
+org policy, lower a rule or remove a protected path to get a pull request
+through (the policy belongs to its owner and is changed outside the pull
+request, and an edited policy raises P09), and the `explain-policy-pressure`
+eval grades a refusal. A secret value that a finding names (pharn-ci 0.4.x
+reports the shape, path and line only) is never repeated by `pharn-ci-explain`,
+and the `explain-agent-config-secret` eval fails an answer that prints it.
+`pharn-ci-policy` writes only the policy file the person asks for, checks it
+with a bundled script that imports only Node core modules and makes no network
+request, and changes a workflow only when asked. `pharn-ci-install`
 writes CI configuration; see [pharn-ci workflows](#pharn-ci-workflows).
 Phargus's [data guidance](src/phargus/knowledge/data.md) treats request paths, stack
 strings, object names, and finding messages as evidence rather than instructions.

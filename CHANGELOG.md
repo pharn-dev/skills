@@ -11,6 +11,30 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ## [Unreleased]
 
+### Added
+
+- `pharn-ci` 0.2.0 (not released yet): support for pharn-ci 0.3.0 and 0.4.0
+  (`pharn-dev/pharn-ci` Action and `pharn-ci check` CLI 0.1.x to 0.4.x). New
+  skill `pharn-ci-policy` drafts an org policy (the JSON document pharn-ci
+  0.4.0 reads), checks it offline with the bundled `scripts/check-policy.mjs`
+  (Node core only, against a byte copy of pharn-ci 0.4.0's
+  `schema/policy.v1.json`) and says how to turn it on: the `policy` input, an
+  app policy with `id-token: write` or `file:<path>`. `pharn-ci-explain` now
+  covers the 0.3.0 test-integrity signals (TI02, TI05 to TI09, TI12, TI15,
+  TI16), the 0.4.0 secret scan of agent configs (`AGENT_CONFIG_SECRET_S01` to
+  `S11`), upload and agent-PR codes, and the org policy rules P01 to P11 and
+  their `POLICY_*` codes (`references/policy.md`), and never edits a policy,
+  lowers a rule or repeats a secret value. `pharn-ci-install` writes pharn-ci
+  0.4.0 (pinned to commit `a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756`, tag
+  `v0.4.0`), recognises 0.2.x and 0.3.x setups and offers an org policy section
+  only when asked; its default workflow still has no `policy` input and no
+  `id-token: write`. `pharn-ci-cover` reads 0.3.x and 0.4.x reports. New evals:
+  `explain-policy-p02`, `explain-policy-pressure`,
+  `explain-agent-config-secret` and `policy-org-draft`, generated with the
+  real pharn-ci 0.4.0 CLI and renderer. The six `install-*` cases moved to
+  0.4.0; the `cover-*` and other 0.1.0 cases and the three 0.2.0 accept-label
+  cases keep their pinned versions.
+
 ### Changed
 
 - `phargus` tooling (no plugin version change): the behavioral release gate

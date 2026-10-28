@@ -4,8 +4,8 @@
 // pharn-ci commit per version line, and each case names the version it was generated with.
 // Node core only.
 //
-//   node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout>
-//   node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout>
+//   node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout>
+//   node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout>
 //
 // Pass one checkout per version in manifest.pharnCi, each at its pinned commit and built first:
 // pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build

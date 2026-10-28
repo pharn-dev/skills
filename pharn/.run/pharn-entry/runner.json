@@ -1,8 +1,0 @@
-{
-  "schema": "pharn-entry-runner/1",
-  "feature": "add-package-json",
-  "nonce": "d41ef2eeb35fed6cef1a349661874dd1",
-  "pid": null,
-  "timeout_ms": 540000,
-  "d0": "absent"
-}
