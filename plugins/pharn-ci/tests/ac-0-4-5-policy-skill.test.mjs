@@ -152,7 +152,7 @@ test("AC-11: the pharn-ci-policy checker refuses an unknown key, a wrong type an
     assert.notEqual(r.status, 0, `the checker accepted ${JSON.stringify(doc)}`);
     assert.ok(r.status !== null, `the checker did not exit on ${JSON.stringify(doc)}`);
     for (const pointer of pointers) {
-      const named = new RegExp(`(?:^|[\\s"'\`(])${pointer.replace(/\//g, "\\/")}(?![A-Za-z0-9_/])`, "m");
+      const named = new RegExp(`(?:^|[\\s"'\`(])${pointer.replace(/[\\^$.*+?()[\]{}|/]/g, "\\$&")}(?![A-Za-z0-9_/])`, "m");
       assert.match(r.output, named, `the output for ${JSON.stringify(doc)} does not name ${pointer}:\n${r.output}`);
     }
   }

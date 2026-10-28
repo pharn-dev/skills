@@ -15,7 +15,7 @@
 // This is an advisory pre-check: it mirrors the schema, and pharn-ci's own validation decides in CI (a
 // duplicate key, for one, is not detected here). A message names the path and the rule, never a value from the
 // document.
-import { readFileSync, realpathSync, statSync } from "node:fs";
+import { closeSync, fstatSync, openSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -265,18 +265,29 @@ function parseArgs(argv) {
 }
 
 function readPolicy(file) {
-  let size;
+  // One descriptor for the size check and the read, so the file checked is the file read.
+  let fd;
   try {
-    size = statSync(file).size;
+    fd = openSync(file, "r");
   } catch {
     throw new UsageError(`cannot read ${file}`);
   }
-  if (size > MAX_BYTES) throw new UsageError(`${file} is over 1 MiB, which pharn-ci refuses for a policy`);
   let text;
   try {
-    text = readFileSync(file, "utf8");
-  } catch {
-    throw new UsageError(`cannot read ${file}`);
+    let size;
+    try {
+      size = fstatSync(fd).size;
+    } catch {
+      throw new UsageError(`cannot read ${file}`);
+    }
+    if (size > MAX_BYTES) throw new UsageError(`${file} is over 1 MiB, which pharn-ci refuses for a policy`);
+    try {
+      text = readFileSync(fd, "utf8");
+    } catch {
+      throw new UsageError(`cannot read ${file}`);
+    }
+  } finally {
+    closeSync(fd);
   }
   try {
     return JSON.parse(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text);
