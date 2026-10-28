@@ -1,6 +1,6 @@
 ---
 name: pharn-ci-install
-description: Add the pharn-ci pull request check (the pharn-dev/pharn-ci GitHub Action) to a repository, writing pharn-ci 0.2.x (Report v2, with the test-integrity check) and recognising an existing 0.1.x setup - lcov or Cobertura coverage output from the project's own test run, checked locally the way pharn-ci reads it, a .pharn/ci.yml with the threshold, and a workflow pinned to a full commit SHA with the test-integrity input. Use when the person asks to set up, add, install or wire in pharn-ci, a diff coverage gate or test integrity for pull requests, including on fork PRs or in an existing CI job. Never uses pull_request_target, never writes a tag pin, asks before installing anything, never creates or applies the accept label, never commits. Not for explaining a pharn-ci result (pharn-ci-explain), covering reported lines (pharn-ci-cover) or the PHARN CLI (pharn-cli).
+description: Add the pharn-ci pull request check (the pharn-dev/pharn-ci GitHub Action) to a repository, writing pharn-ci 0.4.x (Report v2, with the test-integrity check) and recognising an existing 0.1.x, 0.2.x or 0.3.x setup - lcov or Cobertura coverage output from the project's own test run, checked locally the way pharn-ci reads it, a .pharn/ci.yml with the threshold, and a workflow pinned to a full commit SHA with the test-integrity input. Use when the person asks to set up, add, install or wire in pharn-ci, a diff coverage gate or test integrity for pull requests, including on fork PRs or in an existing CI job. Never uses pull_request_target, never writes a tag pin, asks before installing anything, never creates or applies the accept label, never commits. Not for explaining a pharn-ci result (pharn-ci-explain), covering reported lines (pharn-ci-cover) or the PHARN CLI (pharn-cli).
 compatibility: Node.js >=22 for scripts/check-coverage.mjs; git optional; the project's own test runner.
 ---
 
@@ -8,10 +8,12 @@ compatibility: Node.js >=22 for scripts/check-coverage.mjs; git optional; the pr
 
 Sets pharn-ci up so its first pull request measures something: coverage the
 check can read, settings in one place, and a workflow that is safe to run on
-pull requests. Writes pharn-ci 0.2.0, pinned to its release commit
-`0873ce23f3595a3497325635b7bf3ee93ea77687` (tag `v0.2.0`). pharn-ci 0.1.x (release commit
+pull requests. Writes pharn-ci 0.4.0, pinned to its release commit
+`a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` (tag `v0.4.0`). pharn-ci 0.1.x (release commit
 `a88e62a8febf5cd9a77b8e0252cd060c3b94782c`, Report v1) has no test integrity
-and no `test-integrity` input; 0.2.x writes Report v2 (`schemaVersion` 2).
+and no `test-integrity` input; 0.2.x to 0.4.x write Report v2 (`schemaVersion` 2).
+The default templates stay as small as before: no `policy` input and no
+`id-token: write`. An org policy is opt-in (step 6).
 
 - Workflow and config templates, with every pin:
   [references/workflows.md](references/workflows.md).
@@ -36,7 +38,9 @@ something, and point it out to the person.
     adding a second one, and stop. On a 0.1.x pin (`# v0.1.0`), say what the
     update would bring: the test-integrity check and Report v2, whose
     `schemaVersion` is the number 2, so a tool that validates `report.json`
-    against the v1 schema must switch on it.
+    against the v1 schema must switch on it. On a `# v0.2.0` or `# v0.3.0`
+    pin, the update brings the later test-integrity signals, the secret scan
+    of agent configs, and the opt-in org policy and upload.
   - a job on `pull_request` that runs the tests: note its triggers (`push`
     too?), `paths` filters, matrix, `permissions` and runner (`node24`
     Actions need a recent runner; on GHES, check the version).
@@ -165,6 +169,15 @@ From [references/workflows.md](references/workflows.md):
   already in the templates.
 - Leave the agent setup inputs (`setup.require`, `setup.expect`) off unless
   asked.
+- An org policy, only when the person asks for one (the reference's
+  [Org policy](references/workflows.md#org-policy-only-when-asked) section).
+  Tell them:
+  - the `policy` input is `auto` by default, so nothing changes without an
+    app policy; `file:<path>` is for a team with no pharn.dev account;
+  - an app policy needs `id-token: write`, which also lets `upload: auto`
+    upload the redacted run when the org installed the Pharn GitHub App;
+  - drafting the policy document is the `pharn-ci-policy` skill's job.
+  Add `policy:` or `id-token: write` to a workflow only after they say yes.
 
 ## 7. Report
 
@@ -197,9 +210,9 @@ Your answer names:
 - Use `on: pull_request_target`, check out a PR's head with a write token, or
   put text from an artifact or PR into a `run:` script.
 - Write a tag, branch or short-SHA pin.
-- Run `npx pharn-ci` (the CLI is not on npm in 0.1.x or 0.2.x), or install,
+- Run `npx pharn-ci` (the CLI is not on npm in 0.1.x to 0.4.x), or install,
   download or upgrade anything without asking.
-- Create, apply, remove or ask to apply the accept label through `gh`, the API
+- Creating, applying, removing or asking for the accept label through `gh`, the API
   or any other tool. Done with the person's token, applying it would record
   them as signing off. They create the label and their reviewers apply it.
 - Write `test-integrity: off`, or `test_integrity` in `.pharn/ci.yml`.

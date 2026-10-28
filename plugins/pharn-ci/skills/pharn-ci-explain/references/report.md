@@ -1,29 +1,33 @@
-# Getting and reading a pharn-ci report (0.1.x Report v1, 0.2.x Report v2)
+# Getting and reading a pharn-ci report (0.1.x Report v1, 0.2.x to 0.4.x Report v2)
 
-Source: pharn-ci 0.1.0 (`schema/report.v1.json`) and pharn-ci 0.2.0 at commit
-`0873ce23f3595a3497325635b7bf3ee93ea77687` on main, before its tag
-(`schema/report.v2.json`, `action.yml`, README, `docs/LIMITS.md`,
-`packages/core/src/report.ts` and `render/markdown.ts`). This file is shared
-by the `pharn-ci-explain` and `pharn-ci-cover` skills; keep the copies
-identical.
+Source: pharn-ci 0.1.0 (`schema/report.v1.json`), pharn-ci 0.2.0 at commit
+`0873ce23f3595a3497325635b7bf3ee93ea77687` (`schema/report.v2.json`), v0.3.0
+at `ad3b75f9f2b9863806055897e99430b06db7fd1c` and v0.4.0 at
+`a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` (`action.yml`, README, CHANGELOG,
+`docs/LIMITS.md`, `packages/core/src/report.ts` and `render/markdown.ts`). This
+file is shared by the `pharn-ci-explain` and `pharn-ci-cover` skills; keep the
+copies identical.
 
 ## Which version
 
 Switch on `schemaVersion`, never on `tool.version`:
 
 - `"1"`, a **string**: Report v1, written by pharn-ci 0.1.x.
-- `2`, a **number**: Report v2, written by pharn-ci 0.2.x. It is v1 plus a
-  `testIntegrity` block on every report and, from the Action, a `meta` block.
-  Every v1 field keeps its name, type and meaning, and no v1 code changed.
-  A v2 report does not validate against `report.v1.json`.
+- `2`, a **number**: Report v2, written by pharn-ci 0.2.x, 0.3.x and 0.4.x. It
+  is v1 plus a `testIntegrity` block on every report and, from the Action, a
+  `meta` block. Every v1 field keeps its name, type and meaning, and no v1
+  code changed. A v2 report does not validate against `report.v1.json`.
+  Within v2 fields are only added: 0.3.0 adds `testIntegrity.changes` and a
+  filled `testIntegrity.languages`, and 0.4.0 adds the `policy` object and the
+  `meta` agent-PR and upload fields.
 
-The commit pinned above still prints `tool.version` `0.1.0` and its comment
-footer reads `pharn-ci 0.1.0 · report schema v2`, so the version number
-alone cannot tell the two apart. Any other `schemaVersion`: say this skill
-does not know it, and read only the fields named here.
+`tool.version` says the release (`0.4.0` for the pinned commit), but the
+`schemaVersion` is what a tool should switch on. Any other `schemaVersion`:
+say this skill does not know it, and read only the fields named here.
 
 In the comment, the footer says `report schema v1` or `v2`, and only a v2
-comment has a `### 🔍 Test integrity` section.
+comment has a `### 🔍 Test integrity` section. From 0.4.0 a comment can also
+have a `### 📜 Policy` section (see the Policy comment section below).
 
 ## Where a report comes from
 
@@ -34,7 +38,7 @@ rendering that drops detail.
    of `pharn-ci check --format json`.
 2. **A local CLI.** `pharn-ci --version` on `PATH`, or a pharn-ci checkout the
    person names, run as `node <checkout>/packages/cli/dist/index.js`.
-   - The CLI is **not on npm** in 0.1.x or 0.2.x. Never run `npx pharn-ci`: that name
+   - The CLI is **not on npm** in 0.1.x to 0.4.x. Never run `npx pharn-ci`: that name
      can resolve to an unrelated package. Never clone, build or install
      pharn-ci without asking the person first.
    - `pharn-ci check --format json [--base <ref>]` reads files and runs git;
@@ -46,11 +50,13 @@ rendering that drops detail.
      `pharn-ci:`. A `coverage: ... (auto-detected)` line on stderr says which
      file and format were read.
    - It accepts the same settings as the workflow (`--coverage`,
-     `--coverage-root`, `--threshold`, `--exclude`, `--config`, and in 0.2.x
-     `--test-integrity`). Use the values from the workflow's `with:` and
-     `.pharn/ci.yml` so the local run matches CI.
-   - The CLI never reads the accept label, so a local 0.2.x run of a PR a
-     reviewer accepted still shows its block findings as errors. Only the
+     `--coverage-root`, `--threshold`, `--exclude`, `--config`, from 0.2.x
+     `--test-integrity` and from 0.4.x `--policy-file <path>`). Use the values
+     from the workflow's `with:` and `.pharn/ci.yml` so the local run matches
+     CI. The CLI never fetches an org policy: an app policy is not applied to a
+     local run, and only a `policy: file:<path>` document is (`--policy-file`).
+   - The CLI never reads the accept label, so a local 0.2.x to 0.4.x run of a
+     PR a reviewer accepted still shows its block findings as errors. Only the
      Action's report and comment show an accepted PR.
 3. **CI, through `gh`** (read-only calls):
    - **The sticky PR comment.** Its body starts with `<!-- pharn-ci -->`; the
@@ -73,9 +79,13 @@ rendering that drops detail.
      with `gh run download <run-id> -n <artifact> -D "$(mktemp -d)"`.
    - **The job log.** `gh run view <run-id> --log-failed` (or `--log`) shows
      the `coverage:` lines, `pharn-ci verdict: <verdict>` and, when the step
-     failed, `pharn-ci: <error texts>`. In 0.2.x, `accept label honoured` or
+     failed, `pharn-ci: <error texts>`. From 0.2.x, `accept label honoured` or
      `accept label ignored: <author|not-user|no-event|unreadable>` says what
-     the Action made of the accept label. A step that failed before it built a
+     the Action made of the accept label. From 0.4.x, lines that start with
+     `pharn-ci:` also say that the org policy request failed (with the request
+     id the app sent), that the run was or was not uploaded to pharn.dev, and
+     that the Pharn GitHub App comments on the pull request for this run. A
+     step that failed before it built a
      report (a config error, an ambiguous coverage file, a missing base-ref)
      appears **only** here.
    - **Which commit.** Compare `gh pr view <pr> --json headRefOid` with
@@ -112,7 +122,16 @@ rendering that drops detail.
   then `info`; 10 are shown, the next 10 are in a collapsed `<details>` block,
   and the rest are counted (`…and N more findings in report.json`). With none it reads `No test-integrity findings (mode:
   <mode>).` or `Test integrity is off for this run.`. An accepted PR ends the
-  section with ``Accepted via label `<label>` by @<login>``.
+  section with ``Accepted via label `<label>` by @<login>``. From 0.3.0, a
+  change that adds, removes, modifies or renames tests also gets a collapsed
+  "Tests changed" table with counts per test file; the test names are in the
+  JSON only.
+- `### 📜 Policy` (0.4.0, only with an org policy in force or a policy
+  message): where the policy came from, then one line per violation,
+  ``- <icon> **<rule id>** `path:line` — <detail>``, blocks first, each with a
+  `Hint:` line; `No policy violations.` when none. The violations are in the
+  report's `policy` object. Rules and codes: the explain skill's
+  `references/policy.md`.
 - `### 💬 Messages`: one line per message, ``- <icon> `CODE` text``, where ❌ is
   `error`, ⚠️ `warn`, ℹ️ `info`, then a `Hint:` line. In v2 a
   `TEST_INTEGRITY_TI*` message is left out when the 🔍 section lists that
@@ -150,16 +169,20 @@ Read the JSON with a parser (`node -e` or `jq`), not by eye, when it is long.
 | ----- | ------- |
 | `schemaVersion` | The number `2`. |
 | `testIntegrity.mode` | The mode that applied: `block`, `warn` or `off`. |
-| `testIntegrity.source` | Where the mode came from: `default` (`warn`), `input` (the workflow's `test-integrity` or the CLI's `--test-integrity`) or `config` (`test_integrity.mode` in `.pharn/ci.yml`, which only applies when it is stricter). `policy` is in the schema for a later release and not written by 0.2.x. |
+| `testIntegrity.source` | Where the mode came from: `default` (`warn`), `input` (the workflow's `test-integrity` or the CLI's `--test-integrity`), `config` (`test_integrity.mode` in `.pharn/ci.yml`, which only applies when it is stricter) or, from 0.4.0, `policy` (an org policy raised it). |
 | `testIntegrity.verdict` | From the signals alone: `fail` if any is `block`, else `warn` if any is `warn`, else `pass`. The report's top-level `verdict` still comes from the messages. |
 | `testIntegrity.signals[]` | One finding each: `id` (`TI01`, ...), `severity` (`block`, `warn`, `info`) for the mode that applied, `path`, `line` (in the new file, or `null`), `detail` (a fixed sentence), and optional `base`/`head` excerpts. Sorted by id, path, line. |
-| `testIntegrity.languages` | Which syntax-aware detectors ran: `ts`, `js`, `py`, `go`. Always empty in 0.2.x, whose signals read diff lines only. |
+| `testIntegrity.languages` | Which languages the test indexes parsed: `js`, `ts`, `py`. Empty in 0.2.x, whose signals read diff lines only; filled from 0.3.0, which reads the test files themselves. |
+| `testIntegrity.changes` | 0.3.0, optional: the tests a change adds, removes, modifies or renames (`totals`, `files`, and the `added`, `removed`, `modified` and `renamed` lists of at most 200 entries in all, with test names). Present only when a test changed. |
 | `testIntegrity.accepted` | Action only: `{label, by}` when a reviewer who is not the PR author applied the accept label; `by` is their login. Absent or `null` when nothing was accepted. |
 | `testIntegrity.acceptLabel` | Action only: the `accept-label` input, present only when it is not the default `pharn/accepted`. |
 | `meta` | Action only: the run (`event`, `repository`, `prNumber`, `headSha`, `baseSha`, `runId`, `runAttempt`, `actor`, ...). Absent from a CLI report. Compare `meta.headSha` with `git rev-parse HEAD` before trusting line numbers. |
+| `meta.isAgentPr` | 0.4.0, Action only: `true` when the pull request counts as an agent PR (its author, its commits' authors and committers, a known agent's `Co-authored-by` trailer, or a label such as `agent`), and also when that evidence could not be read in full (fail closed); `false` with no pull request. It changes no verdict by itself: only org policy rule P11 reads it. `meta.agentHint`, `meta.prAuthor`, `meta.prLabels` and `meta.coAuthors` carry what it was read from. |
+| `meta.upload` | 0.4.0, Action only: `status` is `ok`, `skipped`, `failed` or `too_large`, with `runUrl` when the run was uploaded to pharn.dev. |
+| `policy` | 0.4.0, only with an org policy in force: `source` (`app`, `input`, `config` or `none`), `version`, `fetchedAt` and `violations[]`, each with `id` (the rule, `P01` to `P11`), `severity` (`block`, `warn`, `info` or `pending`), `path`, `line` (either can be `null`) and a fixed-text `detail`. A violation with a path and a line is the place to read first. The policy's own rules and their codes: `policy.md` in the explain skill. |
 
-`policy` and `flaky` are in the v2 schema for later releases; 0.2.x never
-writes them. Treat them as unknown fields if they appear.
+`flaky` is in the v2 schema for a later release; 0.4.x never writes it. Treat
+it as an unknown field if it appears.
 
 Each signal id with findings adds one `TEST_INTEGRITY_<id>` message. Its level
 is the highest severity among that id's findings (`block` is `error`), and its

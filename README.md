@@ -28,8 +28,8 @@ npx skills add pharn-dev/skills
 
 </div>
 
-> **Status:** `pharn` is ready to use with Claude Code. `pharn-ci` 0.1.0 is a
-> development draft for pharn-ci 0.1.x and 0.2.x, not released yet. `phargus` is a 0.1.1
+> **Status:** `pharn` is ready to use with Claude Code. `pharn-ci` 0.2.0 is a
+> development draft for pharn-ci 0.1.x to 0.4.x, not released yet. `phargus` is a 0.1.1
 > development draft for the `@pharn-dev/phargus` 0.1.x runtime published on npm;
 > see [Compatibility](#compatibility).
 
@@ -55,9 +55,10 @@ npx skills add pharn-dev/skills
 | Plugin | Skill | What it does for you |
 | ------ | ----- | -------------------- |
 | `pharn` | `pharn-cli` | Checks whether PHARN is up to date, previews what an update would change, applies it without overwriting your edits, and adds or removes grillers and lenses. Operates the [PHARN CLI](https://github.com/pharn-dev/pharn-cli) 0.10.0+, best on 0.14.0, with a fallback for 0.9.x. |
-| `pharn-ci` | `pharn-ci-install` | Adds [pharn-ci](https://github.com/pharn-dev/pharn-ci) to a repository: coverage output from your own test run, checked locally the way pharn-ci reads it, a `.pharn/ci.yml` with the threshold, and a workflow pinned to a full commit SHA with the test-integrity check. Never uses `pull_request_target`, asks before installing anything, and leaves the accept label to you. |
-| | `pharn-ci-explain` | Explains a [pharn-ci](https://github.com/pharn-dev/pharn-ci) verdict and each message code from its report, PR comment or job log, including test-integrity findings and the accept label, finds the cause in your repository and says what would fix it. Changes nothing unless you ask, and never applies the label. |
+| `pharn-ci` | `pharn-ci-install` | Adds [pharn-ci](https://github.com/pharn-dev/pharn-ci) to a repository: coverage output from your own test run, checked locally the way pharn-ci reads it, a `.pharn/ci.yml` with the threshold, and a workflow pinned to a full commit SHA with the test-integrity check (an org policy only when you ask). Never uses `pull_request_target`, asks before installing anything, and leaves the accept label to you. |
+| | `pharn-ci-explain` | Explains a [pharn-ci](https://github.com/pharn-dev/pharn-ci) verdict and each message code from its report, PR comment or job log, including test-integrity, org policy and agent-config secret findings and the accept label, finds the cause in your repository and says what would fix it. Changes nothing unless you ask, and never applies the label. |
 | | `pharn-ci-cover` | Writes tests for the added lines pharn-ci lists as uncovered, re-checks them against a fresh coverage report, and never lowers the threshold, excludes files or adds coverage-ignore comments. |
+| | `pharn-ci-policy` | Drafts an org policy for [pharn-ci](https://github.com/pharn-dev/pharn-ci) 0.4.x (coverage floor, test-integrity severities, agent settings and MCP rules, protected paths for agent PRs), checks it offline with a bundled checker against pharn-ci's policy schema, and says how to turn it on. Writes only the policy file you ask for and never weakens an existing policy on its own. |
 | `phargus` | `phargus-setup` | Connects Phargus to your Node.js app and leaves a reproducible start and collector recipe, verified against real samples. |
 | | `phargus-diagnose` | Investigates slow requests, event-loop stalls, GC pressure and stream backpressure, and ranks hypotheses with a next experiment. |
 | | `phargus-verify` | Compares before and after measurements under matching conditions and decides whether a fix helped, regressed, or is inconclusive. |
@@ -147,6 +148,9 @@ You don't name the skill: the agent picks it from what you ask.
 | "pharn-ci passed with NO_COVERABLE_CHANGES, but I added a new module." | `pharn-ci-explain` | Checks whether the new files are in the coverage report at all, and says when a pass means "not measured". |
 | "pharn-ci blocks PR 12 because I skipped a flaky test. Add the pharn/accepted label." | `pharn-ci-explain` | Explains the TI03 finding and why the test was skipped, and that the label is a sign-off by a reviewer who is not the PR author, which they apply themselves. It does not apply it. |
 | "Get this PR's diff coverage over the threshold." | `pharn-ci-cover` | Writes tests that run and assert the uncovered lines, runs coverage the way CI does, re-checks the lines, and reports any line tests cannot reach instead of moving the gate. |
+| "pharn-ci fails PR 14 with POLICY_P02. Why?" | `pharn-ci-explain` | Names the policy rule, the settings file and line and its level, and gives the fix in that file. It does not edit the policy, and says P02 is a text guard, not a security boundary. |
+| "pharn-ci found a token in .mcp.json." | `pharn-ci-explain` | Names the shape, the path and the line, never repeats the value, and says to remove it, load it from the environment and rotate it. |
+| "Draft an org policy: deny `Bash(rm -rf:*)` and protect `.github/workflows/**` from agent PRs." | `pharn-ci-policy` | Writes `.pharn/policy.json`, runs the bundled checker, and says how to turn it on (`policy: file:<path>`, or an app policy with `id-token: write`). |
 | "Just exclude this file from pharn-ci." | `pharn-ci-cover` | Explains that the PR would exempt its own code and that reviewers see the config change, and asks before editing anything. |
 | "Add Phargus to this Express app and show that its dashboard receives data." | `phargus-setup` | Installs, preloads and starts a collector, exercises an endpoint, and proves the connection with captured samples. |
 | "Requests became slow this morning; investigate this Phargus recording." | `phargus-diagnose` | Checks data quality, correlates request duration with event loop, GC, memory and backpressure, and proposes the smallest next experiment. |
@@ -214,6 +218,12 @@ scripts, so a single copied skill works without this repository.
   the workflow or `.gitattributes`, adds coverage-ignore comments, skips or
   focuses tests, edits test scripts or changes production code without your
   explicit confirmation, and "make it pass" is not that confirmation.
+- `pharn-ci-policy` writes only the policy file you ask for, checks it with a
+  bundled Node-core script (no network, no packages), never weakens an existing
+  policy unless you ask for that specific change, and never edits a workflow
+  unasked. `pharn-ci-explain` never edits a policy, lowers a rule or removes a
+  protected path to get a pull request through, and never repeats a secret
+  value a finding names.
 - None of them applies, removes or asks to apply the pharn-ci accept label:
   done with your token it would record you as signing off. Your reviewers
   apply it themselves.
@@ -245,7 +255,7 @@ behavioral review is recorded yet for the current `phargus` content; see its
 | Plugin | Agents | Operates |
 | ------ | ------ | -------- |
 | `pharn` | Claude Code (verified with 2.1.295). Codex not verified. | PHARN CLI `@pharn-dev/pharn` 0.10.0+, best on 0.14.0 (the `pharn/` root layout), text-flow fallback for 0.9.x. |
-| `pharn-ci` | Claude Code. Codex not verified. | pharn-ci 0.1.x (Report v1) and 0.2.x (Report v2, test integrity): the Action `pharn-dev/pharn-ci` and the `pharn-ci check` CLI. The `pharn-ci-install` and `pharn-ci-cover` helpers need Node 22 or later; `pharn-ci-install` writes workflows for pharn-ci 0.2.0 (`node24` Actions runners), pinned to a commit on pharn-ci's main until v0.2.0 is tagged. |
+| `pharn-ci` | Claude Code. Codex not verified. | pharn-ci 0.1.x (Report v1) to 0.4.x (Report v2, test integrity, org policy, agent-config secrets): the Action `pharn-dev/pharn-ci` and the `pharn-ci check` CLI. The `pharn-ci-install`, `pharn-ci-cover` and `pharn-ci-policy` helpers need Node 22 or later; `pharn-ci-install` writes workflows for pharn-ci 0.4.0 (`node24` Actions runners), pinned to the commit of tag v0.4.0. |
 | `phargus` | Codex and Claude Code. Behavioral review of 0.1.1 pending; see the [verification record](src/phargus/VERIFICATION.md). | `@pharn-dev/phargus` 0.1.x from npm (tested: 0.1.0, tag v0.1.0), pinned in [compatibility.json](src/phargus/compatibility.json). Node 22.18.0 or later. |
 
 **Plugin versions and tool versions move separately.** The badges above show
@@ -272,6 +282,7 @@ skills/
 │   │   ├── skills/pharn-ci-install/  # SKILL.md + references/ + scripts/check-coverage.mjs
 │   │   ├── skills/pharn-ci-explain/  # SKILL.md + references/
 │   │   ├── skills/pharn-ci-cover/    # SKILL.md + references/ + scripts/check-lines.mjs
+│   │   ├── skills/pharn-ci-policy/   # SKILL.md + references/ + scripts/check-policy.mjs + policy.v1.json
 │   │   ├── tests/                    # node --test for the helpers and pins
 │   │   └── evals/                    # claude plugin eval cases from real pharn-ci output
 │   └── phargus/                      # generated from src/phargus; edit SKILL.md only
@@ -300,8 +311,8 @@ claude plugin validate --strict plugins/pharn-ci
 # test the pharn-ci helpers and pins
 node --test plugins/pharn-ci/tests/*.test.mjs
 
-# check the pharn-ci eval fixtures against a built pharn-ci checkout
-node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci ../pharn-ci
+# check the pharn-ci eval fixtures against built pharn-ci checkouts, one per pinned version
+node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=../pharn-ci-0.1.0 --pharn-ci 0.2.0=../pharn-ci-0.2.0 --pharn-ci 0.4.0=../pharn-ci-0.4.0
 
 # lint Markdown
 npx markdownlint-cli2 "**/*.md"

@@ -1,14 +1,14 @@
-# Workflow and config templates (pharn-ci 0.2.0)
+# Workflow and config templates (pharn-ci 0.4.0)
 
-From pharn-ci 0.2.0's README, `action.yml` and `examples/workflows/`, at its
-release commit `0873ce23f3595a3497325635b7bf3ee93ea77687` (tag `v0.2.0`). Copy
+From pharn-ci 0.4.0's README, `action.yml` and `examples/workflows/`, at its
+release commit `a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` (tag `v0.4.0`). Copy
 the pins exactly; they are the only ones this skill writes.
 
 ## Pins
 
 | Action | Pin |
 | ------ | --- |
-| pharn-ci | `pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687 # v0.2.0` |
+| pharn-ci | `pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0` |
 | checkout | `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1` |
 | Node | `actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0` |
 | Python | `actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0` |
@@ -80,7 +80,7 @@ jobs:
       - run: npm ci
       - run: npm run test:coverage
       - id: pharn-ci
-        uses: pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687 # v0.2.0
+        uses: pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0
         timeout-minutes: 5
         with:
           test-integrity: warn # or block; never in .pharn/ci.yml
@@ -127,7 +127,7 @@ only:
 ```yaml
       - id: pharn-ci
         if: (github.event_name == 'pull_request' || github.event_name == 'merge_group') && matrix.node == 24
-        uses: pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687 # v0.2.0
+        uses: pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0
         timeout-minutes: 5
         with:
           test-integrity: warn
@@ -190,7 +190,7 @@ jobs:
           path: |
             coverage/lcov.info
             pr-number
-      - uses: pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687 # v0.2.0
+      - uses: pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0
         timeout-minutes: 5
         with:
           comment: false
@@ -231,7 +231,7 @@ jobs:
         env:
           PR_FILE: ${{ runner.temp }}/pharn-ci-input/pr-number
         run: echo "number=$(tr -dc '0-9' < "$PR_FILE" | head -c 10)" >> "$GITHUB_OUTPUT"
-      - uses: pharn-dev/pharn-ci@0873ce23f3595a3497325635b7bf3ee93ea77687 # v0.2.0
+      - uses: pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0
         timeout-minutes: 5
         with:
           coverage-file: ${{ runner.temp }}/pharn-ci-input/coverage/lcov.info
@@ -269,10 +269,14 @@ jobs:
 
 ## Test integrity and the accept label
 
-pharn-ci 0.2.x checks every PR for changes that weaken the tests: a test file
-deleted (TI01), a skip added (TI03), `.only`/`fit` added (TI04), a test script
-weakened (TI10), CI no longer running tests (TI11), a coverage-ignore comment
-(TI13), a lower threshold or a new exclusion in `.pharn/ci.yml` (TI14). Each
+pharn-ci 0.2.x to 0.4.x check every PR for changes that weaken the tests: a
+test file deleted (TI01), a test removed from a file that stays (TI02), a skip
+added (TI03), `.only`/`fit` added (TI04), a test emptied of its assertions
+(TI05), a test script weakened (TI10), CI no longer running tests (TI11), a
+coverage-ignore comment (TI13), a lower threshold or a new exclusion in
+`.pharn/ci.yml` (TI14), and warnings or notes for weaker assertions, edited
+expected values, bulk snapshot updates, loosened runner settings, mocked
+modules under test and lint suppressions (TI06 to TI09, TI12, TI15, TI16). Each
 finding asks for a reviewer to look; most have an ordinary reason.
 
 - **`test-integrity: warn`** (the default, and what this skill writes): the
@@ -332,3 +336,48 @@ updates:
     schedule:
       interval: weekly
 ```
+
+## Org policy (only when asked)
+
+pharn-ci 0.4.x can apply an org policy: one gate for every repository of an
+organization, which a pull request cannot loosen. Offer this section only when
+the person wants an org policy; the templates above carry no `policy` input and
+no `id-token: write`, and a repository without a policy runs exactly as before.
+The policy document itself, its keys and its rules are the
+`pharn-ci-policy` skill's business.
+
+The `policy` input of the pharn-ci step takes four values:
+
+- `auto` (the default): fetch the org policy from the pharn.dev app, only when
+  the job grants `id-token: write`. A repository with no app policy, or a job
+  with no OIDC token, is silent and runs with the workflow inputs and
+  `.pharn/ci.yml`.
+- `never`: use no policy.
+- `required`: fail the check with `POLICY_UNAVAILABLE` when no policy can be
+  fetched.
+- `file:<path>`: read a policy document from the workspace (see below).
+
+An app policy needs `permissions: id-token: write` on the job, and the step
+needs no other input:
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write # an app policy; also see upload below
+```
+
+`id-token: write` also lets `upload: auto` (the default) upload the redacted
+run (`report.json` and `meta.json`) to pharn.dev when the org installed the
+Pharn GitHub App. Only the OIDC token and those two files leave the job, and a
+failed upload never fails the check. Say so before adding `id-token: write`,
+and write `upload: never` in the step when the person does not want the run
+uploaded. A fork pull request never gets the token, so it runs without an app
+policy and without an upload.
+
+`policy: file:<path>` is for a team with no pharn.dev account (or no app
+policy yet): the path is a repository-relative JSON file, nothing is fetched,
+and `id-token: write` is not needed for it. The pull request carries that file,
+so it can only raise the gate, never lower it. For an app policy leave the
+`policy` input out or write `auto`, and keep `required` for a person who wants
+a missing policy to fail the check.

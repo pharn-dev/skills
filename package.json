@@ -14,7 +14,7 @@
     "npm": ">=10"
   },
   "scripts": {
-    "test": "node --test .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
+    "test": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./.github/scripts/pharn-test-reporter.mjs --test-reporter-destination=stdout .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
     "lint": "eslint .",
     "lint:md": "markdownlint-cli2",
     "format": "prettier --write .",

@@ -41,8 +41,22 @@ function passes(grader, content) {
 }
 
 describe("pins", () => {
-  test("every pharn-ci pin in the skill, its references and its graders is the manifest's latest pinned commit", () => {
-    const files = [`${SKILL}/SKILL.md`, `${SKILL}/references/workflows.md`, `${SKILL}/references/coverage.md`, ...installGraders];
+  test("every pharn-ci pin in every skill (text, references and scripts) and in the install graders is the manifest's latest pinned commit", () => {
+    const skillFiles = readdirSync(path.join(PLUGIN, "skills")).flatMap((skill) => {
+      const dir = path.join(PLUGIN, "skills", skill);
+      const under = (sub, ext) => {
+        try {
+          return readdirSync(path.join(dir, sub))
+            .filter((f) => f.endsWith(ext))
+            .map((f) => `skills/${skill}/${sub}/${f}`);
+        } catch {
+          return [];
+        }
+      };
+      return [`skills/${skill}/SKILL.md`, ...under("references", ".md"), ...under("scripts", ".mjs")];
+    });
+    assert.ok(skillFiles.length > 12);
+    const files = [...skillFiles, ...installGraders];
     let seen = 0;
     for (const rel of files) {
       for (const m of read(rel).matchAll(/pharn-dev\/pharn-ci@([0-9A-Za-z.]+)/g)) {
@@ -54,8 +68,16 @@ describe("pins", () => {
     assert.match(read(`${SKILL}/SKILL.md`), new RegExp(latest.sha));
   });
 
-  test("the CI fixtures job checks out every pinned pharn-ci commit and passes each to regen", () => {
+  test("the CI fixtures job checks out exactly the pinned pharn-ci commits and passes exactly those to regen", () => {
     const ci = readFileSync(path.join(PLUGIN, "../../.github/workflows/ci.yml"), "utf8");
+    // The versions the job checks out from pharn-dev/pharn-ci (by path) and passes to regen.mjs, both ways.
+    const checkedOut = [
+      ...ci.matchAll(/repository: pharn-dev\/pharn-ci\n[^\n]*\n?\s+ref: [0-9a-f]{40}[^\n]*\n\s+path: \.cache\/pharn-ci-([\w.-]+)\n/g),
+    ].map((m) => m[1]);
+    const passed = [...ci.matchAll(/--pharn-ci ([\w.-]+)=\.cache\/pharn-ci-[\w.-]+/g)].map((m) => m[1]);
+    const pinned = Object.keys(manifest.pharnCi).sort();
+    assert.deepEqual([...checkedOut].sort(), pinned, "ci.yml checks out a different set of pharn-ci versions than the manifest pins");
+    assert.deepEqual([...passed].sort(), pinned, "ci.yml passes a different set of pharn-ci versions to regen than the manifest pins");
     for (const [version, pin] of Object.entries(manifest.pharnCi)) {
       assert.match(
         ci,
@@ -243,6 +265,83 @@ describe("the eval graders accept the reference's templates", () => {
   });
 });
 
+// The codes pharn-ci 0.3.0 and 0.4.0 added. pharn-ci-explain documents each one under a heading or table row that
+// also names its default level, so a skill that drifts from the codes it explains fails here.
+const CODES_0_3_AND_0_4 = [
+  "TEST_INTEGRITY_TI02",
+  "TEST_INTEGRITY_TI05",
+  "TEST_INTEGRITY_TI06",
+  "TEST_INTEGRITY_TI07",
+  "TEST_INTEGRITY_TI08",
+  "TEST_INTEGRITY_TI09",
+  "TEST_INTEGRITY_TI12",
+  "TEST_INTEGRITY_TI15",
+  "TEST_INTEGRITY_TI16",
+  "TEST_INTEGRITY_INDEX_UNAVAILABLE",
+  "POLICY_UNAVAILABLE",
+  "POLICY_OVERRIDE_IGNORED",
+  "POLICY_P02",
+  "POLICY_P03",
+  "POLICY_P04",
+  "POLICY_P05",
+  "POLICY_P06",
+  "POLICY_P07",
+  "POLICY_P08",
+  "POLICY_P09",
+  "POLICY_P11",
+  "POLICY_SETTINGS_INVALID",
+  "AGENT_PR_DETECTION_INCOMPLETE",
+  "AGENT_CONFIG_SECRET_S01",
+  "AGENT_CONFIG_SECRET_S02",
+  "AGENT_CONFIG_SECRET_S03",
+  "AGENT_CONFIG_SECRET_S04",
+  "AGENT_CONFIG_SECRET_S05",
+  "AGENT_CONFIG_SECRET_S06",
+  "AGENT_CONFIG_SECRET_S07",
+  "AGENT_CONFIG_SECRET_S08",
+  "AGENT_CONFIG_SECRET_S09",
+  "AGENT_CONFIG_SECRET_S10",
+  "AGENT_CONFIG_SECRET_S11",
+  "AGENT_CONFIG_SECRET_UNSCANNED",
+  "UPLOAD_TOO_LARGE",
+];
+
+describe("pharn-ci 0.3.0 and 0.4.0 codes", () => {
+  test("pharn-ci-explain names every code with its level, on a heading or a table row", () => {
+    const lines = ["codes.md", "policy.md"].flatMap((f) => read(`skills/pharn-ci-explain/references/${f}`).split("\n"));
+    for (const code of CODES_0_3_AND_0_4) {
+      const token = new RegExp(`(?<![A-Za-z0-9_])${code}(?![A-Za-z0-9_])`, "g");
+      const row = lines.find((l) => /^\s*(?:#{1,6}\s|\|)/.test(l) && token.test(l));
+      assert.ok(row, `${code} has no heading or table row`);
+      assert.match(row.replace(token, " "), /\b(?:block|error|warn|info)\b/i, `${code}: ${row}`);
+    }
+  });
+
+  test("the manifest pins pharn-ci 0.4.0 and the install cases generate with it", () => {
+    assert.equal(manifest.latest, "0.4.0");
+    assert.equal(manifest.pharnCi["0.4.0"].sha, "a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756");
+    for (const name of Object.keys(manifest.cases).filter((n) => n.startsWith("install-")))
+      assert.equal(manifest.cases[name].pharnCi, "0.4.0", name);
+    for (const name of ["explain-policy-p02", "explain-agent-config-secret", "policy-org-draft"])
+      assert.equal(manifest.cases[name].pharnCi, "0.4.0", name);
+  });
+
+  test("the pharn-ci-policy skill ships the schema it checks against", () => {
+    const schema = JSON.parse(read("skills/pharn-ci-policy/scripts/policy.v1.json"));
+    assert.equal(schema.properties.version.const, 1);
+    assert.deepEqual(Object.keys(schema.properties).sort(), [
+      "agents",
+      "coverage",
+      "dependencies",
+      "flaky",
+      "policy",
+      "setup",
+      "test_integrity",
+      "version",
+    ]);
+  });
+});
+
 describe("shared scaffolds", () => {
   test("explain-accept-ignored is the shared label-case scaffold with its own gh fixture", async () => {
     const { readHeredoc, replaceHeredoc } = await import("../evals/fixtures/regen.mjs");
@@ -251,5 +350,18 @@ describe("shared scaffolds", () => {
     const ignored = read("evals/explain-accept-ignored/scaffold.sh");
     assert.notEqual(readHeredoc(shared, start), readHeredoc(ignored, start));
     assert.equal(replaceHeredoc(ignored, start, "__GH_FIXTURE__\n"), replaceHeredoc(shared, start, "__GH_FIXTURE__\n"));
+  });
+
+  test("explain-policy-pressure shares explain-policy-p02's scaffold, byte for byte", () => {
+    assert.equal(read("evals/explain-policy-pressure/scaffold.sh"), read("evals/explain-policy-p02/scaffold.sh"));
+    assert.deepEqual(manifest.cases["explain-policy-pressure"], { sameAs: "explain-policy-p02" });
+  });
+
+  test("the policy cases ship the gh grader files the label cases ship", () => {
+    for (const dir of ["explain-policy-p02", "explain-policy-pressure", "explain-agent-config-secret"]) {
+      for (const f of ["no-gh-writes.md", "no-label-command.md"]) {
+        assert.equal(read(`evals/${dir}/graders/${f}`), read(`evals/explain-accept-pressure/graders/${f}`), `${dir}/${f}`);
+      }
+    }
   });
 });
