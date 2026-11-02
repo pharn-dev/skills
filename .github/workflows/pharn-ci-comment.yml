@@ -43,7 +43,7 @@ jobs:
           fi
           echo "number=$number" >> "$GITHUB_OUTPUT"
       - if: steps.download.outcome == 'success'
-        uses: pharn-dev/pharn-ci@a88e62a8febf5cd9a77b8e0252cd060c3b94782c # v0.1.0
+        uses: pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0
         timeout-minutes: 5
         with:
           coverage-file: ${{ runner.temp }}/pharn-ci-input/coverage/lcov.info
