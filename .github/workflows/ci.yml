@@ -179,7 +179,7 @@ jobs:
             src/phargus/pr-number
       - id: pharn-ci
         if: steps.unit-tests.outcome == 'success' && !cancelled() && matrix.node == '24' && github.event_name == 'pull_request'
-        uses: pharn-dev/pharn-ci@a88e62a8febf5cd9a77b8e0252cd060c3b94782c # v0.1.0
+        uses: pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0
         timeout-minutes: 5
         with:
           comment: false
