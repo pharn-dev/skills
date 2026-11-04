@@ -1,0 +1,206 @@
+{
+  "schema": "ac-tests-lock/6",
+  "feature": "pharn-ci-plugin-0-4-4",
+  "mode": "test-first",
+  "spec": {
+    "spec_id": "pharn-ci-plugin-0-4-4",
+    "spec_content_hash": "407aad15993764250f4d8f6d22f8627ca06389fa1ffc3944b02b71581aa04c1e"
+  },
+  "mapping": {
+    "path": "pharn/features/pharn-ci-plugin-0-4-4/AC-TESTS.md",
+    "sha256": "07506da1fd3154df3ab491a0141ee44538d3534ab7d30ecaf0afca0897298306"
+  },
+  "files": [
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-4-4-descriptions.test.mjs",
+      "sha256": "883107661a03984411fa12030e7c1d136214076c537b845c3ea86eae744fb6b8"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-4-4-docs.test.mjs",
+      "sha256": "0139065890475afe93089a688ef990829acd6d915efb83390f241a33fe075f36"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-4-4-evals.test.mjs",
+      "sha256": "69ad6eb71fb23dca816519e572e5b8851fd1da1d590e1368cbc83b822421ee3b"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-4-4-explain.test.mjs",
+      "sha256": "b5d5614b0df77d2348051b6f3f56b7f8ed67975fccaf4732c5225d49741b76bd"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-4-4-install-policy.test.mjs",
+      "sha256": "e9ce83d5335b4d938f3a3fae66c9bfa7e7eb5a389ee787f69de952871a0c801d"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-4-4-no-loosening.test.mjs",
+      "sha256": "373c8ba379cbf68864f93a733c55329c493a4c50267e3fd7fd58aed3f3a7ee6b"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-4-4-pins.test.mjs",
+      "sha256": "ec2b0850e55f42ba610acf7d9b93cf270b23923441a3f6d4a5d2bcc4b8662b44"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-4-4-policy-skill.test.mjs",
+      "sha256": "354899b1e3a2ccf2af521aa38b55c4ce44667fced6aead940af70bc763de9cc2"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-4-4-test-suites.test.mjs",
+      "sha256": "049535a50f0728edf3c21bbc0c33a362f9c27a3793d53871279a16c087d32644"
+    }
+  ],
+  "bootstrap": null,
+  "red_run": {
+    "stamp_sha256": "30b5e60fdad1fa93607b827dd66c76b1b14bd8b02e320b6f4ff8ef43509f9d1c",
+    "files_sha256": "746ea443dbe6f93b7035be6775d95a6042c1a9536dcf8ebd75a9db1cce9aacbc",
+    "gates": [
+      {
+        "gate": "test",
+        "results_sha256": "0b621423e89c37a6efa4df4f2de3e0b2a33f5298a5be1423049069a3784a65ef"
+      }
+    ],
+    "acs": [
+      {
+        "id": "AC-1",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-pins.test.mjs::AC-1: every pharn-ci pin in the install skill, its references, the skills' scripts and the install graders is a9314e9 with a v0.4.0 comment"
+        ]
+      },
+      {
+        "id": "AC-2",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-pins.test.mjs::AC-2: the fixtures manifest pins 0.4.0 as latest, and ci.yml checks out and passes every manifest version"
+        ]
+      },
+      {
+        "id": "AC-3",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-descriptions.test.mjs::AC-3: every pharn-ci SKILL.md description names pharn-ci 0.3.x and 0.4.x"
+        ]
+      },
+      {
+        "id": "AC-4",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-pins.test.mjs::AC-4: plugin.json version is 0.2.0"
+        ]
+      },
+      {
+        "id": "AC-5",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-explain.test.mjs::AC-5: pharn-ci-explain names every 0.3.0 and 0.4.0 code on a heading or table row with its default level"
+        ]
+      },
+      {
+        "id": "AC-6",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-explain.test.mjs::AC-6: pharn-ci-explain maps P01 and P10 to their codes and describes the 📜 Policy section, the policy object and meta.isAgentPr"
+        ]
+      },
+      {
+        "id": "AC-7",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-explain.test.mjs::AC-7: pharn-ci-explain says P02–P06 are text guards, what the accept label reaches, and the precedence of settings"
+        ]
+      },
+      {
+        "id": "AC-8",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-no-loosening.test.mjs::AC-8: no pharn-ci skill sentence tells the agent to edit the policy, lower a rule, remove a protected path, weaken .pharn/ci.yml or apply the accept label",
+          "plugins/pharn-ci/tests/ac-0-4-4-no-loosening.test.mjs::AC-8: the \"Never\" lists of pharn-ci-explain and pharn-ci-policy name editing the policy, lowering a rule and removing a protected path"
+        ]
+      },
+      {
+        "id": "AC-9",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-policy-skill.test.mjs::AC-9: pharn-ci-policy names its keys, rules and levels, how to turn policy on, and what policy mode reads"
+        ]
+      },
+      {
+        "id": "AC-10",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-policy-skill.test.mjs::AC-10: the pharn-ci-policy checker exits 0 on a valid policy, with Node core imports only and no network"
+        ]
+      },
+      {
+        "id": "AC-11",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-policy-skill.test.mjs::AC-11: the pharn-ci-policy checker names every failing field of one document",
+          "plugins/pharn-ci/tests/ac-0-4-4-policy-skill.test.mjs::AC-11: the pharn-ci-policy checker rejects a policy with no version and names /version",
+          "plugins/pharn-ci/tests/ac-0-4-4-policy-skill.test.mjs::AC-11: the pharn-ci-policy checker rejects a wrong-typed value and names /coverage/threshold",
+          "plugins/pharn-ci/tests/ac-0-4-4-policy-skill.test.mjs::AC-11: the pharn-ci-policy checker rejects an unknown key and names /foo"
+        ]
+      },
+      {
+        "id": "AC-12",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-install-policy.test.mjs::AC-12: the default workflow has no policy input or id-token: write, and the install references offer an app policy and file:<path>"
+        ]
+      },
+      {
+        "id": "AC-13",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-evals.test.mjs::AC-13: the AGENT_CONFIG_SECRET case's no-secret grader matches the planted value without holding it verbatim",
+          "plugins/pharn-ci/tests/ac-0-4-4-evals.test.mjs::AC-13: the four new eval cases each have case.yaml, prompt.md, scaffold.sh and at least one grader"
+        ]
+      },
+      {
+        "id": "AC-14",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-test-suites.test.mjs::AC-14: the plugin's tests cover pharn-ci v0.4.0, the pharn-ci-policy skill and the codes in Scope",
+          "plugins/pharn-ci/tests/ac-0-4-4-test-suites.test.mjs::AC-14: the suites of the root test script exit 0"
+        ]
+      },
+      {
+        "id": "AC-15",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-4-4-docs.test.mjs::AC-15: the CHANGELOG has a pharn-ci plugin entry naming pharn-ci 0.3.0, 0.4.0 and pharn-ci-policy, and the README lists pharn-ci-policy"
+        ]
+      }
+    ]
+  },
+  "test_infra": {
+    "levels": [
+      "integration",
+      "unit"
+    ],
+    "gates": [
+      {
+        "id": "test",
+        "script": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./.github/scripts/pharn-test-reporter.mjs --test-reporter-destination=stdout .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
+        "pre": null,
+        "post": null,
+        "results": "pharn-json"
+      }
+    ],
+    "chained": [],
+    "configs": [],
+    "script_files": [
+      {
+        "path": ".github/scripts/pharn-test-reporter.mjs",
+        "sha256": "0f6e7369360cc8d7621476f349dc5d3fb08ce968906304f8e6ee2f4ad2ea7058"
+      }
+    ],
+    "jest": null,
+    "exclude": [],
+    "other_gates": [
+      {
+        "id": "format:check",
+        "script": "prettier --check .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint",
+        "script": "eslint .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint:md",
+        "script": "markdownlint-cli2",
+        "pre": null,
+        "post": null
+      }
+    ],
+    "other_chained": []
+  }
+}

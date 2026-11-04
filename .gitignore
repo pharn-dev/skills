@@ -10,3 +10,5 @@ src/*/coverage/
 .cache/
 # PHARN's own run state (stage logs, markers, scopes); never committed
 pharn/.run/
+# PHARN run state and update backups (added by pharn)
+pharn/.backup/

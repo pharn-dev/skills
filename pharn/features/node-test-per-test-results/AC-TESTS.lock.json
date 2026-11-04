@@ -1,0 +1,19 @@
+{
+  "schema": "ac-tests-lock/6",
+  "feature": "node-test-per-test-results",
+  "mode": "bootstrap",
+  "spec": {
+    "spec_id": "node-test-per-test-results",
+    "spec_content_hash": "13d3af66ce4a1f12404b5bc9e05012f1cd7cff9188c189a5d7cbd79e06c1020e"
+  },
+  "mapping": null,
+  "files": [],
+  "bootstrap": {
+    "spec_kind": "test-infra",
+    "levels": [
+      "integration"
+    ]
+  },
+  "red_run": null,
+  "test_infra": null
+}

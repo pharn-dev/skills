@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/pgalarowicz/Projects/skills/.codex/hooks/protect-trusted-paths.cjs'"
+          },
+          {
+            "type": "command",
+            "command": "node '/Users/pgalarowicz/Projects/skills/.codex/hooks/enforce-writes-scope.cjs'"
+          }
+        ]
+      }
+    ]
+  }
+}
