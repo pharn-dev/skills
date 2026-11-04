@@ -1,0 +1,233 @@
+{
+  "feature": "node-test-per-test-results",
+  "gates": {
+    "format:check": 0,
+    "instruction-growth": 0,
+    "lint": 0,
+    "lint:md": 0,
+    "reconcile": 1,
+    "test": 0
+  },
+  "verdict": "FAIL",
+  "failing_gates": [
+    "reconcile"
+  ],
+  "gate_run": {
+    "stamp_sha256": "20243f40c4967828afe541ef1dafe7a56a2642b494c48fd20eb54c9e936634be",
+    "source": "discover",
+    "fingerprint": {
+      "algo": "worktree-fingerprint/3+sha256",
+      "final": "fe56da1498b45d65487ab160da28bd9af255719555550c160a1851ae27162e76"
+    }
+  },
+  "ac_gate": {
+    "mode": "bootstrap",
+    "verdict": "PASS",
+    "reason": null,
+    "evidence": [],
+    "acs": [
+      {
+        "id": "AC-1",
+        "level": "integration",
+        "tests": [],
+        "status": "passed",
+        "reason": null,
+        "detail": "87 passed test(s) at level integration over test — not matched to this AC (BOOTSTRAP)"
+      },
+      {
+        "id": "AC-2",
+        "level": "integration",
+        "tests": [],
+        "status": "passed",
+        "reason": null,
+        "detail": "87 passed test(s) at level integration over test — not matched to this AC (BOOTSTRAP)"
+      },
+      {
+        "id": "AC-3",
+        "level": "integration",
+        "tests": [],
+        "status": "passed",
+        "reason": null,
+        "detail": "87 passed test(s) at level integration over test — not matched to this AC (BOOTSTRAP)"
+      },
+      {
+        "id": "AC-4",
+        "level": "integration",
+        "tests": [],
+        "status": "passed",
+        "reason": null,
+        "detail": "87 passed test(s) at level integration over test — not matched to this AC (BOOTSTRAP)"
+      },
+      {
+        "id": "AC-5",
+        "level": "integration",
+        "tests": [],
+        "status": "passed",
+        "reason": null,
+        "detail": "87 passed test(s) at level integration over test — not matched to this AC (BOOTSTRAP)"
+      },
+      {
+        "id": "AC-6",
+        "level": "integration",
+        "tests": [],
+        "status": "passed",
+        "reason": null,
+        "detail": "87 passed test(s) at level integration over test — not matched to this AC (BOOTSTRAP)"
+      },
+      {
+        "id": "AC-7",
+        "level": "integration",
+        "tests": [],
+        "status": "passed",
+        "reason": null,
+        "detail": "87 passed test(s) at level integration over test — not matched to this AC (BOOTSTRAP)"
+      }
+    ],
+    "unmapped_anomalies": [],
+    "note": "BOOTSTRAP evidence (spec_kind: test-infra) — WEAKER than test-first: each level's gate ran as discovered and reported at least one passed test; no AC test was shown red before the build."
+  },
+  "completeness": {
+    "plan": "pharn/features/node-test-per-test-results/PLAN.md",
+    "repoDir": ".",
+    "declared": [
+      ".github/scripts/pharn-test-reporter.mjs",
+      ".github/scripts/pharn-test-reporter.test.mjs",
+      "package.json",
+      "CONTRIBUTING.md"
+    ],
+    "skipped": [],
+    "missing": [],
+    "deletions": [],
+    "undeleted": [],
+    "complete": true,
+    "verdict": "complete"
+  },
+  "verifiers": {
+    "registered": 0,
+    "findings": []
+  },
+  "gate_reuse": {
+    "reused": []
+  },
+  "head_install": {
+    "state": "clean",
+    "why": null,
+    "family": "npm",
+    "lockfile": "package-lock.json",
+    "counts": {
+      "changed": 0,
+      "missing": 0,
+      "extraneous": 0,
+      "missing_unchecked": 0
+    }
+  },
+  "reconcile_detail": {
+    "state": "parsed",
+    "exit": 1,
+    "verdict": "ESCAPE",
+    "escapes": [
+      {
+        "file": "pharn/.run/cost/node-test-per-test-results/markers.jsonl",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/cost/node-test-per-test-results/work.jsonl",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/full.times.json",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/full/0-test.err",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/full/0-test.out",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/full/0-test.test-results.json",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/full/1-lint.err",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/full/1-lint.out",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/full/2-format_check.err",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/full/2-format_check.out",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/full/3-lint_md.err",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/full/3-lint_md.out",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/full/stamp.json",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/targeted.times.json",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/targeted/0-test.err",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/targeted/0-test.out",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/targeted/0-test.test-results.json",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/targeted/stamp.json",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-build/node-test-per-test-results/targets.json",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      },
+      {
+        "file": "pharn/.run/pharn-regress/base-gates/0-test.err",
+        "denied_by": "writes-scope (snapshot)",
+        "scope_set_by": "pharn/features/node-test-per-test-results/PLAN.md"
+      }
+    ],
+    "escapes_total": 55,
+    "merged_count": 0
+  }
+}

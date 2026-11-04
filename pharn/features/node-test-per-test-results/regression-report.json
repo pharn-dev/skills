@@ -1,0 +1,118 @@
+{
+  "base": "c99fa521b97925c944588c2301cc5f0820794614",
+  "inside": [
+    ".github/workflows/ci.yml",
+    "CONTRIBUTING.md",
+    "package.json",
+    ".github/scripts/pharn-test-reporter.mjs",
+    ".github/scripts/pharn-test-reporter.test.mjs",
+    "pharn/features/node-test-per-test-results/AC-TESTS.lock.json",
+    "pharn/features/node-test-per-test-results/BUILD.md",
+    "pharn/features/node-test-per-test-results/GRILL.md",
+    "pharn/features/node-test-per-test-results/PLAN.md",
+    "pharn/features/node-test-per-test-results/SPEC.md",
+    "pharn/features/pharn-ci-plugin-0-4-2/AC-TESTS.md",
+    "pharn/features/pharn-ci-plugin-0-4-2/LOOP.md",
+    "pharn/features/pharn-ci-plugin-0-4-2/PLAN.md",
+    "pharn/features/pharn-ci-plugin-0-4-2/RUN-REPORT.md",
+    "pharn/features/pharn-ci-plugin-0-4-2/SPEC.md",
+    "pharn/features/pharn-ci-plugin-0-4-2/cost.json",
+    "pharn/features/pharn-ci-plugin-0-4-3/AC-TESTS.md",
+    "pharn/features/pharn-ci-plugin-0-4-3/GRILL.md",
+    "pharn/features/pharn-ci-plugin-0-4-3/LOOP.md",
+    "pharn/features/pharn-ci-plugin-0-4-3/PLAN.md",
+    "pharn/features/pharn-ci-plugin-0-4-3/RUN-REPORT.md",
+    "pharn/features/pharn-ci-plugin-0-4-3/SPEC.md",
+    "pharn/features/pharn-ci-plugin-0-4-3/cost.json",
+    "pharn/features/pharn-ci-plugin-0-4/LOOP.md",
+    "pharn/features/pharn-ci-plugin-0-4/RUN-REPORT.md",
+    "pharn/features/pharn-ci-plugin-0-4/SPEC.md",
+    "pharn/features/pharn-ci-plugin-0-4/cost.json"
+  ],
+  "outside_gates": {
+    "test": {
+      "base": 1,
+      "head": 0
+    }
+  },
+  "regressions": [],
+  "pre_existing": [
+    "test"
+  ],
+  "verdict": "no-regressions",
+  "gate_run": {
+    "base": {
+      "stamp_sha256": "95b9982c455c44b03bbcea6c179b7b4be996ace66fdea019867a81062aa94713",
+      "source": "discover",
+      "fingerprint": {
+        "algo": "worktree-fingerprint/3+sha256",
+        "final": "94f73248cc9db941148e0b12f44bfc8ba701c5cc438de0b15a946979adc5117c"
+      }
+    },
+    "head": {
+      "stamp_sha256": "73a771edc49cbc8703e06c67591e9448bfdf7fdb20dc0f9733b154abb3f98bf3",
+      "source": "discover",
+      "fingerprint": {
+        "algo": "worktree-fingerprint/3+sha256",
+        "final": "3646e1e143a7fd435c7b48fe9fc4728cd0c39db3eaf6c38b7f2282a99548c478"
+      }
+    }
+  },
+  "base_evidence": {
+    "reused": false,
+    "miss": "no-record",
+    "requirement_sha256": "422fe2638f19a35a8523b200176e7410db131a4c9ebc1b9b1914d15c4771460a",
+    "recorded": true,
+    "source": "fresh",
+    "entry": {
+      "used": false,
+      "miss": "start-dirty",
+      "offer_sha256": null,
+      "entry_stamp_sha256": null,
+      "base": null,
+      "run": {
+        "command": "pharn-ship",
+        "marker_sha256": "cfd0429f9b57989bce2b835591712a0a33a50827e0f73d7e3df3b6cebe666364"
+      },
+      "reused_ids": [],
+      "no_files_ids": [],
+      "ignored_ids": []
+    }
+  },
+  "pre_run_snapshot": {
+    "status": "applied",
+    "unchanged": [
+      ".github/workflows/ci.yml",
+      "pharn/features/pharn-ci-plugin-0-4-2/AC-TESTS.md",
+      "pharn/features/pharn-ci-plugin-0-4-2/LOOP.md",
+      "pharn/features/pharn-ci-plugin-0-4-2/PLAN.md",
+      "pharn/features/pharn-ci-plugin-0-4-2/RUN-REPORT.md",
+      "pharn/features/pharn-ci-plugin-0-4-2/SPEC.md",
+      "pharn/features/pharn-ci-plugin-0-4-2/cost.json",
+      "pharn/features/pharn-ci-plugin-0-4-3/AC-TESTS.md",
+      "pharn/features/pharn-ci-plugin-0-4-3/GRILL.md",
+      "pharn/features/pharn-ci-plugin-0-4-3/LOOP.md",
+      "pharn/features/pharn-ci-plugin-0-4-3/PLAN.md",
+      "pharn/features/pharn-ci-plugin-0-4-3/RUN-REPORT.md",
+      "pharn/features/pharn-ci-plugin-0-4-3/SPEC.md",
+      "pharn/features/pharn-ci-plugin-0-4-3/cost.json",
+      "pharn/features/pharn-ci-plugin-0-4/LOOP.md",
+      "pharn/features/pharn-ci-plugin-0-4/RUN-REPORT.md",
+      "pharn/features/pharn-ci-plugin-0-4/SPEC.md",
+      "pharn/features/pharn-ci-plugin-0-4/cost.json"
+    ]
+  },
+  "head_install": {
+    "state": "clean",
+    "why": null,
+    "family": "npm",
+    "lockfile": "package-lock.json",
+    "counts": {
+      "changed": 0,
+      "missing": 0,
+      "extraneous": 0,
+      "missing_unchecked": 0
+    }
+  },
+  "base_source": "explicit"
+}

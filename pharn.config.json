@@ -1,11 +1,13 @@
 {
   "pharnVersion": "0.15.0",
-  "skillsVersion": "7.1.4",
+  "skillsVersion": "7.3.0",
   "repo": "pharn-dev/pharn-oss",
-  "commit": "62526d8a30886173477db4ee96c70233ee0a1608",
+  "commit": "7a2340dd36e4c1703eb542ba9e8774000cc4ade2",
   "modules": [],
-  "testResults": { "test": "pharn-json" },
-  "installedAt": "2026-10-27T11:17:32.746Z",
+  "testResults": {
+    "test": "pharn-json"
+  },
+  "installedAt": "2026-11-04T12:09:36.528Z",
   "models": {
     "stages": {
       "default": {
