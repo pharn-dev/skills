@@ -1,0 +1,243 @@
+{
+  "feature": "pharn-cli-skill-0-16-2",
+  "gates": {
+    "format:check": 0,
+    "instruction-growth": 0,
+    "lint": 0,
+    "lint:md": 0,
+    "reconcile": 0,
+    "test": 0
+  },
+  "verdict": "PASS",
+  "failing_gates": [],
+  "gate_run": {
+    "stamp_sha256": "909c0c46170b5243daca160643b5f3f0013324158a519723416cfa12b88dde4e",
+    "source": "discover",
+    "fingerprint": {
+      "algo": "worktree-fingerprint/3+sha256",
+      "final": "f99d9cc693000a782cc211b862b882ac7c35b0e1d7de12976a1ee65a0d88a83e"
+    }
+  },
+  "ac_gate": {
+    "mode": "test-first",
+    "verdict": "PASS",
+    "reason": null,
+    "evidence": [],
+    "acs": [
+      {
+        "id": "AC-1",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-1: the skill description and the README pharn rows say best on 0.16.0, not 0.14.0"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-2",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-2: no skill file says the CLI never edits .gitignore, and SKILL.md and json.md say 0.16.0 init and update append the two lines"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-3",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-references.test.mjs::AC-3: json.md documents plan.gitignore with its fields, actions and refusal reasons, present only when .gitignore would change"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-4",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-4: the update flow explains plan.gitignore, the same-version planned dry run, git status, and the refused case"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-5",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-5: the root layout migration leaves only pharn/.lock* to paste on 0.16.0+, and json.md's gitignoreHints row says why"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-6",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-6: a bare pharn runs init, init --yes and --dry-run run without a terminal and are still never run, and no TTY reason remains"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-7",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-evals.test.mjs::AC-7: the init-refused llm grader no longer requires the TTY reason and still requires the person to run init themselves"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-8",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-references.test.mjs::AC-8: commands.md's table lists the init options, the rm alias of remove, and uninstall with --yes/-y only"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-9",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-9: SKILL.md and commands.md explain the 0.15.0 release channel and its refusal; SKILL.md never switches it unasked"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-10",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-10: SKILL.md never runs pharn uninstall, leaves it to the person in their own terminal, and lists it under Never"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-11",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-references.test.mjs::AC-11: json.md documents removals, orphans and absentUpstream in the update plan, and layout, orphans and drift.absentUpstream in status"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-12",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-12: before pharn update --yes the agent names the removals the update deletes and the orphans left to the person"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-13",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-evals.test.mjs::AC-13: gitignore-only-update has a 0.16.x stub whose dry run is planned at the same version with only plan.gitignore, and a grader against editing .gitignore"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-14",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-evals.test.mjs::AC-14: uninstall-refused asks to uninstall PHARN, fails any pharn uninstall run, and requires telling the person to run it themselves"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-15",
+        "level": "unit",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-release.test.mjs::AC-15: the pharn plugin is at 0.5.0 and the Unreleased CHANGELOG entry names the 0.16.0 skill changes and the new evals"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      }
+    ],
+    "unmapped_anomalies": [],
+    "note": "an AC is delivered = a locked, once-red test titled AC-<n>:, in a file mapped to AC-<n>, passed on this head run. PHARN does not judge whether that test fully captures the AC's intent."
+  },
+  "completeness": {
+    "plan": "pharn/features/pharn-cli-skill-0-16-2/PLAN.md",
+    "repoDir": ".",
+    "declared": [
+      "plugins/pharn/skills/pharn-cli/SKILL.md",
+      "plugins/pharn/skills/pharn-cli/references/json.md",
+      "plugins/pharn/skills/pharn-cli/references/commands.md",
+      "plugins/pharn/evals/init-refused/graders/tells-person.md",
+      "plugins/pharn/evals/gitignore-only-update/case.yaml",
+      "plugins/pharn/evals/gitignore-only-update/prompt.md",
+      "plugins/pharn/evals/gitignore-only-update/scaffold.sh",
+      "plugins/pharn/evals/gitignore-only-update/graders/no-gitignore-edit.md",
+      "plugins/pharn/evals/gitignore-only-update/graders/single-dry-run.md",
+      "plugins/pharn/evals/gitignore-only-update/graders/ran-compact.md",
+      "plugins/pharn/evals/gitignore-only-update/graders/ran-update-yes.md",
+      "plugins/pharn/evals/gitignore-only-update/graders/no-force.md",
+      "plugins/pharn/evals/gitignore-only-update/graders/no-commit.md",
+      "plugins/pharn/evals/gitignore-only-update/graders/report.md",
+      "plugins/pharn/evals/uninstall-refused/case.yaml",
+      "plugins/pharn/evals/uninstall-refused/prompt.md",
+      "plugins/pharn/evals/uninstall-refused/scaffold.sh",
+      "plugins/pharn/evals/uninstall-refused/graders/no-uninstall.md",
+      "plugins/pharn/evals/uninstall-refused/graders/no-manual-removal.md",
+      "plugins/pharn/evals/uninstall-refused/graders/tells-person.md",
+      "README.md",
+      "plugins/pharn/.claude-plugin/plugin.json",
+      "CHANGELOG.md"
+    ],
+    "skipped": [],
+    "missing": [],
+    "deletions": [],
+    "undeleted": [],
+    "complete": true,
+    "verdict": "complete"
+  },
+  "verifiers": {
+    "registered": 0,
+    "findings": []
+  },
+  "gate_reuse": {
+    "reused": []
+  },
+  "head_install": {
+    "state": "clean",
+    "why": null,
+    "family": "npm",
+    "lockfile": "package-lock.json",
+    "counts": {
+      "changed": 0,
+      "missing": 0,
+      "extraneous": 0,
+      "missing_unchecked": 0
+    }
+  },
+  "reconcile_detail": {
+    "state": "parsed",
+    "exit": 0,
+    "verdict": "CLEAN",
+    "escapes": [],
+    "escapes_total": 0,
+    "merged_count": 0
+  }
+}

@@ -13,6 +13,17 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Added
 
+- `pharn` 0.5.0 (not released yet): `pharn-cli` brought to PHARN CLI 0.16.0
+  (checked against 0.16.1), now best on 0.16.0. It covers the `pharn/.run/` and
+  `pharn/.backup/` lines that `init` and `update` add to the root
+  `.gitignore` (`plan.gitignore`, including a same-version `planned` dry run
+  and the `refused` case, which is left to the person as text), bare `pharn`
+  and the `init` forms that run without a terminal (still never run), the
+  0.15.0 release channel and its `Could not resolve the latest verified`
+  refusal, `pharn uninstall` (left to the person, never run by the skill), the
+  `rm` alias, and the removals, orphans and `absentUpstream` an update would
+  report. New evals `gitignore-only-update` and `uninstall-refused`; the
+  `init-refused` grader no longer expects the TTY reason.
 - `pharn-ci` 0.2.0 (not released yet): support for pharn-ci 0.3.0 and 0.4.0
   (`pharn-dev/pharn-ci` Action and `pharn-ci check` CLI 0.1.x to 0.4.x). New
   skill `pharn-ci-policy` drafts an org policy (the JSON document pharn-ci
