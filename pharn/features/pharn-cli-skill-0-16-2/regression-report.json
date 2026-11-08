@@ -1,0 +1,117 @@
+{
+  "base": "d8b6d2bcd5de4426e07dba841bf5e8d4a941ad34",
+  "inside": [
+    "CHANGELOG.md",
+    "README.md",
+    "plugins/pharn/.claude-plugin/plugin.json",
+    "plugins/pharn/evals/init-refused/graders/tells-person.md",
+    "plugins/pharn/skills/pharn-cli/SKILL.md",
+    "plugins/pharn/skills/pharn-cli/references/commands.md",
+    "plugins/pharn/skills/pharn-cli/references/json.md",
+    ".github/scripts/ac-pharn-cli-0-16-2-evals.test.mjs",
+    ".github/scripts/ac-pharn-cli-0-16-2-references.test.mjs",
+    ".github/scripts/ac-pharn-cli-0-16-2-release.test.mjs",
+    ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs",
+    "pharn/features/pharn-cli-skill-0-16-2/AC-TESTS.lock.json",
+    "pharn/features/pharn-cli-skill-0-16-2/AC-TESTS.md",
+    "pharn/features/pharn-cli-skill-0-16-2/BUILD.md",
+    "pharn/features/pharn-cli-skill-0-16-2/GRILL.md",
+    "pharn/features/pharn-cli-skill-0-16-2/PLAN.md",
+    "pharn/features/pharn-cli-skill-0-16-2/SPEC.md",
+    "pharn/features/pharn-cli-skill-0-16/GRILL.md",
+    "pharn/features/pharn-cli-skill-0-16/LOOP.md",
+    "pharn/features/pharn-cli-skill-0-16/PLAN.md",
+    "pharn/features/pharn-cli-skill-0-16/RUN-REPORT.md",
+    "pharn/features/pharn-cli-skill-0-16/SPEC.md",
+    "pharn/features/pharn-cli-skill-0-16/cost.json",
+    "plugins/pharn/evals/gitignore-only-update/case.yaml",
+    "plugins/pharn/evals/gitignore-only-update/graders/no-commit.md",
+    "plugins/pharn/evals/gitignore-only-update/graders/no-force.md",
+    "plugins/pharn/evals/gitignore-only-update/graders/no-gitignore-edit.md",
+    "plugins/pharn/evals/gitignore-only-update/graders/ran-compact.md",
+    "plugins/pharn/evals/gitignore-only-update/graders/ran-update-yes.md",
+    "plugins/pharn/evals/gitignore-only-update/graders/single-dry-run.md",
+    "plugins/pharn/evals/gitignore-only-update/prompt.md",
+    "plugins/pharn/evals/gitignore-only-update/scaffold.sh",
+    "plugins/pharn/evals/uninstall-refused/case.yaml",
+    "plugins/pharn/evals/uninstall-refused/graders/no-manual-removal.md",
+    "plugins/pharn/evals/uninstall-refused/graders/no-uninstall.md",
+    "plugins/pharn/evals/uninstall-refused/graders/tells-person.md",
+    "plugins/pharn/evals/uninstall-refused/prompt.md",
+    "plugins/pharn/evals/uninstall-refused/scaffold.sh"
+  ],
+  "outside_gates": {
+    "test": {
+      "base": 1,
+      "head": 0
+    }
+  },
+  "regressions": [],
+  "pre_existing": [
+    "test"
+  ],
+  "verdict": "no-regressions",
+  "gate_run": {
+    "base": {
+      "stamp_sha256": "00229d55e0e9784443673a8d653fc3b839f8747dce4d1b66c2377b35c683a507",
+      "source": "discover",
+      "fingerprint": {
+        "algo": "worktree-fingerprint/3+sha256",
+        "final": "54e0545f30e8e43c87fc353cc8949d5103cf7c642940261b09c7fa7c35bed09b"
+      }
+    },
+    "head": {
+      "stamp_sha256": "45cfd86c2977f048c232a67f51ad52f6c0770a81b98824f872a50a6d2aac949a",
+      "source": "discover",
+      "fingerprint": {
+        "algo": "worktree-fingerprint/3+sha256",
+        "final": "2b4a86ecdef79148bb9bd2f5f1203e8ec7d1f2a26a8564670655668c0aa25204"
+      }
+    }
+  },
+  "base_evidence": {
+    "reused": false,
+    "miss": "other-run",
+    "requirement_sha256": "c492113d569330f66d623f938c82f2a1cded1a3f929c6f76e2274a72a34120c4",
+    "recorded": true,
+    "source": "fresh",
+    "entry": {
+      "used": false,
+      "miss": "start-dirty",
+      "offer_sha256": null,
+      "entry_stamp_sha256": null,
+      "base": null,
+      "run": {
+        "command": "pharn-loop",
+        "marker_sha256": "fd467163213c172de6f41860d79208d8e8ebd221456d48b320002e5d66dcaa1b"
+      },
+      "reused_ids": [],
+      "no_files_ids": [],
+      "ignored_ids": []
+    }
+  },
+  "pre_run_snapshot": {
+    "status": "applied",
+    "unchanged": [
+      "pharn/features/pharn-cli-skill-0-16/GRILL.md",
+      "pharn/features/pharn-cli-skill-0-16/LOOP.md",
+      "pharn/features/pharn-cli-skill-0-16/PLAN.md",
+      "pharn/features/pharn-cli-skill-0-16/RUN-REPORT.md",
+      "pharn/features/pharn-cli-skill-0-16/SPEC.md",
+      "pharn/features/pharn-cli-skill-0-16/cost.json"
+    ]
+  },
+  "head_install": {
+    "state": "clean",
+    "why": null,
+    "family": "npm",
+    "lockfile": "package-lock.json",
+    "counts": {
+      "changed": 0,
+      "missing": 0,
+      "extraneous": 0,
+      "missing_unchecked": 0
+    }
+  },
+  "base_source": "explicit"
+}

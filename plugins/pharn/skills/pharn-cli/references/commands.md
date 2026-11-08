@@ -1,9 +1,11 @@
-# pharn command notes (0.9.0 baseline)
+# pharn command notes (0.9.0 baseline, checked against 0.16.1)
 
-Source: the CLI's own README and `docs/commands/*` at 0.9.0. Where 0.10.0
+Source: the CLI's own README and `docs/commands/*` at 0.9.0, and at 0.16.1 for
+what changed since. Where 0.10.0
 changes a command (`status --json`, `update --dry-run`, `update --json`), see
-[json.md](json.md); the rest below still holds, except where a line names
-0.14.0, which moved PHARN's root files under `pharn/`.
+[json.md](json.md); the rest below still holds, except where a line names a
+later version: 0.14.0 moved PHARN's root files under `pharn/`, 0.15.0 changed
+the default release channel and 0.16.0 added the `.gitignore` lines.
 
 ## Command surface
 
@@ -13,8 +15,12 @@ changes a command (`status --json`, `update --dry-run`, `update --json`), see
 | `pharn status` | `--strict`, `--no-drift`, `--json` (0.10.0+) | never |
 | `pharn update` | `--yes`/`-y`, `--force`, `--ref latest\|main`, `--dry-run`, `--json` (0.10.0+, only with `--dry-run`) | yes, never with `--dry-run` |
 | `pharn add [name]` | none | yes |
-| `pharn remove [name]` | none | yes |
-| `pharn init` | `--ref` | yes, interactive only |
+| `pharn remove [name]` | none (alias `pharn rm`, 0.13.0+) | yes |
+| `pharn init` | `--ref`, `--archetype <list>`, `--yes`/`-y`, `--dry-run`, `--json` (only with `--dry-run`) | yes, never with `--dry-run` |
+| `pharn uninstall` | `--yes`/`-y` | yes |
+
+A bare `pharn` with no command runs `init`. The agent never runs `init` or
+`uninstall` in any form (SKILL.md, section 5).
 
 Any other option is refused (on 0.9.0 that includes `status --json`): ``Unsupported option for `status`: "--json"`` on
 stderr, usage text, exit 1.
@@ -68,9 +74,28 @@ lock, so never run two CLI versions in one project at once.
   every differing file as `unverifiable`.
 - `--ref latest` follows verified releases and is recorded in the config;
   `--ref main` switches back. Only use when the person asks for the channel.
+  Since CLI 0.15.0 a new install follows verified releases (`latest`) by
+  default, and an install that records no `ref` stays on `main`. When no
+  verified release can be resolved, nothing is written and stderr starts
+  `Could not resolve the latest verified pharn-dev/pharn-oss release`. The
+  causes are no release published yet, `api.github.com` unreachable, or its
+  unauthenticated rate limit of 60 requests an hour used up. The message names
+  `pharn init --ref main` and `pharn update --ref main`; pass `--ref` only when
+  the person asks.
 - Backups go to `pharn/.backup/<timestamp>/` (CLI 0.14.0+) or
   `.pharn-backup/<timestamp>/` (older CLIs; 0.14.0 leaves existing ones where
-  they are). Neither is ever pruned, and `.gitignore` is never edited.
+  they are). Neither is ever pruned.
+- CLI 0.16.0+ appends `pharn/.run/` and `pharn/.backup/` to the project's root
+  `.gitignore` (a comment line, then the missing lines, append-only, in the
+  file's own line endings; a line that already covers an entry is respected).
+  A symlinked, non-regular or unreadable `.gitignore` is not written: the run
+  names the lines to add. At the same skills version a `.gitignore` missing
+  either line re-opens the "Already up to date" return, so the next `update`
+  runs once to add them. CLIs before 0.16.0 leave `.gitignore` to the person.
+- From CLI 0.13.0 an update lists the recorded files upstream no longer ships
+  (`ORPHANED`, left for the person to delete) and the surfaces pharn-oss ships
+  no file for (`NOT SHIPPED`); json.md has `plan.orphans` and
+  `plan.absentUpstream`.
 
 ## add and remove
 
@@ -82,13 +107,25 @@ lock, so never run two CLI versions in one project at once.
   the `pharn` layout) or the memory bank (`pharn/memory-bank/` after the 0.14.0
   migration, `memory-bank/` before).
 - A name installed as both griller and lens needs `griller:` or `lens:`.
+- `add` and `remove` leave `.gitignore` as it is.
+
+## uninstall
+
+Run by the person in their own terminal, never by the agent. It needs no
+network. It deletes only the recorded files whose hash still matches, then the
+directories that leaves empty, `pharn.records.json`, and `pharn.config.json`
+after copying it to `pharn/.backup/<timestamp>/`. It asks once (default No);
+`--yes`/`-y` skips the question, and off a terminal it refuses without
+`--yes`. It keeps edited and unrecorded files, `.claude/settings.json`,
+`.claude/settings.local.json`, every `pharn/.backup/` directory and the
+`.gitignore` lines, and prints the hooks still wired to a script it removed.
 
 ## MIN_CLI refusal
 
 pharn-oss can declare the oldest CLI its content needs in a root `MIN_CLI`
 file. When the installed CLI is older, `init`, `add` and `update` (its dry run
 included) refuse before writing anything: exit 1, stdout empty in JSON mode,
-and one line on stderr (the same wording from 0.9.0 through 0.14.1; the two
+and one line on stderr (the same wording from 0.9.0 through 0.16.1; the two
 versions vary). Shown wrapped here; match on its start, `This pharn is too old
 for the current github.com/pharn-dev/pharn-oss`:
 

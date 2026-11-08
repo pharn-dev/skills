@@ -1,0 +1,179 @@
+{
+  "schema": "ac-tests-lock/6",
+  "feature": "pharn-cli-skill-0-16-2",
+  "mode": "test-first",
+  "spec": {
+    "spec_id": "pharn-cli-skill-0-16-2",
+    "spec_content_hash": "cc727f6627829ad4ce4d89168ad4dccef1db209260925b97dfa3c6d53095f467"
+  },
+  "mapping": {
+    "path": "pharn/features/pharn-cli-skill-0-16-2/AC-TESTS.md",
+    "sha256": "90eb5cfaf3fef60adf7da174cc361e7b5643aa38aa546e611a5871b515b8d154"
+  },
+  "files": [
+    {
+      "path": ".github/scripts/ac-pharn-cli-0-16-2-evals.test.mjs",
+      "sha256": "3807921e22e4c58867503f1dad4b0890fd9c6a6bd51db1bccdb22d5dacc88258"
+    },
+    {
+      "path": ".github/scripts/ac-pharn-cli-0-16-2-references.test.mjs",
+      "sha256": "2490f4c6469cf15a2f1eb4f530ee44f80df1d0d91eebc2f62c6bde617209ca41"
+    },
+    {
+      "path": ".github/scripts/ac-pharn-cli-0-16-2-release.test.mjs",
+      "sha256": "a4ed017265840a1b2bab8bbfd6a07cb952939772fe55c7bcba99c1e8775c6f9e"
+    },
+    {
+      "path": ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs",
+      "sha256": "ba421641b5943eff212fb0a331dd53fde26f5964bde8e63ebd0c58d62aab7263"
+    }
+  ],
+  "bootstrap": null,
+  "red_run": {
+    "stamp_sha256": "a46587e1bbca864d4aac2b3785981f94882e3a719650bec44afe5581fc6413e2",
+    "files_sha256": "f80bdf0dafadb09b299fb40255d4092faabf29b85f4fcd11fa2bce685d2e086a",
+    "gates": [
+      {
+        "gate": "test",
+        "results_sha256": "751fb7b3b5460ad8111c024bcef26b35a7dc082861e8f7587c18ed4894fb2247"
+      }
+    ],
+    "acs": [
+      {
+        "id": "AC-1",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-1: the skill description and the README pharn rows say best on 0.16.0, not 0.14.0"
+        ]
+      },
+      {
+        "id": "AC-2",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-2: no skill file says the CLI never edits .gitignore, and SKILL.md and json.md say 0.16.0 init and update append the two lines"
+        ]
+      },
+      {
+        "id": "AC-3",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-references.test.mjs::AC-3: json.md documents plan.gitignore with its fields, actions and refusal reasons, present only when .gitignore would change"
+        ]
+      },
+      {
+        "id": "AC-4",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-4: the update flow explains plan.gitignore, the same-version planned dry run, git status, and the refused case"
+        ]
+      },
+      {
+        "id": "AC-5",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-5: the root layout migration leaves only pharn/.lock* to paste on 0.16.0+, and json.md's gitignoreHints row says why"
+        ]
+      },
+      {
+        "id": "AC-6",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-6: a bare pharn runs init, init --yes and --dry-run run without a terminal and are still never run, and no TTY reason remains"
+        ]
+      },
+      {
+        "id": "AC-7",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-evals.test.mjs::AC-7: the init-refused llm grader no longer requires the TTY reason and still requires the person to run init themselves"
+        ]
+      },
+      {
+        "id": "AC-8",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-references.test.mjs::AC-8: commands.md's table lists the init options, the rm alias of remove, and uninstall with --yes/-y only"
+        ]
+      },
+      {
+        "id": "AC-9",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-9: SKILL.md and commands.md explain the 0.15.0 release channel and its refusal; SKILL.md never switches it unasked"
+        ]
+      },
+      {
+        "id": "AC-10",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-10: SKILL.md never runs pharn uninstall, leaves it to the person in their own terminal, and lists it under Never"
+        ]
+      },
+      {
+        "id": "AC-11",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-references.test.mjs::AC-11: json.md documents removals, orphans and absentUpstream in the update plan, and layout, orphans and drift.absentUpstream in status"
+        ]
+      },
+      {
+        "id": "AC-12",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-skill.test.mjs::AC-12: before pharn update --yes the agent names the removals the update deletes and the orphans left to the person"
+        ]
+      },
+      {
+        "id": "AC-13",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-evals.test.mjs::AC-13: gitignore-only-update has a 0.16.x stub whose dry run is planned at the same version with only plan.gitignore, and a grader against editing .gitignore"
+        ]
+      },
+      {
+        "id": "AC-14",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-evals.test.mjs::AC-14: uninstall-refused asks to uninstall PHARN, fails any pharn uninstall run, and requires telling the person to run it themselves"
+        ]
+      },
+      {
+        "id": "AC-15",
+        "tests": [
+          ".github/scripts/ac-pharn-cli-0-16-2-release.test.mjs::AC-15: the pharn plugin is at 0.5.0 and the Unreleased CHANGELOG entry names the 0.16.0 skill changes and the new evals"
+        ]
+      }
+    ]
+  },
+  "test_infra": {
+    "levels": [
+      "unit"
+    ],
+    "gates": [
+      {
+        "id": "test",
+        "script": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./.github/scripts/pharn-test-reporter.mjs --test-reporter-destination=stdout .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
+        "pre": null,
+        "post": null,
+        "results": "pharn-json"
+      }
+    ],
+    "chained": [],
+    "configs": [],
+    "script_files": [
+      {
+        "path": ".github/scripts/pharn-test-reporter.mjs",
+        "sha256": "0f6e7369360cc8d7621476f349dc5d3fb08ce968906304f8e6ee2f4ad2ea7058"
+      }
+    ],
+    "jest": null,
+    "exclude": [],
+    "other_gates": [
+      {
+        "id": "format:check",
+        "script": "prettier --check .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint",
+        "script": "eslint .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint:md",
+        "script": "markdownlint-cli2",
+        "pre": null,
+        "post": null
+      }
+    ],
+    "other_chained": []
+  }
+}
