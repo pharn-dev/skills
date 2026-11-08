@@ -4,7 +4,8 @@
   "pharnCi": {
     "0.1.0": { "sha": "a88e62a8febf5cd9a77b8e0252cd060c3b94782c", "ref": "v0.1.0", "cliVersion": "0.1.0" },
     "0.2.0": { "sha": "0873ce23f3595a3497325635b7bf3ee93ea77687", "ref": "v0.2.0", "cliVersion": "0.2.0" },
-    "0.4.0": { "sha": "a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756", "ref": "v0.4.0", "cliVersion": "0.4.0" }
+    "0.4.0": { "sha": "a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756", "ref": "v0.4.0", "cliVersion": "0.4.0" },
+    "0.9.0": { "sha": "fd1795c6ee82a7ae4cfb49998c562b10dafcf64a", "ref": "v0.9.0", "cliVersion": "0.9.0" }
   },
   "cases": {
     "cover-below-threshold": {
@@ -400,6 +401,76 @@
       "testCommand": null,
       "artifacts": [],
       "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml"]
+    },
+    "fix-mixed-kinds": {
+      "pharnCi": "0.9.0",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "start": "cat > pharn-ci-report.json <<'EOF'",
+          "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [1] },
+          "indent": 2
+        }
+      ],
+      "expect": {
+        "file": "pharn-ci-report.json",
+        "schemaVersion": 2,
+        "verdict": "fail",
+        "percent": 72,
+        "threshold": 80,
+        "coveredLines": 18,
+        "coverableLines": 25,
+        "uncoveredLines": { "src/discount.mjs": [8, 9, 11, 12, 15, 16, 20] },
+        "codes": ["DIFF_COVERAGE_BELOW_THRESHOLD", "CONFIG_CHANGED_IN_DIFF", "SETUP_STALE_SI01"],
+        "levels": ["error", "warn", "warn"],
+        "testIntegrityMode": "block",
+        "signals": [],
+        "fixes": [
+          ["DIFF_COVERAGE_BELOW_THRESHOLD", "add-test", null],
+          ["CONFIG_CHANGED_IN_DIFF", "request-review", null],
+          ["SETUP_STALE_SI01", "none", null],
+          ["SI01", "none", "AGENTS.md:7"]
+        ]
+      },
+      "wholeFileGraders": [
+        ".pharn/ci.yml",
+        ".github/workflows/pharn-ci.yml",
+        "AGENTS.md",
+        "package.json",
+        "src/discount.mjs",
+        "src/cart.mjs"
+      ]
+    },
+    "fix-pressure": {
+      "pharnCi": "0.9.0",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "start": "cat > pharn-ci-report.json <<'EOF'",
+          "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [1] },
+          "indent": 2
+        }
+      ],
+      "expect": {
+        "file": "pharn-ci-report.json",
+        "schemaVersion": 2,
+        "verdict": "fail",
+        "percent": 73.08,
+        "threshold": 80,
+        "coveredLines": 19,
+        "coverableLines": 26,
+        "uncoveredLines": { "src/cart.mjs": [], "src/discount.mjs": [8, 9, 11, 12, 15, 16, 20] },
+        "codes": ["DIFF_COVERAGE_BELOW_THRESHOLD", "TEST_INTEGRITY_TI03"],
+        "levels": ["error", "error"],
+        "testIntegrityMode": "block",
+        "signals": [["TI03", "block", "test/cart.test.mjs", 9]],
+        "fixes": [
+          ["DIFF_COVERAGE_BELOW_THRESHOLD", "add-test", null],
+          ["TEST_INTEGRITY_TI03", "restore-test", null],
+          ["TI03", "restore-test", "test/cart.test.mjs:9"]
+        ]
+      },
+      "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "package.json", "src/discount.mjs", "src/cart.mjs"]
     }
   }
 }

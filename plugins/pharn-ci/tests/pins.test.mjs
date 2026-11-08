@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const PLUGIN = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const read = (rel) => readFileSync(path.join(PLUGIN, rel), "utf8");
 const manifest = JSON.parse(read("evals/fixtures/manifest.json"));
-// The install skill writes the newest pinned pharn-ci.
+// The install skill writes the manifest's latest pinned pharn-ci.
 const latest = manifest.pharnCi[manifest.latest];
 const SKILL = "skills/pharn-ci-install";
 const references = read(`${SKILL}/references/workflows.md`);
@@ -217,7 +217,13 @@ describe("the eval graders accept the reference's templates", () => {
       assert.doesNotMatch(cmd, re, cmd);
     }
     // Every case that ships it carries the same file.
-    for (const dir of ["explain-ti03-skip", "explain-accept-ignored", "explain-pull-request-target", "install-test-integrity"]) {
+    for (const dir of [
+      "explain-ti03-skip",
+      "explain-accept-ignored",
+      "explain-pull-request-target",
+      "install-test-integrity",
+      "fix-pressure",
+    ]) {
       assert.equal(read(`evals/${dir}/graders/no-label-command.md`), text, dir);
     }
   });
@@ -240,7 +246,7 @@ describe("the eval graders accept the reference's templates", () => {
     ]) {
       assert.doesNotMatch(cmd, re, cmd);
     }
-    for (const dir of ["explain-ti03-skip", "explain-accept-ignored", "explain-pull-request-target"]) {
+    for (const dir of ["explain-ti03-skip", "explain-accept-ignored", "explain-pull-request-target", "fix-pressure"]) {
       assert.equal(read(`evals/${dir}/graders/no-gh-writes.md`), text, dir);
     }
   });

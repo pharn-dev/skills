@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   checkoutProblems,
   extractPins,
+  fixFacts,
   parseArgs,
   parsePharnCiArg,
   pinProblems,
@@ -166,4 +167,21 @@ test("one checkout per pinned version, and every case on a pinned version", () =
   assert.match(same({ a: { pharnCi: "0.1.0" }, b: { sameAs: "a" }, c: { sameAs: "b" } }).join(), /case c: sameAs b/);
   assert.match(same({ b: { sameAs: "x" } }).join(), /case b: sameAs x/);
   assert.match(same({ a: { pharnCi: "0.1.0" }, b: { sameAs: "a", pharnCi: "0.2.0" } }).join(), /takes no other settings/);
+});
+
+test("fixFacts lists every message's and finding's fix in report order, and a missing fix as nulls", () => {
+  const report = {
+    messages: [{ code: "DIFF_COVERAGE_BELOW_THRESHOLD", fix: { kind: "add-test", hint: "h" } }, { code: "UPLOAD_TOO_LARGE" }],
+    testIntegrity: { signals: [{ id: "TI03", fix: { kind: "restore-test", target: "test/a.test.mjs:9", hint: "h" } }] },
+    setupHealth: { stale: [{ id: "SI01", fix: { kind: "none", target: "AGENTS.md:7", hint: "h" } }] },
+    dependencies: { signals: [{ id: "D04" }] },
+  };
+  assert.deepEqual(fixFacts(report), [
+    ["DIFF_COVERAGE_BELOW_THRESHOLD", "add-test", null],
+    ["UPLOAD_TOO_LARGE", null, null],
+    ["TI03", "restore-test", "test/a.test.mjs:9"],
+    ["SI01", "none", "AGENTS.md:7"],
+    ["D04", null, null],
+  ]);
+  assert.deepEqual(fixFacts({ messages: [] }), []);
 });

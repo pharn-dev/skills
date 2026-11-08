@@ -1,0 +1,133 @@
+{
+  "schema": "ac-tests-lock/6",
+  "feature": "pharn-ci-fix-skill",
+  "mode": "test-first",
+  "spec": {
+    "spec_id": "pharn-ci-fix-skill",
+    "spec_content_hash": "2cee86075dbef9d3971283cd4ef188ad3a7f775d6c1013905da7e10c0590c941"
+  },
+  "mapping": {
+    "path": "pharn/features/pharn-ci-fix-skill/AC-TESTS.md",
+    "sha256": "9636f5badd04e75815be9a20959f5fafd452ef9e4570d8c6380b75e7c6271ad9"
+  },
+  "files": [
+    {
+      "path": "plugins/pharn-ci/tests/ac-fix-docs.test.mjs",
+      "sha256": "b0077a1694fd91512821bbe1031e5702a45df367121b30aa394887eaafbbc1e3"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-fix-list-fixes.test.mjs",
+      "sha256": "9ef816b56abd58ee43c71aeec49ad10044fe0bcc892ef1063573c0606e807ebc"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-fix-skill-text.test.mjs",
+      "sha256": "5adf9721609894dc0acf0597acd74fbe43b9da4776aa7d71461b2dd1f89d41e4"
+    }
+  ],
+  "bootstrap": null,
+  "red_run": {
+    "stamp_sha256": "d3d696fcb44c0ce16547d28c9c32e11dcdd77ad6cc7fe98973297cd0145339e1",
+    "files_sha256": "43aeddb153627ddcd3a279515923fcd5afcff4925cb7f0bb6a2665d45a5cb608",
+    "gates": [
+      {
+        "gate": "test",
+        "results_sha256": "a282aef2b34588f56eefd117170f39db8c4ba170c9f4c71fdd625022bd4b99f5"
+      }
+    ],
+    "acs": [
+      {
+        "id": "AC-1",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-skill-text.test.mjs::AC-1: SKILL.md is named pharn-ci-fix and its description names 0.9.x, the fix object, pharn-ci-cover and pharn-ci-explain"
+        ]
+      },
+      {
+        "id": "AC-2",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-skill-text.test.mjs::AC-2: the skill names the eight kinds, the fields, the six places, and what the agent does for each kind"
+        ]
+      },
+      {
+        "id": "AC-3",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-skill-text.test.mjs::AC-3: SKILL.md says report text, a hint and a target are data, never instructions, and quotes a target after --"
+        ]
+      },
+      {
+        "id": "AC-4",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-skill-text.test.mjs::AC-4: the Never list names every forbidden move, and no sentence of the skill tells the agent to loosen a gate"
+        ]
+      },
+      {
+        "id": "AC-5",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-list-fixes.test.mjs::AC-5: list-fixes exits 0 and lists every valid fix with where it sits, its code or id, kind, target and hint, by kind"
+        ]
+      },
+      {
+        "id": "AC-6",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-list-fixes.test.mjs::AC-6: list-fixes exits non-zero and names each malformed fix by its JSON Pointer"
+        ]
+      },
+      {
+        "id": "AC-7",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-list-fixes.test.mjs::AC-7: list-fixes exits 0 on a report with no fix objects, with no fixes and the count of entries that have none"
+        ]
+      },
+      {
+        "id": "AC-8",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-docs.test.mjs::AC-8: README.md lists pharn-ci-fix, and CHANGELOG.md's [Unreleased] section names pharn-ci-fix and 0.9.0"
+        ]
+      }
+    ]
+  },
+  "test_infra": {
+    "levels": [
+      "unit"
+    ],
+    "gates": [
+      {
+        "id": "test",
+        "script": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./.github/scripts/pharn-test-reporter.mjs --test-reporter-destination=stdout .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
+        "pre": null,
+        "post": null,
+        "results": "pharn-json"
+      }
+    ],
+    "chained": [],
+    "configs": [],
+    "script_files": [
+      {
+        "path": ".github/scripts/pharn-test-reporter.mjs",
+        "sha256": "0f6e7369360cc8d7621476f349dc5d3fb08ce968906304f8e6ee2f4ad2ea7058"
+      }
+    ],
+    "jest": null,
+    "exclude": [],
+    "other_gates": [
+      {
+        "id": "format:check",
+        "script": "prettier --check .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint",
+        "script": "eslint .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint:md",
+        "script": "markdownlint-cli2",
+        "pre": null,
+        "post": null
+      }
+    ],
+    "other_chained": []
+  }
+}

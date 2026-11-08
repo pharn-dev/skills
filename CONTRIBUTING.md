@@ -95,11 +95,15 @@ branch. Reports, PR comments and CLI output in the scaffolds were generated
 with the real pharn-ci CLI and renderer for that exact tree, so line numbers
 and message texts match. `plugins/pharn-ci/evals/fixtures/manifest.json` pins
 one pharn-ci commit per supported version line (`pharnCi`: 0.1.0 for Report
-v1, 0.2.0 for the 0.2.x accept-label cases, 0.4.0 for the newest cases) and names the newest in `latest`, which is what
-`pharn-ci-install` writes; each case names the version it was generated with.
+v1, 0.2.0 for the 0.2.x accept-label cases, 0.4.0 for the install, policy and
+0.4.x explain cases, 0.9.0 for the `pharn-ci-fix` cases, which need Report v2's
+`fix` objects) and names in `latest` the version `pharn-ci-install` writes (0.4.0
+until the older skills move to 0.9.x); each case names the version it was
+generated with. A case's `expect.fixes` lists the fix kind and target of every
+message and finding, so a pharn-ci change to the fix tables fails the check.
 Regenerate them, and the whole-file graders built from the scaffolds' files,
 with
-`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout>`
+`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout>`
 after changing a case's tree or a targeted pharn-ci version; `--check` reports
 drift without writing. Each checkout must be pharn-ci at the commit pinned for
 its version, built with

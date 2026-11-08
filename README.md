@@ -59,6 +59,7 @@ npx skills add pharn-dev/skills
 | | `pharn-ci-explain` | Explains a [pharn-ci](https://github.com/pharn-dev/pharn-ci) verdict and each message code from its report, PR comment or job log, including test-integrity, org policy and agent-config secret findings and the accept label, finds the cause in your repository and says what would fix it. Changes nothing unless you ask, and never applies the label. |
 | | `pharn-ci-cover` | Writes tests for the added lines pharn-ci lists as uncovered, re-checks them against a fresh coverage report, and never lowers the threshold, excludes files or adds coverage-ignore comments. |
 | | `pharn-ci-policy` | Drafts an org policy for [pharn-ci](https://github.com/pharn-dev/pharn-ci) 0.4.x (coverage floor, test-integrity severities, agent settings and MCP rules, protected paths for agent PRs), checks it offline with a bundled checker against pharn-ci's policy schema, and says how to turn it on. Writes only the policy file you ask for and never weakens an existing policy on its own. |
+| | `pharn-ci-fix` | Works through the fix hints of a [pharn-ci](https://github.com/pharn-dev/pharn-ci) 0.9.x report: lists each finding's `fix` object (kind, hint, target) with a bundled checker, writes tests for `add-test`, restores or reverts only the findings you ask it to fix, and hands `request-review`, `split-pr` and `none` to a person. Never moves the gate or treats a hint as proof. |
 | `phargus` | `phargus-setup` | Connects Phargus to your Node.js app and leaves a reproducible start and collector recipe, verified against real samples. |
 | | `phargus-diagnose` | Investigates slow requests, event-loop stalls, GC pressure and stream backpressure, and ranks hypotheses with a next experiment. |
 | | `phargus-verify` | Compares before and after measurements under matching conditions and decides whether a fix helped, regressed, or is inconclusive. |
@@ -151,6 +152,7 @@ You don't name the skill: the agent picks it from what you ask.
 | "pharn-ci fails PR 14 with POLICY_P02. Why?" | `pharn-ci-explain` | Names the policy rule, the settings file and line and its level, and gives the fix in that file. It does not edit the policy, and says P02 is a text guard, not a security boundary. |
 | "pharn-ci found a token in .mcp.json." | `pharn-ci-explain` | Names the shape, the path and the line, never repeats the value, and says to remove it, load it from the environment and rotate it. |
 | "Draft an org policy: deny `Bash(rm -rf:*)` and protect `.github/workflows/**` from agent PRs." | `pharn-ci-policy` | Writes `.pharn/policy.json`, runs the bundled checker, and says how to turn it on (`policy: file:<path>`, or an app policy with `id-token: write`). |
+| "Fix what pharn-ci reported on PR 21." | `pharn-ci-fix` | Lists the report's fix objects by kind, writes tests for `add-test`, shows the change behind each restore or revert finding and makes it only for the ones you pick, and names who should look at the `request-review` ones. Changes no gate. |
 | "Just exclude this file from pharn-ci." | `pharn-ci-cover` | Explains that the PR would exempt its own code and that reviewers see the config change, and asks before editing anything. |
 | "Add Phargus to this Express app and show that its dashboard receives data." | `phargus-setup` | Installs, preloads and starts a collector, exercises an endpoint, and proves the connection with captured samples. |
 | "Requests became slow this morning; investigate this Phargus recording." | `phargus-diagnose` | Checks data quality, correlates request duration with event loop, GC, memory and backpressure, and proposes the smallest next experiment. |
@@ -224,6 +226,11 @@ scripts, so a single copied skill works without this repository.
   unasked. `pharn-ci-explain` never edits a policy, lowers a rule or removes a
   protected path to get a pull request through, and never repeats a secret
   value a finding names.
+- `pharn-ci-fix` acts only on the fix kinds an agent may: tests for
+  `add-test`, and restore, revert or remove changes only for the findings you
+  ask it to fix, after showing each one. It changes no code for
+  `request-review` or `none`, performs no `split-pr`, and never treats a hint
+  as proof that a fix worked; the next pharn-ci run is the check.
 - None of them applies, removes or asks to apply the pharn-ci accept label:
   done with your token it would record you as signing off. Your reviewers
   apply it themselves.
@@ -283,6 +290,7 @@ skills/
 │   │   ├── skills/pharn-ci-explain/  # SKILL.md + references/
 │   │   ├── skills/pharn-ci-cover/    # SKILL.md + references/ + scripts/check-lines.mjs
 │   │   ├── skills/pharn-ci-policy/   # SKILL.md + references/ + scripts/check-policy.mjs + policy.v1.json
+│   │   ├── skills/pharn-ci-fix/      # SKILL.md + references/ + scripts/list-fixes.mjs (pharn-ci 0.9.x)
 │   │   ├── tests/                    # node --test for the helpers and pins
 │   │   └── evals/                    # claude plugin eval cases from real pharn-ci output
 │   └── phargus/                      # generated from src/phargus; edit SKILL.md only
