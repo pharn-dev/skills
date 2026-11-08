@@ -4,8 +4,8 @@
 // pharn-ci commit per version line, and each case names the version it was generated with.
 // Node core only.
 //
-//   node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout>
-//   node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout>
+//   node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout>
+//   node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout>
 //
 // Pass one checkout per version in manifest.pharnCi, each at its pinned commit and built first:
 // pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build
@@ -132,7 +132,7 @@ export function extractPins(text) {
   }));
 }
 
-/** The pinned commit of the newest pharn-ci version the manifest names: the one the install skill writes. */
+/** The pinned commit of the manifest's `latest` pharn-ci version: the one the install skill writes. */
 export function latestPin(manifest) {
   const pin = manifest.pharnCi?.[manifest.latest];
   if (pin === undefined) throw new RegenError(`manifest.latest ${manifest.latest} is not a key of manifest.pharnCi`);
@@ -214,6 +214,27 @@ function json(value, indent) {
   return `${JSON.stringify(value, null, indent)}\n`;
 }
 
+// The finding arrays of Report v2 that carry a fix object (pharn-ci 0.9.0), in the order the schema lists them.
+const FIX_FINDINGS = [
+  ["testIntegrity", "signals"],
+  ["policy", "violations"],
+  ["setupHealth", "stale"],
+  ["injection", "signals"],
+  ["dependencies", "signals"],
+];
+
+/**
+ * Every fix of a report as [code or id, kind, target or null]: the messages first, then each finding array in
+ * FIX_FINDINGS order. A message or finding without a fix gives [code or id, null, null].
+ */
+export function fixFacts(report) {
+  const entry = (key, fix) => [key, fix?.kind ?? null, fix?.target ?? null];
+  return [
+    ...(report.messages ?? []).map((m) => entry(m.code, m.fix)),
+    ...FIX_FINDINGS.flatMap((at) => (getIn(report, at) ?? []).map((f) => entry(f.id, f.fix))),
+  ];
+}
+
 function checkExpect(name, expect, reports) {
   const report = reports.get(expect.file) ?? (existsSync(path.join(FIXTURES, "inputs", expect.file)) ? readInput(expect.file) : undefined);
   if (report === undefined) throw new RegenError(`${name}: expect.file ${expect.file} is neither an artifact nor an input`);
@@ -228,6 +249,7 @@ function checkExpect(name, expect, reports) {
   if ("testIntegrityMode" in expect) facts.testIntegrityMode = ti?.mode;
   if ("signals" in expect) facts.signals = (ti?.signals ?? []).map((s) => [s.id, s.severity, s.path, s.line]);
   if ("accepted" in expect) facts.accepted = ti?.accepted ?? null;
+  if ("fixes" in expect) facts.fixes = fixFacts(report);
   const wanted = Object.fromEntries(Object.entries(expect).filter(([k]) => k !== "file"));
   const got = Object.fromEntries(Object.keys(wanted).map((k) => [k, facts[k]]));
   if (JSON.stringify(got) !== JSON.stringify(wanted)) {
