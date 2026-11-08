@@ -1,0 +1,16 @@
+{
+  "name": "pharn-dev",
+  "interface": {
+    "displayName": "PHARN developer tools"
+  },
+  "plugins": [
+    {
+      "name": "phargus",
+      "source": {
+        "source": "local",
+        "path": "./plugins/phargus"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}
