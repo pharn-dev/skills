@@ -28,8 +28,8 @@ npx skills add pharn-dev/skills
 
 </div>
 
-> **Status:** `pharn` is ready to use with Claude Code. `pharn-ci` 0.2.0 is a
-> development draft for pharn-ci 0.1.x to 0.4.x, not released yet. `phargus` is a 0.1.1
+> **Status:** `pharn` and `pharn-ci` are ready to use with Claude Code; `pharn-ci`
+> covers pharn-ci 0.1.x to 0.9.x. `phargus` is a 0.1.1
 > development draft for the `@pharn-dev/phargus` 0.1.x runtime published on npm;
 > see [Compatibility](#compatibility).
 
@@ -58,7 +58,7 @@ npx skills add pharn-dev/skills
 | `pharn-ci` | `pharn-ci-install` | Adds [pharn-ci](https://github.com/pharn-dev/pharn-ci) to a repository: coverage output from your own test run, checked locally the way pharn-ci reads it, a `.pharn/ci.yml` with the threshold, and a workflow pinned to a full commit SHA with the test-integrity check (an org policy only when you ask). Never uses `pull_request_target`, asks before installing anything, and leaves the accept label to you. |
 | | `pharn-ci-explain` | Explains a [pharn-ci](https://github.com/pharn-dev/pharn-ci) verdict and each message code from its report, PR comment or job log, including test-integrity, org policy and agent-config secret findings and the accept label, finds the cause in your repository and says what would fix it. Changes nothing unless you ask, and never applies the label. |
 | | `pharn-ci-cover` | Writes tests for the added lines pharn-ci lists as uncovered, re-checks them against a fresh coverage report, and never lowers the threshold, excludes files or adds coverage-ignore comments. |
-| | `pharn-ci-policy` | Drafts an org policy for [pharn-ci](https://github.com/pharn-dev/pharn-ci) 0.4.x (coverage floor, test-integrity severities, agent settings and MCP rules, protected paths for agent PRs), checks it offline with a bundled checker against pharn-ci's policy schema, and says how to turn it on. Writes only the policy file you ask for and never weakens an existing policy on its own. |
+| | `pharn-ci-policy` | Drafts an org policy for [pharn-ci](https://github.com/pharn-dev/pharn-ci) 0.4.x to 0.9.x (coverage floor, test-integrity severities, agent settings and MCP rules, protected paths for agent PRs), checks it offline with a bundled checker against pharn-ci's policy schema, and says how to turn it on. Writes only the policy file you ask for and never weakens an existing policy on its own. |
 | | `pharn-ci-fix` | Works through the fix hints of a [pharn-ci](https://github.com/pharn-dev/pharn-ci) 0.9.x report: lists each finding's `fix` object (kind, hint, target) with a bundled checker, writes tests for `add-test`, restores or reverts only the findings you ask it to fix, and hands `request-review`, `split-pr` and `none` to a person. Never moves the gate or treats a hint as proof. |
 | `phargus` | `phargus-setup` | Connects Phargus to your Node.js app and leaves a reproducible start and collector recipe, verified against real samples. |
 | | `phargus-diagnose` | Investigates slow requests, event-loop stalls, GC pressure and stream backpressure, and ranks hypotheses with a next experiment. |
@@ -262,7 +262,7 @@ behavioral review is recorded yet for the current `phargus` content; see its
 | Plugin | Agents | Operates |
 | ------ | ------ | -------- |
 | `pharn` | Claude Code (verified with 2.1.295). Codex not verified. | PHARN CLI `@pharn-dev/pharn` 0.10.0+, best on 0.16.0 (the `pharn/` root layout), text-flow fallback for 0.9.x. |
-| `pharn-ci` | Claude Code. Codex not verified. | pharn-ci 0.1.x (Report v1) to 0.4.x (Report v2, test integrity, org policy, agent-config secrets): the Action `pharn-dev/pharn-ci` and the `pharn-ci check` CLI. The `pharn-ci-install`, `pharn-ci-cover` and `pharn-ci-policy` helpers need Node 22 or later; `pharn-ci-install` writes workflows for pharn-ci 0.4.0 (`node24` Actions runners), pinned to the commit of tag v0.4.0. |
+| `pharn-ci` | Claude Code. Codex not verified. | pharn-ci 0.1.x (Report v1) to 0.9.x (Report v2: test integrity, org policy, agent-config secrets, prompt-injection and dependency checks, fix hints): the Action `pharn-dev/pharn-ci` and the `pharn-ci check` CLI. The `pharn-ci-install`, `pharn-ci-cover`, `pharn-ci-policy` and `pharn-ci-fix` helpers need Node 22 or later; `pharn-ci-install` writes workflows for pharn-ci 0.9.1 (`node24` Actions runners), pinned to the commit of tag v0.9.1. |
 | `phargus` | Codex and Claude Code. Behavioral review of 0.1.1 pending; see the [verification record](src/phargus/VERIFICATION.md). | `@pharn-dev/phargus` 0.1.x from npm (tested: 0.1.0, tag v0.1.0), pinned in [compatibility.json](src/phargus/compatibility.json). Node 22.18.0 or later. |
 
 **Plugin versions and tool versions move separately.** The badges above show
@@ -320,7 +320,7 @@ claude plugin validate --strict plugins/pharn-ci
 node --test plugins/pharn-ci/tests/*.test.mjs
 
 # check the pharn-ci eval fixtures against built pharn-ci checkouts, one per pinned version
-node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=../pharn-ci-0.1.0 --pharn-ci 0.2.0=../pharn-ci-0.2.0 --pharn-ci 0.4.0=../pharn-ci-0.4.0
+node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=../pharn-ci-0.1.0 --pharn-ci 0.2.0=../pharn-ci-0.2.0 --pharn-ci 0.4.0=../pharn-ci-0.4.0 --pharn-ci 0.9.0=../pharn-ci-0.9.0 --pharn-ci 0.9.1=../pharn-ci-0.9.1
 
 # lint Markdown
 npx markdownlint-cli2 "**/*.md"

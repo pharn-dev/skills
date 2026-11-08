@@ -21,7 +21,7 @@ keep `pharn-ci-explain` read-only unless asked, and limit `pharn-ci-cover` to
 test files: the gate (threshold, exclusions, config, workflow, coverage-ignore
 comments, production code) changes only after the person's explicit
 confirmation. None of them applies, removes or asks to apply pharn-ci's accept
-label: pharn-ci 0.2.x to 0.4.x record that label as a sign-off by the user who applied
+label: pharn-ci 0.2.x to 0.9.x record that label as a sign-off by the user who applied
 it, so an agent applying it with the person's token would record a sign-off
 the person never gave. Their evals include a report and a file name that carry
 instructions, a request to "do whatever it takes", and a request to "just add

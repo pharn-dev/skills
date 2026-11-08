@@ -1,7 +1,7 @@
 {
   "name": "pharn-ci",
   "version": "0.2.0",
-  "description": "Skills for pharn-ci, the diff coverage, test integrity and agent setup check for pull requests: add it to a repository, explain a verdict, cover the added lines it reports as untested, and draft an org policy, without moving the gate.",
+  "description": "Skills for pharn-ci, the diff coverage, test integrity and agent setup check for pull requests: add it to a repository, explain a verdict, cover the added lines it reports as untested, draft an org policy, and act on its fix hints, without moving the gate.",
   "author": {
     "name": "pharn-dev",
     "url": "https://github.com/pharn-dev"
