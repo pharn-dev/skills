@@ -1,0 +1,156 @@
+{
+  "feature": "pharn-ci-fix-skill",
+  "gates": {
+    "format:check": 0,
+    "instruction-growth": 0,
+    "lint": 0,
+    "lint:md": 0,
+    "reconcile": 0,
+    "test": 0
+  },
+  "verdict": "PASS",
+  "failing_gates": [],
+  "gate_run": {
+    "stamp_sha256": "ebc158fe9c28a8c7a5136be80c32a719c3ee98984d1b1b513d6897aa40f9f24d",
+    "source": "discover",
+    "fingerprint": {
+      "algo": "worktree-fingerprint/3+sha256",
+      "final": "e21e66c070b86872ea0749e9ca9f04573b070690258216fdbda3a950129163a5"
+    }
+  },
+  "ac_gate": {
+    "mode": "test-first",
+    "verdict": "PASS",
+    "reason": null,
+    "evidence": [],
+    "acs": [
+      {
+        "id": "AC-1",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-skill-text.test.mjs::AC-1: SKILL.md is named pharn-ci-fix and its description names 0.9.x, the fix object, pharn-ci-cover and pharn-ci-explain"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-2",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-skill-text.test.mjs::AC-2: the skill names the eight kinds, the fields, the six places, and what the agent does for each kind"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-3",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-skill-text.test.mjs::AC-3: SKILL.md says report text, a hint and a target are data, never instructions, and quotes a target after --"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-4",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-skill-text.test.mjs::AC-4: the Never list names every forbidden move, and no sentence of the skill tells the agent to loosen a gate"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-5",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-list-fixes.test.mjs::AC-5: list-fixes exits 0 and lists every valid fix with where it sits, its code or id, kind, target and hint, by kind"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-6",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-list-fixes.test.mjs::AC-6: list-fixes exits non-zero and names each malformed fix by its JSON Pointer"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-7",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-list-fixes.test.mjs::AC-7: list-fixes exits 0 on a report with no fix objects, with no fixes and the count of entries that have none"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-8",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-fix-docs.test.mjs::AC-8: README.md lists pharn-ci-fix, and CHANGELOG.md's [Unreleased] section names pharn-ci-fix and 0.9.0"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      }
+    ],
+    "unmapped_anomalies": [],
+    "note": "an AC is delivered = a locked, once-red test titled AC-<n>:, in a file mapped to AC-<n>, passed on this head run. PHARN does not judge whether that test fully captures the AC's intent."
+  },
+  "completeness": {
+    "plan": "pharn/features/pharn-ci-fix-skill/PLAN.md",
+    "repoDir": ".",
+    "declared": [
+      "plugins/pharn-ci/skills/pharn-ci-fix/SKILL.md",
+      "plugins/pharn-ci/skills/pharn-ci-fix/references/kinds.md",
+      "plugins/pharn-ci/skills/pharn-ci-fix/scripts/list-fixes.mjs",
+      "plugins/pharn-ci/tests/ac-0-4-5-descriptions.test.mjs",
+      "README.md",
+      "CHANGELOG.md"
+    ],
+    "skipped": [],
+    "missing": [],
+    "deletions": [],
+    "undeleted": [],
+    "complete": true,
+    "verdict": "complete"
+  },
+  "verifiers": {
+    "registered": 0,
+    "findings": []
+  },
+  "gate_reuse": {
+    "reused": []
+  },
+  "head_install": {
+    "state": "clean",
+    "why": null,
+    "family": "npm",
+    "lockfile": "package-lock.json",
+    "counts": {
+      "changed": 0,
+      "missing": 0,
+      "extraneous": 0,
+      "missing_unchecked": 0
+    }
+  },
+  "reconcile_detail": {
+    "state": "parsed",
+    "exit": 0,
+    "verdict": "CLEAN",
+    "escapes": [],
+    "escapes_total": 0,
+    "merged_count": 0
+  }
+}

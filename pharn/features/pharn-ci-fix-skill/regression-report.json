@@ -1,0 +1,87 @@
+{
+  "base": "e4b230aa560c8a409a251d7e9f917416b2294844",
+  "inside": [
+    "CHANGELOG.md",
+    "README.md",
+    "plugins/pharn-ci/tests/ac-0-4-5-descriptions.test.mjs",
+    "pharn/features/pharn-ci-fix-skill/AC-TESTS.lock.json",
+    "pharn/features/pharn-ci-fix-skill/AC-TESTS.md",
+    "pharn/features/pharn-ci-fix-skill/BUILD.md",
+    "pharn/features/pharn-ci-fix-skill/GRILL.md",
+    "pharn/features/pharn-ci-fix-skill/PLAN.md",
+    "pharn/features/pharn-ci-fix-skill/SPEC.md",
+    "plugins/pharn-ci/skills/pharn-ci-fix/SKILL.md",
+    "plugins/pharn-ci/skills/pharn-ci-fix/references/kinds.md",
+    "plugins/pharn-ci/skills/pharn-ci-fix/scripts/list-fixes.mjs",
+    "plugins/pharn-ci/tests/ac-fix-docs.test.mjs",
+    "plugins/pharn-ci/tests/ac-fix-list-fixes.test.mjs",
+    "plugins/pharn-ci/tests/ac-fix-skill-text.test.mjs"
+  ],
+  "outside_gates": {
+    "test": {
+      "base": 1,
+      "head": 0
+    }
+  },
+  "regressions": [],
+  "pre_existing": [
+    "test"
+  ],
+  "verdict": "no-regressions",
+  "gate_run": {
+    "base": {
+      "stamp_sha256": "a977faab6ff3be579aa99628e29d795ea13eb26e0c12f727f31c7056195ee7a4",
+      "source": "discover",
+      "fingerprint": {
+        "algo": "worktree-fingerprint/3+sha256",
+        "final": "06cc6ce047e6d96c04a2b22b93be1b89401a97888567bc3230798511eb80638a"
+      }
+    },
+    "head": {
+      "stamp_sha256": "d46f07d8eb9ce05d66ec5a6d11e743295b6910840affa932a5250f10c25171f4",
+      "source": "discover",
+      "fingerprint": {
+        "algo": "worktree-fingerprint/3+sha256",
+        "final": "e21e66c070b86872ea0749e9ca9f04573b070690258216fdbda3a950129163a5"
+      }
+    }
+  },
+  "base_evidence": {
+    "reused": false,
+    "miss": "other-run",
+    "requirement_sha256": "a8dfbf292e9f2f8a79c39764081ba00bf29b86c00158b52816615e2880901596",
+    "recorded": true,
+    "source": "fresh",
+    "entry": {
+      "used": false,
+      "miss": "shape-mismatch",
+      "offer_sha256": null,
+      "entry_stamp_sha256": null,
+      "base": null,
+      "run": {
+        "command": "pharn-loop",
+        "marker_sha256": "3bc304a30ff6bb0bc77349edd755c2ed13a0a41a149c87d9b3f51990712cd89f"
+      },
+      "reused_ids": [],
+      "no_files_ids": [],
+      "ignored_ids": []
+    }
+  },
+  "pre_run_snapshot": {
+    "status": "applied",
+    "unchanged": []
+  },
+  "head_install": {
+    "state": "clean",
+    "why": null,
+    "family": "npm",
+    "lockfile": "package-lock.json",
+    "counts": {
+      "changed": 0,
+      "missing": 0,
+      "extraneous": 0,
+      "missing_unchecked": 0
+    }
+  },
+  "base_source": "explicit"
+}

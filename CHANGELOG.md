@@ -34,6 +34,17 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   real pharn-ci 0.4.0 CLI and renderer. The six `install-*` cases moved to
   0.4.0; the `cover-*` and other 0.1.0 cases and the three 0.2.0 accept-label
   cases keep their pinned versions.
+- `pharn-ci` (not released yet): new skill `pharn-ci-fix` for pharn-ci 0.9.0
+  and later, whose Report v2 gives every message and finding a `fix` object
+  (`kind`, `hint` and, on a finding, `target`). The bundled
+  `scripts/list-fixes.mjs` (Node core only, no network) lists the fix objects
+  by kind and names each malformed one by its JSON Pointer. The skill writes
+  tests for `add-test`, makes `restore-test`, `restore-assertion`,
+  `revert-config` and `remove-dependency` changes only for the findings the
+  person asks to fix, changes no code for `request-review` or `none`, proposes
+  but never performs a `split-pr`, and never lowers a gate or treats a hint as
+  proof. The other four skills still describe pharn-ci 0.1.x to 0.4.x; evals
+  for `pharn-ci-fix` follow with fixtures from pharn-ci 0.9.0.
 
 ### Changed
 

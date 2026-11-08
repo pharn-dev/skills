@@ -26,8 +26,10 @@ test("AC-3: every pharn-ci SKILL.md description names pharn-ci 0.3.x and 0.4.x",
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
     .sort();
-  assert.deepEqual(skills, ["pharn-ci-cover", "pharn-ci-explain", "pharn-ci-install", "pharn-ci-policy"]);
-  for (const skill of skills) {
+  assert.deepEqual(skills, ["pharn-ci-cover", "pharn-ci-explain", "pharn-ci-fix", "pharn-ci-install", "pharn-ci-policy"]);
+  // pharn-ci-fix is for pharn-ci 0.9.x only (fix objects exist since 0.9.0); the version check keeps to the four
+  // skills written for 0.1.x to 0.4.x.
+  for (const skill of ["pharn-ci-cover", "pharn-ci-explain", "pharn-ci-install", "pharn-ci-policy"]) {
     const description = frontmatterDescription(readFileSync(join(SKILLS, skill, "SKILL.md"), "utf8"));
     assert.match(description, /(?<![\d.])0\.3\.x\b/, `${skill}'s description does not name 0.3.x`);
     assert.match(description, /(?<![\d.])0\.4\.x\b/, `${skill}'s description does not name 0.4.x`);
