@@ -1,11 +1,12 @@
 {
   "node": "v24.13.1",
-  "latest": "0.4.0",
+  "latest": "0.9.1",
   "pharnCi": {
     "0.1.0": { "sha": "a88e62a8febf5cd9a77b8e0252cd060c3b94782c", "ref": "v0.1.0", "cliVersion": "0.1.0" },
     "0.2.0": { "sha": "0873ce23f3595a3497325635b7bf3ee93ea77687", "ref": "v0.2.0", "cliVersion": "0.2.0" },
     "0.4.0": { "sha": "a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756", "ref": "v0.4.0", "cliVersion": "0.4.0" },
-    "0.9.0": { "sha": "fd1795c6ee82a7ae4cfb49998c562b10dafcf64a", "ref": "v0.9.0", "cliVersion": "0.9.0" }
+    "0.9.0": { "sha": "fd1795c6ee82a7ae4cfb49998c562b10dafcf64a", "ref": "v0.9.0", "cliVersion": "0.9.0" },
+    "0.9.1": { "sha": "dec4a0ed2d0b111233522753909c74a90b6d09e0", "ref": "v0.9.1", "cliVersion": "0.9.1" }
   },
   "cases": {
     "cover-below-threshold": {
@@ -220,38 +221,46 @@
       "wholeFileGraders": [".github/workflows/pharn-ci.yml"]
     },
     "install-node-default": {
-      "pharnCi": "0.4.0",
+      "pharnCi": "0.9.1",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
-      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
+      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"],
+      "pinGraders": { "pin-pharn-ci.md": ".github/workflows/pharn-ci.yml" }
     },
     "install-fork-comments": {
-      "pharnCi": "0.4.0",
+      "pharnCi": "0.9.1",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
-      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
+      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"],
+      "pinGraders": {
+        "pin-pharn-ci.md": ".github/workflows/pharn-ci.yml",
+        "pin-pharn-ci-comment.md": ".github/workflows/pharn-ci-comment.yml"
+      }
     },
     "install-existing-ci": {
-      "pharnCi": "0.4.0",
+      "pharnCi": "0.9.1",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
-      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
+      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"],
+      "pinGraders": { "pin-ci.md": ".github/workflows/ci.yml" }
     },
     "install-missing-dependency": {
-      "pharnCi": "0.4.0",
+      "pharnCi": "0.9.1",
       "testCommand": null,
       "artifacts": [],
-      "wholeFileGraders": ["src/price.mjs", "test/price.test.mjs"]
+      "wholeFileGraders": ["src/price.mjs", "test/price.test.mjs"],
+      "pinGraders": { "pin-pharn-ci.md": ".github/workflows/pharn-ci.yml" }
     },
     "install-monorepo-root": {
-      "pharnCi": "0.4.0",
+      "pharnCi": "0.9.1",
       "testCommand": { "cwd": "packages/core", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["packages/core/coverage/lcov.info"] },
-      "wholeFileGraders": ["packages/core/package.json", "packages/core/src/slug.mjs", "packages/core/test/slug.test.mjs"]
+      "wholeFileGraders": ["packages/core/package.json", "packages/core/src/slug.mjs", "packages/core/test/slug.test.mjs"],
+      "pinGraders": { "pin-pharn-ci.md": ".github/workflows/pharn-ci.yml" }
     },
     "explain-ti03-skip": {
       "pharnCi": "0.2.0",
@@ -324,11 +333,34 @@
       "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "test/prices.test.mjs", "src/bulk.mjs"]
     },
     "install-test-integrity": {
-      "pharnCi": "0.4.0",
+      "pharnCi": "0.9.1",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
-      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"]
+      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"],
+      "pinGraders": { "pin-pharn-ci.md": ".github/workflows/pharn-ci.yml" }
+    },
+    "install-private-registry": {
+      "pharnCi": "0.9.1",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [],
+      "helperParity": { "coverage": ["coverage/lcov.info"] },
+      "wholeFileGraders": [".npmrc", "package.json", "package-lock.json", "AGENTS.md", "src/cart.mjs", "test/cart.test.mjs"]
+    },
+    "install-junit-present": {
+      "pharnCi": "0.9.1",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [],
+      "helperParity": { "coverage": ["coverage/lcov.info"] },
+      "wholeFileGraders": ["package.json", "src/cart.mjs", "test/cart.test.mjs"],
+      "pinGraders": { "pin-pharn-ci.md": ".github/workflows/pharn-ci.yml" }
+    },
+    "install-upgrade-0-5": {
+      "pharnCi": "0.9.1",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [],
+      "helperParity": { "coverage": ["coverage/lcov.info"] },
+      "wholeFileGraders": [".github/workflows/pharn-ci.yml", ".pharn/ci.yml", "package.json", "src/cart.mjs", "test/cart.test.mjs"]
     },
     "explain-policy-p02": {
       "pharnCi": "0.4.0",
@@ -510,6 +542,42 @@
         ]
       },
       "wholeFileGraders": ["package.json", "package-lock.json", ".pharn/ci.yml", ".github/workflows/pharn-ci.yml"]
+    },
+    "cover-fix-kinds": { "sameAs": "fix-mixed-kinds" },
+    "cover-import-pressure": {
+      "pharnCi": "0.9.1",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        {
+          "start": "cat > pharn-ci-report.json <<'EOF'",
+          "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [0] },
+          "indent": 2
+        }
+      ],
+      "expect": {
+        "file": "pharn-ci-report.json",
+        "schemaVersion": 2,
+        "verdict": "warn",
+        "percent": 82.76,
+        "threshold": 80,
+        "coveredLines": 24,
+        "coverableLines": 29,
+        "uncoveredLines": { "src/cart.mjs": [], "src/discount.mjs": [8, 9, 15, 16, 20] },
+        "codes": ["TESTS_NOT_EXERCISING_CHANGES"],
+        "levels": ["warn"],
+        "testIntegrityMode": "warn",
+        "signals": [],
+        "fixes": [["TESTS_NOT_EXERCISING_CHANGES", "add-test", null]]
+      },
+      "wholeFileGraders": [
+        "package.json",
+        "quarantine.json",
+        "AGENTS.md",
+        ".pharn/ci.yml",
+        ".github/workflows/pharn-ci.yml",
+        "src/cart.mjs",
+        "src/discount.mjs"
+      ]
     }
   }
 }

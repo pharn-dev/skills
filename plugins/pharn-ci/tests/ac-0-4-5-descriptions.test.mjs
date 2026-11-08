@@ -21,6 +21,14 @@ function frontmatterDescription(text) {
   return parts.join(" ");
 }
 
+test("namesMinor reads single versions and ranges", () => {
+  assert.ok(namesMinor("0.2.x to 0.9.x with Report v2", 4));
+  assert.ok(namesMinor("0.1.x to 0.9.x", 3));
+  assert.ok(namesMinor("0.2.x, 0.3.x or 0.4.x", 3));
+  assert.ok(!namesMinor("0.2.x to 0.3.x", 4));
+  assert.ok(!namesMinor("10.4.x", 4));
+});
+
 test("AC-3: every pharn-ci SKILL.md description names pharn-ci 0.3.x and 0.4.x", () => {
   const skills = readdirSync(SKILLS, { withFileTypes: true })
     .filter((d) => d.isDirectory())

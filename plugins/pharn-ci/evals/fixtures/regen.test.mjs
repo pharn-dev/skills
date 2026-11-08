@@ -9,8 +9,10 @@ import {
   checkoutProblems,
   extractPins,
   fixFacts,
+  latestPin,
   parseArgs,
   parsePharnCiArg,
+  pinGrader,
   pinProblems,
   readHeredoc,
   RegenError,
@@ -128,6 +130,32 @@ test("pins are read from text and checked against pharn-ci's own", () => {
   assert.match(pinProblems(reference, [`actions/checkout@${other} # v7.0.1`], preTag).join(), /# v0\.2\.0-pre/);
   assert.deepEqual(pinProblems("no pins here", [], manifest), ["the pin reference lists no pins"]);
   assert.throws(() => pinProblems(reference, [], { ...manifest, latest: "9.9.9" }), /manifest\.latest/);
+});
+
+test("pin graders hold the manifest's latest commit, so a release is one edit there", () => {
+  const sha = "a".repeat(40);
+  const grader = pinGrader({ sha, ref: "v0.9.1", cliVersion: "0.9.1" }, ".github/workflows/pharn-ci.yml");
+  const re = new RegExp(patternOf(grader));
+  assert.ok(re.test(`      - uses: pharn-dev/pharn-ci@${sha} # v0.9.1\n        timeout-minutes: 5\n`));
+  assert.ok(!re.test(`      - uses: pharn-dev/pharn-ci@${"b".repeat(40)} # v0.9.1\n`));
+  assert.ok(!re.test(`      - uses: pharn-dev/pharn-ci@${sha} # v0.9.2\n`));
+  assert.ok(!re.test(`      - uses: pharn-dev/pharn-ci@${sha} # v0x9y1\n`));
+  assert.match(grader, /^ {2}path: \.github\/workflows\/pharn-ci\.yml$/m);
+
+  // Every pin grader of the install cases is exactly what regen generates from the manifest, and every install
+  // case names the workflow file that holds the pin, except a case that must write no workflow.
+  const manifest = JSON.parse(readFileSync(path.join(EVALS, "fixtures", "manifest.json"), "utf8"));
+  const latest = latestPin(manifest);
+  let seen = 0;
+  for (const [name, spec] of Object.entries(manifest.cases)) {
+    for (const [file, target] of Object.entries(spec.pinGraders ?? {})) {
+      seen++;
+      assert.equal(readFileSync(path.join(EVALS, name, "graders", file), "utf8"), pinGrader(latest, target), `${name}/${file}`);
+    }
+  }
+  assert.ok(seen >= 8);
+  const withoutPins = Object.keys(manifest.cases).filter((n) => n.startsWith("install-") && manifest.cases[n].pinGraders === undefined);
+  assert.deepEqual(withoutPins.sort(), ["install-private-registry", "install-upgrade-0-5"]);
 });
 
 test("one checkout per pinned version, and every case on a pinned version", () => {

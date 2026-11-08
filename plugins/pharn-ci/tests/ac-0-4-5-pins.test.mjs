@@ -1,4 +1,4 @@
-// Acceptance tests for pharn-ci-plugin-0-4-5: AC-1 (every pharn-ci pin names v0.4.0), AC-2 (the fixtures manifest
+// Acceptance tests for pharn-ci-plugin-0-4-5: AC-1 (every pharn-ci pin names the latest release, v0.4.0 when this was written), AC-2 (the fixtures manifest
 // pins exactly the versions ci.yml checks out and passes to regen.mjs --check) and AC-4 (plugin.json 0.2.0).
 // Every target is read inside its test body, so a missing file is a failed test, never an uncollected file.
 import assert from "node:assert/strict";
@@ -9,10 +9,14 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("../../../", import.meta.url));
 const PLUGIN = join(ROOT, "plugins/pharn-ci");
-const V040_SHA = "a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756";
 const V020_SHA = "0873ce23f3595a3497325635b7bf3ee93ea77687";
 
 const read = (abs) => readFileSync(abs, "utf8");
+// The release the install skill writes is the manifest's latest, so a release moves these tests with the manifest.
+const manifestLatest = () => {
+  const manifest = JSON.parse(read(join(PLUGIN, "evals/fixtures/manifest.json")));
+  return { version: manifest.latest, ...manifest.pharnCi[manifest.latest] };
+};
 const listDir = (abs) => (existsSync(abs) ? readdirSync(abs).sort() : []);
 
 // The files AC-1 reads: install SKILL.md, install references/*.md, every skill's scripts/*.mjs, and every
@@ -28,7 +32,9 @@ function pinFiles() {
   for (const c of listDir(join(PLUGIN, "evals"))) {
     if (!c.startsWith("install-")) continue;
     const graders = join(PLUGIN, "evals", c, "graders");
-    for (const f of listDir(graders)) if (f.endsWith(".md")) files.push(join(graders, f));
+    // An `unchanged-*` grader holds a file the scaffold wrote as it is, so install-upgrade-0-5's carries the older pin
+    // its workflow already had; every other grader is about what the skill writes.
+    for (const f of listDir(graders)) if (f.endsWith(".md") && !f.startsWith("unchanged-")) files.push(join(graders, f));
   }
   return files;
 }
@@ -38,7 +44,7 @@ function pinFiles() {
 const PIN = /pharn-dev\\?\/pharn-ci@([0-9a-f]{7,40})(?![0-9a-f])/g;
 
 // The text after a pin, up to the end of its line, with regex whitespace tokens and escapes folded, so a grader's
-// `[ \t]*#\s*v0\.4\.0` reads as `# v0.4.0`.
+// `[ \t]*#\s*v0\.9\.1` reads as `# v0.9.1`.
 function commentAfter(line, index) {
   return line
     .slice(index)
@@ -56,14 +62,15 @@ function pinsIn(text) {
   return pins;
 }
 
-test("AC-1: every pharn-dev/pharn-ci pin in the install skill, the skill scripts and the install graders names a9314e9 # v0.4.0", () => {
+test("AC-1: every pharn-dev/pharn-ci pin in the install skill, the skill scripts and the install graders names the latest pinned commit with its version comment", () => {
+  const latest = manifestLatest();
   const problems = [];
   for (const file of pinFiles()) {
     const rel = file.slice(ROOT.length);
     for (const pin of pinsIn(read(file))) {
-      if (pin.sha !== V040_SHA) problems.push(`${rel}: pin ${pin.sha} is not ${V040_SHA} — ${pin.line}`);
-      else if (!/#\s*v0\.4\.0(?![0-9])/.test(pin.rest)) {
-        problems.push(`${rel}: pin ${pin.sha} has no "# v0.4.0" comment — ${pin.line}`);
+      if (pin.sha !== latest.sha) problems.push(`${rel}: pin ${pin.sha} is not ${latest.sha} — ${pin.line}`);
+      else if (!new RegExp(`#\\s*${latest.ref.replaceAll(".", "\\.")}(?![0-9])`).test(pin.rest)) {
+        problems.push(`${rel}: pin ${pin.sha} has no "# ${latest.ref}" comment — ${pin.line}`);
       }
     }
   }
@@ -84,7 +91,7 @@ test("AC-1: every pharn-dev/pharn-ci pin in the install skill, the skill scripts
   }
 
   const skill = read(join(PLUGIN, "skills/pharn-ci-install/SKILL.md"));
-  assert.ok(skill.includes(V040_SHA), "pharn-ci-install SKILL.md does not name the v0.4.0 commit");
+  assert.ok(skill.includes(latest.sha), `pharn-ci-install SKILL.md does not name the ${latest.ref} commit`);
   assert.ok(!skill.includes(V020_SHA), "pharn-ci-install SKILL.md still names the v0.2.0 commit");
 });
 
@@ -119,11 +126,11 @@ function fixturesJob(ciYml) {
   return { checkouts, passed };
 }
 
-test("AC-2: the fixtures manifest pins 0.4.0 as latest and exactly the versions ci.yml checks out and passes to regen.mjs --check", () => {
+test("AC-2: the fixtures manifest pins its latest and exactly the versions ci.yml checks out and passes to regen.mjs --check", () => {
   const manifest = JSON.parse(read(join(PLUGIN, "evals/fixtures/manifest.json")));
-  assert.equal(manifest.pharnCi?.["0.4.0"]?.sha, V040_SHA);
-  assert.equal(manifest.pharnCi?.["0.4.0"]?.ref, "v0.4.0");
-  assert.equal(manifest.latest, "0.4.0");
+  const latest = manifestLatest();
+  assert.equal(manifest.pharnCi?.[latest.version]?.sha, latest.sha);
+  assert.equal(manifest.pharnCi?.[latest.version]?.ref, `v${latest.version}`);
 
   const { checkouts, passed } = fixturesJob(read(join(ROOT, ".github/workflows/ci.yml")));
   const manifestVersions = Object.keys(manifest.pharnCi).sort();

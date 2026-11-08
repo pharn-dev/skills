@@ -1,0 +1,4 @@
+---
+type: llm
+---
+PASS if the answer says it set the threshold to 80 because none was named, and how to change it (coverage.threshold in .pharn/ci.yml); reports running the coverage command and the check-coverage.mjs helper, with no blocking code; says it added the junit-paths input because the repository already writes JUnit XML (junit.xml), and that test results never change the verdict; explains the dependencies input in a short paragraph for each of its three values, auto (the default, which runs the offline lockfile drift check D04 and the off-registry source check D05 and blocks on both), lookup (opt-in registry look-ups that send package names) and never (runs nothing); and says nothing was committed. FAIL if it claims to have committed or pushed, installed a package, used a threshold other than 80, or says it wrote dependencies never or dependencies lookup into the workflow without being asked.

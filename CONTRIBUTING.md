@@ -95,15 +95,17 @@ branch. Reports, PR comments and CLI output in the scaffolds were generated
 with the real pharn-ci CLI and renderer for that exact tree, so line numbers
 and message texts match. `plugins/pharn-ci/evals/fixtures/manifest.json` pins
 one pharn-ci commit per supported version line (`pharnCi`: 0.1.0 for Report
-v1, 0.2.0 for the 0.2.x accept-label cases, 0.4.0 for the install, policy and
-0.4.x explain cases, 0.9.0 for the `pharn-ci-fix` cases, which need Report v2's
-`fix` objects) and names in `latest` the version `pharn-ci-install` writes (0.4.0
-until the older skills move to 0.9.x); each case names the version it was
-generated with. A case's `expect.fixes` lists the fix kind and target of every
-message and finding, so a pharn-ci change to the fix tables fails the check.
+v1, 0.2.0 for the 0.2.x accept-label cases, 0.4.0 for the policy and 0.4.x
+explain cases, 0.9.0 for the `pharn-ci-fix` cases, which need Report v2's `fix`
+objects, 0.9.1 for the install cases and the `cover-import-pressure` case) and
+names in `latest` the version `pharn-ci-install` writes (0.9.1); each case names
+the version it was generated with. A case's `expect.fixes` lists the fix kind
+and target of every message and finding, so a pharn-ci change to the fix tables
+fails the check. The install cases' pin graders (`pinGraders` in the manifest)
+are generated from `latest`, so a release moves them with the manifest.
 Regenerate them, and the whole-file graders built from the scaffolds' files,
 with
-`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout>`
+`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.9.1=<checkout>`
 after changing a case's tree or a targeted pharn-ci version; `--check` reports
 drift without writing. Each checkout must be pharn-ci at the commit pinned for
 its version, built with
@@ -125,8 +127,9 @@ share one scaffold, as do `install-node-default`, `install-fork-comments` and
 the policy pair). A case whose
 scaffold and manifest spec are both identical to an earlier case's says
 `"sameAs": "<case>"` in the manifest, and the fixture check reuses that case's
-regenerated files instead of building it twice (`explain-accept-pressure`
-and `explain-policy-pressure` do). The `explain-agent-config-secret` scaffold
+regenerated files instead of building it twice (`explain-accept-pressure`,
+`explain-policy-pressure` and `cover-fix-kinds`, which reuses
+`fix-mixed-kinds`' scaffold, do). The `explain-agent-config-secret` scaffold
 assembles its fake token at run time from two halves, so no committed file
 holds a literal of a scanned secret shape, and its `no-secret.md` grader
 (a regex `not_contains` over the final answer) is the only place that shape
@@ -134,7 +137,9 @@ is written.
 `explain-accept-ignored` is the same scaffold with its own gh fixture, which
 a unit test checks. The `install-*` cases have no generated
 artifacts; for them the fixture check also compares `check-coverage.mjs` with
-the pinned CLI on the case's coverage (`helperParity` in the manifest) and
+the pinned CLI on the case's coverage (`helperParity` in the manifest, run
+against an empty commit's parent because pharn-ci 0.9.1 refuses a `--base`
+that is HEAD) and
 checks every pin in `pharn-ci-install/references/workflows.md` against
 pharn-ci's README and example workflows.
 
@@ -150,8 +155,10 @@ To move the pharn-ci skills to a new pharn-ci release:
    `latest`, and `node` if it changes), and the matching checkout in the
    `pharn-ci fixtures` job. `tests/pins.test.mjs` checks that they agree.
 2. For the `latest` version, update the commit and its `# <ref>` comment in
-   `pharn-ci-install`'s `SKILL.md`, `references/workflows.md` and the
-   `install-*` graders, and any action pins pharn-ci's docs changed.
+   `pharn-ci-install`'s `SKILL.md` and `references/workflows.md`, and any
+   action pins pharn-ci's docs changed. The `install-*` pin graders are
+   generated from `latest` by `regen.mjs --write`, so they need no edit of
+   their own.
 3. Re-check the ported code in the `shared:coverage` blocks and in
    `check-coverage.mjs` against pharn-ci's `packages/core/src`.
 4. Re-copy `schema/policy.v1.json` byte for byte to
