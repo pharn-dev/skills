@@ -5,9 +5,10 @@
 //
 //   node check-policy.mjs <policy.json> [--schema <schema.json>]
 //
-// scripts/policy.v1.json is a byte copy of pharn-ci 0.4.0's schema/policy.v1.json (sha256
-// 54ea51b848bcb5be4292d6bc1440ac47149de0976649a5cf4d59604718ef4775). The validator implements exactly the
-// JSON Schema keywords that file uses and refuses (exit 2) a schema that uses another one.
+// scripts/policy.v1.json is a byte copy of pharn-ci 0.9.1's schema/policy.v1.json (sha256
+// 8dcd0f6971d89808deea68d3e5d24ced01ecd9a37b962eb63b04bbd0a9deb4c1), which adds `dependencies.lookup` and the
+// `injection` object to 0.4.0's. The validator implements exactly the JSON Schema keywords that file uses and
+// refuses (exit 2) a schema that uses another one.
 //
 // Exit 0: valid. Exit 1: invalid, one stdout line per problem as `<JSON Pointer>: <reason>`. Exit 2: a usage
 // error, an unreadable file, a file that is not JSON, a file over 1 MiB, or an unsupported schema keyword.
@@ -306,7 +307,7 @@ export function main(argv, io = IO) {
     const doc = readPolicy(file);
     const problems = validatePolicy(doc, schema);
     if (problems.length === 0) {
-      const label = schemaFile === undefined ? "policy.v1.json, pharn-ci 0.4.0" : path.basename(schemaFile);
+      const label = schemaFile === undefined ? "policy.v1.json, pharn-ci 0.9.1" : path.basename(schemaFile);
       io.stdout(`ok — ${file} is a valid pharn-ci policy (${label})\n`);
       return 0;
     }

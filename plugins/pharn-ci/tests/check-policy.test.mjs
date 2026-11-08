@@ -36,9 +36,9 @@ function cli(args, files = {}) {
 }
 
 describe("check-policy", () => {
-  test("the bundled schema is byte for byte pharn-ci 0.4.0's schema/policy.v1.json", () => {
+  test("the bundled schema is byte for byte pharn-ci 0.9.1's schema/policy.v1.json", () => {
     const sha = createHash("sha256").update(readFileSync(SCHEMA_FILE)).digest("hex");
-    assert.equal(sha, "54ea51b848bcb5be4292d6bc1440ac47149de0976649a5cf4d59604718ef4775");
+    assert.equal(sha, "8dcd0f6971d89808deea68d3e5d24ced01ecd9a37b962eb63b04bbd0a9deb4c1");
   });
 
   test("a full valid policy and the minimal one pass", () => {
@@ -200,7 +200,7 @@ describe("check-policy", () => {
   test("the CLI: exit 0 with the ok line, exit 1 with one pointer line per problem, exit 2 for input problems", () => {
     const ok = cli(["$DIR/p.json"], { "p.json": '{"version":1}' });
     assert.equal(ok.status, 0);
-    assert.match(ok.stdout, /^ok — .*p\.json is a valid pharn-ci policy \(policy\.v1\.json, pharn-ci 0\.4\.0\)\n$/);
+    assert.match(ok.stdout, /^ok — .*p\.json is a valid pharn-ci policy \(policy\.v1\.json, pharn-ci 0\.9\.1\)\n$/);
 
     const bad = cli(["$DIR/p.json"], { "p.json": '{"foo":1,"coverage":{"threshold":"80"}}' });
     assert.equal(bad.status, 1);

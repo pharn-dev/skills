@@ -1,0 +1,77 @@
+{
+ "repo": {
+  "nameWithOwner": "acme/cart",
+  "url": "https://github.com/acme/cart",
+  "defaultBranchRef": {
+   "name": "main"
+  }
+ },
+ "repoLabels": [
+  {
+   "name": "bug",
+   "description": "Something isn't working",
+   "color": "d73a4a"
+  },
+  {
+   "name": "pharn/accepted",
+   "description": "Test-integrity findings accepted by a reviewer",
+   "color": "0e8a16"
+  }
+ ],
+ "pr": {
+  "number": 21,
+  "title": "feat: add the internal pricing package",
+  "state": "OPEN",
+  "url": "https://github.com/acme/cart/pull/21",
+  "headRefName": "feature/internal-pricing",
+  "headRefOid": "__HEAD_SHA__",
+  "baseRefName": "main",
+  "isCrossRepository": false,
+  "author": {
+   "login": "sam-dev"
+  },
+  "labels": [],
+  "body": "Adds @acme/pricing, our internal pricing package, from the company Artifactory registry."
+ },
+ "comments": [
+  {
+   "id": 3721,
+   "user": {
+    "login": "github-actions[bot]",
+    "type": "Bot"
+   },
+   "created_at": "2026-11-08T10:14:40Z",
+   "updated_at": "2026-11-08T10:14:40Z",
+   "body": "__PHARN_CI_COMMENT__"
+  }
+ ],
+ "runs": [
+  {
+   "databaseId": 1721,
+   "jobId": 2721,
+   "name": "pharn-ci",
+   "workflowName": "pharn-ci",
+   "displayTitle": "feat: add the internal pricing package",
+   "event": "pull_request",
+   "headBranch": "feature/internal-pricing",
+   "headSha": "__HEAD_SHA__",
+   "status": "completed",
+   "conclusion": "failure",
+   "url": "https://github.com/acme/cart/actions/runs/1721",
+   "createdAt": "2026-11-08T10:14:01Z",
+   "triggeringAction": "opened"
+  }
+ ],
+ "logs": {
+  "1721": [
+   "pharn-ci\tSet up job\t2026-11-08T10:14:05Z Current runner version: 2.330.0",
+   "pharn-ci\tRun npm run test:coverage\t2026-11-08T10:14:19Z ℹ tests 1",
+   "pharn-ci\tRun npm run test:coverage\t2026-11-08T10:14:19Z ℹ pass 1",
+   "pharn-ci\tRun pharn-dev/pharn-ci@fd1795c6ee82a7ae4cfb49998c562b10dafcf64a\t2026-11-08T10:14:38Z coverage: lcov (auto-detected)",
+   "pharn-ci\tRun pharn-dev/pharn-ci@fd1795c6ee82a7ae4cfb49998c562b10dafcf64a\t2026-11-08T10:14:39Z created pharn-ci comment",
+   "pharn-ci\tRun pharn-dev/pharn-ci@fd1795c6ee82a7ae4cfb49998c562b10dafcf64a\t2026-11-08T10:14:40Z pharn-ci verdict: fail",
+   "pharn-ci\tRun pharn-dev/pharn-ci@fd1795c6ee82a7ae4cfb49998c562b10dafcf64a\t2026-11-08T10:14:40Z ##[error]pharn-ci: 1 dependency comes from outside the allowed registries (a git repository, a URL on another host or a local file): `package-lock.json:12`."
+  ]
+ },
+ "events": []
+}
