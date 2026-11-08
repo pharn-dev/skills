@@ -13,7 +13,8 @@ import { fileURLToPath } from "node:url";
 const SKILL = fileURLToPath(new URL("../skills/pharn-ci-policy/", import.meta.url));
 const CHECKER = join(SKILL, "scripts/check-policy.mjs");
 const SCHEMA = join(SKILL, "scripts/policy.v1.json");
-const TOP_LEVEL_KEYS = ["version", "coverage", "setup", "test_integrity", "flaky", "policy", "agents", "dependencies"];
+// pharn-ci 0.7.0 added `injection`; the bundled schema is v0.9.1's.
+const TOP_LEVEL_KEYS = ["version", "coverage", "setup", "test_integrity", "flaky", "policy", "agents", "dependencies", "injection"];
 
 function skillText() {
   const parts = [readFileSync(join(SKILL, "SKILL.md"), "utf8")];

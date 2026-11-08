@@ -1,0 +1,106 @@
+{
+  "base": "d8b6d2bcd5de4426e07dba841bf5e8d4a941ad34",
+  "inside": [
+    "plugins/pharn-ci/evals/fixtures/manifest.json",
+    "plugins/pharn-ci/skills/pharn-ci-cover/references/report.md",
+    "plugins/pharn-ci/skills/pharn-ci-explain/SKILL.md",
+    "plugins/pharn-ci/skills/pharn-ci-explain/references/codes.md",
+    "plugins/pharn-ci/skills/pharn-ci-explain/references/policy.md",
+    "plugins/pharn-ci/skills/pharn-ci-explain/references/report.md",
+    "plugins/pharn-ci/skills/pharn-ci-policy/SKILL.md",
+    "plugins/pharn-ci/skills/pharn-ci-policy/references/enable.md",
+    "plugins/pharn-ci/skills/pharn-ci-policy/references/keys.md",
+    "plugins/pharn-ci/skills/pharn-ci-policy/scripts/check-policy.mjs",
+    "plugins/pharn-ci/skills/pharn-ci-policy/scripts/policy.v1.json",
+    "plugins/pharn-ci/tests/ac-0-4-5-descriptions.test.mjs",
+    "plugins/pharn-ci/tests/ac-0-4-5-policy-skill.test.mjs",
+    "plugins/pharn-ci/tests/check-policy.test.mjs",
+    "plugins/pharn-ci/tests/pins.test.mjs",
+    "pharn/features/pharn-ci-explain-policy-current/AC-TESTS.lock.json",
+    "pharn/features/pharn-ci-explain-policy-current/AC-TESTS.md",
+    "pharn/features/pharn-ci-explain-policy-current/BUILD.md",
+    "pharn/features/pharn-ci-explain-policy-current/GRILL.md",
+    "pharn/features/pharn-ci-explain-policy-current/PLAN.md",
+    "pharn/features/pharn-ci-explain-policy-current/SPEC.md",
+    "pharn/features/pharn-ci-explain-policy-current/VERIFY.md",
+    "pharn/features/pharn-ci-explain-policy-current/verify-report.json",
+    "plugins/pharn-ci/evals/explain-dependency-d05/case.yaml",
+    "plugins/pharn-ci/evals/explain-dependency-d05/graders/answer.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/graders/loads-skill.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/graders/no-commit.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/graders/no-edit.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/graders/no-gh-writes.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/graders/no-label-command.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/graders/no-write.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/graders/ran-gh.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/graders/unchanged-github-workflows-pharn-ci-yml.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/graders/unchanged-package-json.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/graders/unchanged-package-lock-json.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/graders/unchanged-pharn-ci-yml.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/prompt.md",
+    "plugins/pharn-ci/evals/explain-dependency-d05/scaffold.sh",
+    "plugins/pharn-ci/evals/fixtures/inputs/gh-fixture-d05.json",
+    "plugins/pharn-ci/tests/ac-0-9-1-descriptions.test.mjs",
+    "plugins/pharn-ci/tests/ac-0-9-1-drift.test.mjs",
+    "plugins/pharn-ci/tests/ac-0-9-1-eval.test.mjs",
+    "plugins/pharn-ci/tests/ac-0-9-1-explain.test.mjs",
+    "plugins/pharn-ci/tests/ac-0-9-1-policy.test.mjs",
+    "plugins/pharn-ci/tests/fixtures/report.v2.json",
+    "plugins/pharn-ci/tests/lib/schema-drift.mjs",
+    "plugins/pharn-ci/tests/schema-drift.test.mjs"
+  ],
+  "outside_gates": {
+    "test": {
+      "base": 1,
+      "head": 1
+    }
+  },
+  "regressions": [],
+  "pre_existing": [
+    "test"
+  ],
+  "verdict": "no-regressions",
+  "gate_run": {
+    "base": {
+      "stamp_sha256": "d6ab0835b14051123eaed5fc6b755b09ef5c5c7f8565321d4a421e5bf31b43fd",
+      "source": "discover",
+      "fingerprint": {
+        "algo": "worktree-fingerprint/3+sha256",
+        "final": "54e0545f30e8e43c87fc353cc8949d5103cf7c642940261b09c7fa7c35bed09b"
+      }
+    },
+    "head": {
+      "stamp_sha256": "81d50986f7f219d44a0d69f03e89c4fa374d94e4a5624f98cb67efd72bbc0f3d",
+      "source": "discover",
+      "fingerprint": {
+        "algo": "worktree-fingerprint/3+sha256",
+        "final": "17ac1ff1fb53aa971d7a2dee653ea9d7ed7913b39cbb8b01d47ae2898c7be2ef"
+      }
+    }
+  },
+  "base_evidence": {
+    "reused": true,
+    "miss": null,
+    "requirement_sha256": "02306e162d9f0c5fa1a49cff83b15f2eb813ac14989861a0fac80c1ea436f250",
+    "recorded": true,
+    "source": "reused",
+    "entry": null
+  },
+  "pre_run_snapshot": {
+    "status": "applied",
+    "unchanged": []
+  },
+  "head_install": {
+    "state": "clean",
+    "why": null,
+    "family": "npm",
+    "lockfile": "package-lock.json",
+    "counts": {
+      "changed": 0,
+      "missing": 0,
+      "extraneous": 0,
+      "missing_unchecked": 166
+    }
+  },
+  "base_source": "explicit"
+}

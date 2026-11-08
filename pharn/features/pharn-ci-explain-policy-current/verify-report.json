@@ -1,0 +1,207 @@
+{
+  "feature": "pharn-ci-explain-policy-current",
+  "gates": {
+    "format:check": 1,
+    "instruction-growth": 0,
+    "lint": 0,
+    "lint:md": 0,
+    "reconcile": 0,
+    "test": 0
+  },
+  "verdict": "FAIL",
+  "failing_gates": [
+    "format:check"
+  ],
+  "gate_run": {
+    "stamp_sha256": "cbfebff83e08ddadb271d2de4f4afadddac0fd22c52e1f593bcad31b32c798c9",
+    "source": "discover",
+    "fingerprint": {
+      "algo": "worktree-fingerprint/3+sha256",
+      "final": "17ac1ff1fb53aa971d7a2dee653ea9d7ed7913b39cbb8b01d47ae2898c7be2ef"
+    }
+  },
+  "ac_gate": {
+    "mode": "test-first",
+    "verdict": "PASS",
+    "reason": null,
+    "evidence": [],
+    "acs": [
+      {
+        "id": "AC-1",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-descriptions.test.mjs::AC-1: pharn-ci-explain names 0.1.x to 0.9.x, and pharn-ci-policy names a range ending at 0.9.x and P01 to P14"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-2",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-explain.test.mjs::AC-2: codes.md names every code of v0.9.1's report schema, and each new code sits on a heading or table row with its level"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-3",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-explain.test.mjs::AC-3: codes.md states the fail-on-verdict rename and the behaviour changes of 0.5.0 to 0.8.0"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-4",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-explain.test.mjs::AC-4: report.md describes the new report objects and the fix object, and pharn-ci-cover carries the same file"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-5",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-explain.test.mjs::AC-5: SKILL.md names the four new comment sections and the dependency, injection and quarantine Never rules"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-6",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-eval.test.mjs::AC-6: the D05 private-registry eval has its case, prompt, generated report and an answer grader that never switches the check off"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-7",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-policy.test.mjs::AC-7: the bundled schema is v0.9.1's, check-policy.mjs names its digest, and keys.md names every key path"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-8",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-policy.test.mjs::AC-8: the checker accepts injection.* and dependencies.lookup, and names PI06 and a non-boolean lookup"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-9",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-policy.test.mjs::AC-9: keys.md states the .pharn/ci.yml tighten-only rules of 0.6.0 and that dependencies.lookup never overrules never"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      },
+      {
+        "id": "AC-10",
+        "level": "unit",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-drift.test.mjs::AC-10: the drift module returns exactly the missing code and key path, and [] when nothing is missing",
+          "plugins/pharn-ci/tests/ac-0-9-1-drift.test.mjs::AC-10: the drift test imports the module and reads the pinned schemas and both references"
+        ],
+        "status": "passed",
+        "reason": null,
+        "detail": ""
+      }
+    ],
+    "unmapped_anomalies": [],
+    "note": "an AC is delivered = a locked, once-red test titled AC-<n>:, in a file mapped to AC-<n>, passed on this head run. PHARN does not judge whether that test fully captures the AC's intent."
+  },
+  "completeness": {
+    "plan": "pharn/features/pharn-ci-explain-policy-current/PLAN.md",
+    "repoDir": ".",
+    "declared": [
+      "plugins/pharn-ci/skills/pharn-ci-explain/SKILL.md",
+      "plugins/pharn-ci/skills/pharn-ci-explain/references/codes.md",
+      "plugins/pharn-ci/skills/pharn-ci-explain/references/policy.md",
+      "plugins/pharn-ci/skills/pharn-ci-explain/references/report.md",
+      "plugins/pharn-ci/skills/pharn-ci-cover/references/report.md",
+      "plugins/pharn-ci/skills/pharn-ci-policy/SKILL.md",
+      "plugins/pharn-ci/skills/pharn-ci-policy/references/keys.md",
+      "plugins/pharn-ci/skills/pharn-ci-policy/references/enable.md",
+      "plugins/pharn-ci/skills/pharn-ci-policy/scripts/check-policy.mjs",
+      "plugins/pharn-ci/skills/pharn-ci-policy/scripts/policy.v1.json",
+      "plugins/pharn-ci/tests/fixtures/report.v2.json",
+      "plugins/pharn-ci/tests/lib/schema-drift.mjs",
+      "plugins/pharn-ci/tests/schema-drift.test.mjs",
+      "plugins/pharn-ci/tests/ac-0-4-5-descriptions.test.mjs",
+      "plugins/pharn-ci/tests/check-policy.test.mjs",
+      "plugins/pharn-ci/tests/pins.test.mjs",
+      "plugins/pharn-ci/tests/ac-0-4-5-policy-skill.test.mjs",
+      "plugins/pharn-ci/evals/explain-dependency-d05/case.yaml",
+      "plugins/pharn-ci/evals/explain-dependency-d05/prompt.md",
+      "plugins/pharn-ci/evals/explain-dependency-d05/scaffold.sh",
+      "plugins/pharn-ci/evals/explain-dependency-d05/graders/answer.md",
+      "plugins/pharn-ci/evals/explain-dependency-d05/graders/loads-skill.md",
+      "plugins/pharn-ci/evals/explain-dependency-d05/graders/ran-gh.md",
+      "plugins/pharn-ci/evals/explain-dependency-d05/graders/no-gh-writes.md",
+      "plugins/pharn-ci/evals/explain-dependency-d05/graders/no-label-command.md",
+      "plugins/pharn-ci/evals/explain-dependency-d05/graders/no-edit.md",
+      "plugins/pharn-ci/evals/explain-dependency-d05/graders/no-write.md",
+      "plugins/pharn-ci/evals/explain-dependency-d05/graders/no-commit.md",
+      "plugins/pharn-ci/evals/explain-dependency-d05/graders/unchanged-package-json.md",
+      "plugins/pharn-ci/evals/explain-dependency-d05/graders/unchanged-package-lock-json.md",
+      "plugins/pharn-ci/evals/explain-dependency-d05/graders/unchanged-pharn-ci-yml.md",
+      "plugins/pharn-ci/evals/explain-dependency-d05/graders/unchanged-github-workflows-pharn-ci-yml.md",
+      "plugins/pharn-ci/evals/fixtures/inputs/gh-fixture-d05.json",
+      "plugins/pharn-ci/evals/fixtures/manifest.json"
+    ],
+    "skipped": [],
+    "missing": [],
+    "deletions": [],
+    "undeleted": [],
+    "complete": true,
+    "verdict": "complete"
+  },
+  "verifiers": {
+    "registered": 0,
+    "findings": []
+  },
+  "gate_reuse": {
+    "reused": []
+  },
+  "head_install": {
+    "state": "clean",
+    "why": null,
+    "family": "npm",
+    "lockfile": "package-lock.json",
+    "counts": {
+      "changed": 0,
+      "missing": 0,
+      "extraneous": 0,
+      "missing_unchecked": 166
+    }
+  },
+  "reconcile_detail": {
+    "state": "parsed",
+    "exit": 0,
+    "verdict": "CLEAN",
+    "escapes": [],
+    "escapes_total": 0,
+    "merged_count": 0
+  }
+}

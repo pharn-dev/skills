@@ -31,7 +31,18 @@ test("AC-3: every pharn-ci SKILL.md description names pharn-ci 0.3.x and 0.4.x",
   // skills written for 0.1.x to 0.4.x.
   for (const skill of ["pharn-ci-cover", "pharn-ci-explain", "pharn-ci-install", "pharn-ci-policy"]) {
     const description = frontmatterDescription(readFileSync(join(SKILLS, skill, "SKILL.md"), "utf8"));
-    assert.match(description, /(?<![\d.])0\.3\.x\b/, `${skill}'s description does not name 0.3.x`);
-    assert.match(description, /(?<![\d.])0\.4\.x\b/, `${skill}'s description does not name 0.4.x`);
+    for (const minor of [3, 4]) {
+      assert.ok(namesMinor(description, minor), `${skill}'s description does not name 0.${minor}.x`);
+    }
   }
 });
+
+// A description names 0.<minor>.x when it says so, or names a range `0.a.x to 0.b.x` that covers it (a <= minor <= b):
+// pharn-ci-explain's "0.1.x to 0.9.x" covers 0.3.x and 0.4.x.
+function namesMinor(description, minor) {
+  if (new RegExp(`(?<![\\d.])0\\.${minor}\\.x\\b`).test(description)) return true;
+  for (const m of description.matchAll(/(?<![\d.])0\.(\d+)\.x to 0\.(\d+)\.x\b/g)) {
+    if (Number(m[1]) <= minor && minor <= Number(m[2])) return true;
+  }
+  return false;
+}

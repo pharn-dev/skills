@@ -1,11 +1,13 @@
-# Org policy (pharn-ci 0.4.x)
+# Org policy (pharn-ci 0.4.x to 0.9.x)
 
-Source: pharn-ci v0.4.0 at commit `a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756`:
-README ("Org policy", "Policy mode", "Agent PRs"), CHANGELOG, `schema/report.v2.json`,
-`packages/core/src/policy/` and `docs/LIMITS.md`. pharn-ci 0.1.x to 0.3.x read no
-policy. The other message codes are in [codes.md](codes.md), the report's fields
-in [report.md](report.md), and writing a policy document is the `pharn-ci-policy`
-skill's job.
+Source: pharn-ci v0.4.0 at commit `a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` and
+v0.9.1 at `dec4a0ed2d0b111233522753909c74a90b6d09e0`: README ("Org policy", "P13",
+"P14", "Policy mode", "Agent PRs", "Prompt-injection scan", "Dependency safety",
+"Flaky tests and JUnit results"), CHANGELOG, `schema/report.v2.json`,
+`schema/policy.v1.json`, `packages/core/src/policy/` and `docs/LIMITS.md`.
+pharn-ci 0.1.x to 0.3.x read no policy. The other message codes are in
+[codes.md](codes.md), the report's fields in [report.md](report.md), and writing
+a policy document is the `pharn-ci-policy` skill's job.
 
 An org policy sets one gate for every repository of an organization, so a pull
 request cannot loosen it. It is a JSON document (`schema/policy.v1.json`) that the
@@ -13,20 +15,27 @@ pharn.dev app serves to the Action, or that a pull request carries in a file
 (`policy: file:<path>`, or `--policy-file` for the CLI). 0.4.0 applies the
 coverage, setup (including the lists P02 to P06 check, and `setup.consistency`
 for P07) and test-integrity keys, and `agents.labels`, `agents.extra_logins`,
-`agents.protected_paths` and `agents.protected_paths_mode`. The other `agents`
-keys, `dependencies` and `flaky` are validated but not applied yet.
+`agents.protected_paths` and `agents.protected_paths_mode`. 0.6.0 adds rules
+P13 and P14 (`agents.max_files`, `agents.max_changed_lines`); 0.7.0 the
+`injection` keys of the prompt-injection scan; 0.8.0 the `dependencies` keys
+and `flaky.quarantine`. In 0.9.x `agents.require_human_approval` (meant for
+P12) is still validated and not applied. The pharn.dev app's policy response
+also carries settings that are not part of the policy document (for example
+`settings.uploadJunit`, which keeps the JUnit results out of an upload, and
+`settings.messageMaxBytes`) and the quarantine list.
 
 A policy finding is about this repository, so **the honest fix is to change the
 flagged file** (for example `.claude/settings.json` or a workflow), never the
 policy, a rule's level, a protected path or `.pharn/ci.yml`. The policy belongs to
 its owner. A pull request that edits the policy it is graded by raises P09.
 
-## Rules P01 to P11
+## Rules P01 to P14
 
 Each finding is in the report's `policy.violations` and in the comment's
 📜 Policy section; the message code carries the rule's level. A policy's
 `policy.rules` sets a rule's severity (`block`, `warn`, `info` or `off`); a `file:`
-policy can only raise it.
+policy can only raise it. There is no P12 rule in 0.9.x: `policy.rules.P12` and
+`agents.require_human_approval` are accepted by the schema and not enforced.
 
 | Rule | Code | Default level | What it checks |
 | ---- | ---- | ------------- | -------------- |
@@ -41,6 +50,8 @@ policy can only raise it.
 | P09 | `POLICY_P09` | error, warn or info | The pull request edits what it is graded by: the policy file, the config or a workflow that sets a value looser than the policy, or an agent settings or MCP file the policy checks. |
 | P10 | `POLICY_UNAVAILABLE` | warn (error with `policy: required`) | The policy could not be read. |
 | P11 | `POLICY_P11` | error | An agent pull request changes a path that `agents.protected_paths` lists. |
+| P13 | `POLICY_P13` | error | 0.6.0: an agent pull request widens its own or another agent's powers in an agent settings file, an MCP config, a workflow or CODEOWNERS. Needs no setting. |
+| P14 | `POLICY_P14` | error | 0.6.0: an agent pull request changes more files than `agents.max_files` or more lines than `agents.max_changed_lines`. Off until the policy sets a cap. |
 
 ## Codes
 
@@ -172,6 +183,58 @@ also read at the merge base, so a pull request that edits the file it is graded 
 including one that drops a path from `agents.protected_paths`, does not loosen
 P11: the merge-base copy still counts. The accept label never touches P11.
 
+### `POLICY_P13` (error)
+
+0.6.0 and later. Agent self-modification: under any app or `file:` policy, an
+agent pull request that widens what an agent may do. For each agent settings
+file (`.claude/settings.json`, `.claude/settings.local.json`), MCP config
+(`.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`), workflow
+(`.github/workflows/*.yml`) and CODEOWNERS file the diff adds, modifies,
+renames or deletes, pharn-ci compares the merge base with HEAD and reports one
+violation per file, naming the widening in fixed words: an `allow` rule added, a
+`deny` rule removed, `defaultMode` set or changed, an `additionalDirectories`
+entry added, a hook removed or rewritten, `disableAllHooks` or
+`enableAllProjectMcpServers` turned on, an MCP server added or its command,
+args, URL or type changed, a secret newly referenced, a workflow permission
+raised or its block removed, `read-all` or `write-all` added,
+`pull_request_target` added, or a CODEOWNERS change other than owners added.
+Narrowing changes give nothing. It fails closed: a missing diff, or a file that
+could not be read or parsed on a side it exists on, is one violation. A
+violation never carries a rule, server name, secret name, owner or command.
+
+- Level: `error` by default; an app policy can set `policy.rules.P13`, a `file:`
+  policy cannot lower it (`POLICY_OVERRIDE_IGNORED`). A person's pull request is
+  never subject to P13, and the CLI never runs it (it has no agent PR detection).
+  PR-number mode and a compare-API diff leave every touched file uncompared.
+- Look at: each named file's diff (`git diff --literal-pathspecs <base>...HEAD -- '<path>'`)
+  and `meta.isAgentPr` with `meta.agentHint`.
+- Fix (`revert-config`): revert the agent's edit that widens what an agent may do.
+  A person who wants the wider setting makes that change in their own pull
+  request, where a reviewer sees it. Never relabel the PR or change its author to
+  get past detection.
+
+### `POLICY_P14` (error)
+
+0.6.0 and later. Agent PR size cap, opt-in: it runs only when the policy sets
+`agents.max_files` or `agents.max_changed_lines`, and there is no default cap.
+An agent pull request over a cap gets one path-less violation per exceeded cap
+that names the count, the cap and the top-level directories touched (for example
+`agent PR changes 31 files (cap 25); split it by area: docs, packages`). A file
+is a diff entry (a rename counts once); its lines are the added plus removed
+lines. Lockfiles, snapshots, `*.generated.*` files and `coverage.exclude` paths do
+not count (`coverage.exclude` does count when the pull request edits the config
+in use or a workflow, unless the exclusions are the app policy's). A missing
+diff fails closed.
+
+- Level: `error`; an app policy may set `policy.rules.P14` to `warn`, `info` or
+  `off`, and a `file:` policy can only raise it. A `file:` policy the pull
+  request edits can lower a cap but never raise or remove one: each cap is the
+  smaller of its merge-base and head values. A person's pull request is never
+  subject to P14.
+- Fix (`split-pr`): split the change into smaller pull requests within the caps,
+  by the areas the message names. Never raise or remove a cap to get a pull
+  request through: the caps are the policy owner's.
+
 ### `AGENT_PR_DETECTION_INCOMPLETE` (warn)
 
 See [codes.md](codes.md): the evidence could not be read in full, so the PR counts
@@ -226,16 +289,24 @@ unknown author, commits that cannot be listed, more than 250 commits, or an edit
   finding is read as proof of safety, and read `docs/LIMITS.md` in pharn-ci for what
   they miss.
 - **Precedence.** The app policy beats the workflow inputs, which beat
-  `.pharn/ci.yml`, and `.pharn/ci.yml` can only tighten. A served policy raises
-  `coverage.threshold` (the larger value applies) and `setup.require`, raises the
-  test-integrity mode above the input and the config, replaces `coverage.exclude`
-  and `coverage.root`, sets per-signal severities and the accept label, and adds
-  `setup.expect` tools. A `file:` policy can only raise: a higher threshold,
-  `setup.require: true`, a stricter mode, more `setup.expect` tools and higher
-  signal severities.
-- **What a `file:` policy may not set.** Exclusions, a root, an accept label and
-  `policy.required` are not allowed from a file, because the pull request carries
-  it; a value lower than the workflow inputs give is ignored. Both are named in
+  `.pharn/ci.yml`. Since 0.6.0 `coverage.threshold` (the larger applies),
+  `setup.require` (`true` wins) and the test-integrity mode are merged to the
+  stricter value, so `.pharn/ci.yml` may raise an input but never lower it; an
+  input still replaces the config's coverage file, root and format, and
+  `coverage.exclude` is the config's patterns plus the input's. A served policy
+  raises `coverage.threshold` and `setup.require`, raises the test-integrity
+  mode above the input and the config, replaces `coverage.exclude` and
+  `coverage.root`, sets per-signal severities and the accept label, adds
+  `setup.expect` tools, requires dependency safety when it has a `dependencies`
+  key (a `never` input becomes `auto`, named in `POLICY_OVERRIDE_IGNORED`), and
+  sets the prompt-injection exemptions, phrases and severities. A `file:` policy
+  can only raise: a higher threshold, `setup.require: true`, a stricter mode,
+  more `setup.expect` tools, higher signal severities, more injection phrases,
+  and lower agent PR size caps.
+- **What a `file:` policy may not set.** Exclusions, a root, an accept label,
+  `policy.required`, `injection.exempt` and `dependencies.registries` are not
+  allowed from a file, because the pull request carries it; a value lower than
+  the workflow inputs give is ignored. Both are named in
   `POLICY_OVERRIDE_IGNORED`. The path is relative, stays inside the repository,
   goes through no symbolic link and names a regular file of at most 1 MiB.
 - **The accept label** signs off test-integrity findings only (block findings of
