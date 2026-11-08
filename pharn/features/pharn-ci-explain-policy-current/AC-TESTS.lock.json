@@ -1,0 +1,154 @@
+{
+  "schema": "ac-tests-lock/6",
+  "feature": "pharn-ci-explain-policy-current",
+  "mode": "test-first",
+  "spec": {
+    "spec_id": "pharn-ci-explain-policy-current",
+    "spec_content_hash": "3b1d4670117c78151aca3b52de407af256a60fb829c08d18f20e81a6f5a51e04"
+  },
+  "mapping": {
+    "path": "pharn/features/pharn-ci-explain-policy-current/AC-TESTS.md",
+    "sha256": "45a19676a4a7772dda5d17f4dbfbe0dea9c779945ca44321bb4a1354d5def3d6"
+  },
+  "files": [
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-9-1-descriptions.test.mjs",
+      "sha256": "ef615a33e80c78d0288e7afa630113f94ab626d9351612e29e0654caf36d6c8e"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-9-1-drift.test.mjs",
+      "sha256": "39269d6c7e525e050c2f15b125a1c003541a8b4d24ef1c5d4168c70d1480aae0"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-9-1-eval.test.mjs",
+      "sha256": "1f74d1919e8cb039233d89751c72af84ceca858852a09bd3e03ebc90c7bab1f0"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-9-1-explain.test.mjs",
+      "sha256": "583f2aa0bf509418bcc01d15657477fe3fdfd6aaacd1c23ca5aafc11a8426b72"
+    },
+    {
+      "path": "plugins/pharn-ci/tests/ac-0-9-1-policy.test.mjs",
+      "sha256": "943dcd61f8d5eddb4d053930a96195de227931337f985b6a9bdd78689d65ec6b"
+    }
+  ],
+  "bootstrap": null,
+  "red_run": {
+    "stamp_sha256": "0d59e730c902c4c24117a99426574956013bde127a13ba93ed68f5200a9ef728",
+    "files_sha256": "cd88b9a0b81f62b951bddaceff0efb91132a6e5ea88d0302fd3ac3d3845c637e",
+    "gates": [
+      {
+        "gate": "test",
+        "results_sha256": "50750e7609630a16cd8a48f48bf6004e6e9d6ee22efc52257ab6a1c567599472"
+      }
+    ],
+    "acs": [
+      {
+        "id": "AC-1",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-descriptions.test.mjs::AC-1: pharn-ci-explain names 0.1.x to 0.9.x, and pharn-ci-policy names a range ending at 0.9.x and P01 to P14"
+        ]
+      },
+      {
+        "id": "AC-2",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-explain.test.mjs::AC-2: codes.md names every code of v0.9.1's report schema, and each new code sits on a heading or table row with its level"
+        ]
+      },
+      {
+        "id": "AC-3",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-explain.test.mjs::AC-3: codes.md states the fail-on-verdict rename and the behaviour changes of 0.5.0 to 0.8.0"
+        ]
+      },
+      {
+        "id": "AC-4",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-explain.test.mjs::AC-4: report.md describes the new report objects and the fix object, and pharn-ci-cover carries the same file"
+        ]
+      },
+      {
+        "id": "AC-5",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-explain.test.mjs::AC-5: SKILL.md names the four new comment sections and the dependency, injection and quarantine Never rules"
+        ]
+      },
+      {
+        "id": "AC-6",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-eval.test.mjs::AC-6: the D05 private-registry eval has its case, prompt, generated report and an answer grader that never switches the check off"
+        ]
+      },
+      {
+        "id": "AC-7",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-policy.test.mjs::AC-7: the bundled schema is v0.9.1's, check-policy.mjs names its digest, and keys.md names every key path"
+        ]
+      },
+      {
+        "id": "AC-8",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-policy.test.mjs::AC-8: the checker accepts injection.* and dependencies.lookup, and names PI06 and a non-boolean lookup"
+        ]
+      },
+      {
+        "id": "AC-9",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-policy.test.mjs::AC-9: keys.md states the .pharn/ci.yml tighten-only rules of 0.6.0 and that dependencies.lookup never overrules never"
+        ]
+      },
+      {
+        "id": "AC-10",
+        "tests": [
+          "plugins/pharn-ci/tests/ac-0-9-1-drift.test.mjs::AC-10: the drift module returns exactly the missing code and key path, and [] when nothing is missing",
+          "plugins/pharn-ci/tests/ac-0-9-1-drift.test.mjs::AC-10: the drift test imports the module and reads the pinned schemas and both references"
+        ]
+      }
+    ]
+  },
+  "test_infra": {
+    "levels": [
+      "unit"
+    ],
+    "gates": [
+      {
+        "id": "test",
+        "script": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./.github/scripts/pharn-test-reporter.mjs --test-reporter-destination=stdout .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
+        "pre": null,
+        "post": null,
+        "results": "pharn-json"
+      }
+    ],
+    "chained": [],
+    "configs": [],
+    "script_files": [
+      {
+        "path": ".github/scripts/pharn-test-reporter.mjs",
+        "sha256": "0f6e7369360cc8d7621476f349dc5d3fb08ce968906304f8e6ee2f4ad2ea7058"
+      }
+    ],
+    "jest": null,
+    "exclude": [],
+    "other_gates": [
+      {
+        "id": "format:check",
+        "script": "prettier --check .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint",
+        "script": "eslint .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint:md",
+        "script": "markdownlint-cli2",
+        "pre": null,
+        "post": null
+      }
+    ],
+    "other_chained": []
+  }
+}

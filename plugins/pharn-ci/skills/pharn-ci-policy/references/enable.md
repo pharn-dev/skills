@@ -1,9 +1,10 @@
-# Turning a policy on (pharn-ci 0.4.0)
+# Turning a policy on (pharn-ci 0.4.x to 0.9.x)
 
-Source: pharn-ci v0.4.0 at commit `a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756`:
-README ("Org policy", "Policy mode", "Upload to pharn.dev", "Action reference"),
-CHANGELOG and `docs/LIMITS.md`. pharn-ci 0.1.x to 0.3.x have no `policy` input
-and read no policy.
+Source: pharn-ci v0.4.0 at commit `a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` and
+v0.9.1 at `dec4a0ed2d0b111233522753909c74a90b6d09e0`: README ("Org policy",
+"Policy mode", "Upload to pharn.dev", "Action reference"), CHANGELOG and
+`docs/LIMITS.md`. pharn-ci 0.1.x to 0.3.x have no `policy` input and read no
+policy. The `policy` input and its values are unchanged from 0.4.0 to 0.9.1.
 
 A policy reaches a run in one of two ways: the pharn.dev app serves it for the
 repository (an app policy), or the repository carries it in a file
@@ -57,13 +58,17 @@ repository, goes through no symbolic link and names a regular file of at most
 path. Because the pull request carries the file, it can only tighten:
 
 - it may raise `coverage.threshold`, set `setup.require: true`, raise the
-  test-integrity mode, add `setup.expect` tools and raise severities;
+  test-integrity mode, add `setup.expect` tools and raise severities; from
+  0.6.0 lower an agent PR size cap (P14); from 0.7.0 add injection phrases;
 - a `file:` policy may not set exclusions (`coverage.exclude`), a `coverage.root`,
-  an accept label (`test_integrity.accept_label`) or `policy.required`, and a
-  value lower than the workflow inputs give is ignored; both are named in
+  an accept label (`test_integrity.accept_label`), `policy.required`,
+  `injection.exempt` (0.7.0) or `dependencies.registries` (0.8.0), and a value
+  lower than the workflow inputs give is ignored; both are named in
   `POLICY_OVERRIDE_IGNORED`;
 - P11 always blocks under a `file:` policy, and the policy file is also read at
-  the merge base, so editing the file in the pull request removes nothing.
+  the merge base, so editing the file in the pull request removes nothing. P13
+  cannot be lowered by a `file:` policy, and when the pull request edits the
+  file each P14 cap is the smaller of its merge-base and head values.
 
 A pull request that edits the policy file it is graded by raises `POLICY_P09`.
 Offer CODEOWNERS for the policy file and for `.github/workflows/`, since the
@@ -78,7 +83,10 @@ following a symbolic link:
   nested directories, for P02 to P06;
 - `.mcp.json`, `.cursor/mcp.json` and `.vscode/mcp.json`, when the policy lists
   MCP servers (P04 and P05), and the agent instruction files for P07 (only their
-  inline code spans and shell blocks).
+  inline code spans and shell blocks);
+- from 0.6.0, for an agent pull request, the agent settings, MCP, workflow and
+  CODEOWNERS files the diff touches, at the merge base and at `HEAD`, for P13
+  (the CLI never runs P13).
 
 Nothing it reads leaves the job: a finding carries only the rule id, the path,
 the line, fixed words and the policy's own text, never a value from a file. An
@@ -88,6 +96,8 @@ or an unavailable policy, none of these files is read.
 ## Precedence
 
 The app policy beats the workflow inputs, which beat `.pharn/ci.yml`; a
-`file:` policy can only raise them. A setting of a lower layer that the policy
-beat is named in one `POLICY_OVERRIDE_IGNORED` warning (a threshold with both
-numbers; never a pattern, root or label).
+`file:` policy can only raise them. Since 0.6.0 `.pharn/ci.yml` may itself only
+tighten the threshold, `setup.require` and the test-integrity mode (see
+[keys.md](keys.md)). A setting of a lower layer that the policy beat is named in
+one `POLICY_OVERRIDE_IGNORED` warning (a threshold with both numbers; never a
+pattern, root or label).

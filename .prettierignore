@@ -8,6 +8,8 @@ LICENSE
 *.md
 # Captured gh API responses, kept as recorded.
 plugins/pharn-ci/evals/fixtures/inputs
+# Byte copies of pharn-ci's schemas, pinned by sha256 in the tests.
+plugins/pharn-ci/tests/fixtures
 # Scripts shipped inside skills: a formatting-only change would make skills.sh republish the skill.
 plugins/*/skills/*/scripts
 # src/phargus formats itself and plugins/phargus (npm run format there).

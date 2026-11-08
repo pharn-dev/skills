@@ -346,6 +346,7 @@ describe("pharn-ci 0.3.0 and 0.4.0 codes", () => {
       "coverage",
       "dependencies",
       "flaky",
+      "injection",
       "policy",
       "setup",
       "test_integrity",

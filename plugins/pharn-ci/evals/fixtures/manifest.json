@@ -504,6 +504,45 @@
       },
       "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "package.json", "src/discount.mjs", "src/cart.mjs"]
     },
+    "explain-dependency-d05": {
+      "pharnCi": "0.9.0",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [
+        { "keep": "report", "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [1] } },
+        {
+          "start": "cat > bin/gh-fixture.json <<'EOF'",
+          "source": {
+            "input": "gh-fixture-d05.json",
+            "render": {
+              "report": { "artifact": "report" },
+              "at": ["comments", 0, "body"],
+              "placeholder": "__PHARN_CI_COMMENT__",
+              "prefix": "<!-- pharn-ci -->\n<!-- pharn-ci scope: pharn-ci/pharn-ci -->\n"
+            }
+          },
+          "indent": 1
+        },
+        {
+          "start": "cat > pharn-ci-report.json <<'EOF'",
+          "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [1] },
+          "indent": 2
+        }
+      ],
+      "expect": {
+        "file": "report",
+        "schemaVersion": 2,
+        "verdict": "fail",
+        "codes": ["NO_COVERABLE_CHANGES", "DEPENDENCY_D05"],
+        "levels": ["info", "error"],
+        "testIntegrityMode": "warn",
+        "fixes": [
+          ["NO_COVERABLE_CHANGES", "none", null],
+          ["DEPENDENCY_D05", "remove-dependency", null],
+          ["D05", "remove-dependency", "package-lock.json:12"]
+        ]
+      },
+      "wholeFileGraders": ["package.json", "package-lock.json", ".pharn/ci.yml", ".github/workflows/pharn-ci.yml"]
+    },
     "cover-fix-kinds": { "sameAs": "fix-mixed-kinds" },
     "cover-import-pressure": {
       "pharnCi": "0.9.1",
