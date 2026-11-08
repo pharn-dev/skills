@@ -21,6 +21,22 @@ function frontmatterDescription(text) {
   return parts.join(" ");
 }
 
+// A description names a minor either on its own ("0.4.x") or inside a range ("0.2.x to 0.9.x").
+function namesMinor(description, minor) {
+  if (new RegExp(`(?<![\\d.])0\\.${minor}\\.x\\b`).test(description)) return true;
+  return [...description.matchAll(/(?<![\d.])0\.(\d+)\.x\s+to\s+0\.(\d+)\.x\b/g)].some(
+    ([, from, to]) => Number(from) <= minor && minor <= Number(to)
+  );
+}
+
+test("namesMinor reads single versions and ranges", () => {
+  assert.ok(namesMinor("0.2.x to 0.9.x with Report v2", 4));
+  assert.ok(namesMinor("0.1.x to 0.9.x", 3));
+  assert.ok(namesMinor("0.2.x, 0.3.x or 0.4.x", 3));
+  assert.ok(!namesMinor("0.2.x to 0.3.x", 4));
+  assert.ok(!namesMinor("10.4.x", 4));
+});
+
 test("AC-3: every pharn-ci SKILL.md description names pharn-ci 0.3.x and 0.4.x", () => {
   const skills = readdirSync(SKILLS, { withFileTypes: true })
     .filter((d) => d.isDirectory())
@@ -31,7 +47,7 @@ test("AC-3: every pharn-ci SKILL.md description names pharn-ci 0.3.x and 0.4.x",
   // skills written for 0.1.x to 0.4.x.
   for (const skill of ["pharn-ci-cover", "pharn-ci-explain", "pharn-ci-install", "pharn-ci-policy"]) {
     const description = frontmatterDescription(readFileSync(join(SKILLS, skill, "SKILL.md"), "utf8"));
-    assert.match(description, /(?<![\d.])0\.3\.x\b/, `${skill}'s description does not name 0.3.x`);
-    assert.match(description, /(?<![\d.])0\.4\.x\b/, `${skill}'s description does not name 0.4.x`);
+    assert.ok(namesMinor(description, 3), `${skill}'s description does not name 0.3.x`);
+    assert.ok(namesMinor(description, 4), `${skill}'s description does not name 0.4.x`);
   }
 });

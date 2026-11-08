@@ -323,13 +323,19 @@ describe("pharn-ci 0.3.0 and 0.4.0 codes", () => {
     }
   });
 
-  test("the manifest pins pharn-ci 0.4.0 and the install cases generate with it", () => {
-    assert.equal(manifest.latest, "0.4.0");
+  test("the manifest pins pharn-ci 0.4.0 for the explain and policy cases", () => {
     assert.equal(manifest.pharnCi["0.4.0"].sha, "a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756");
-    for (const name of Object.keys(manifest.cases).filter((n) => n.startsWith("install-")))
-      assert.equal(manifest.cases[name].pharnCi, "0.4.0", name);
     for (const name of ["explain-policy-p02", "explain-agent-config-secret", "policy-org-draft"])
       assert.equal(manifest.cases[name].pharnCi, "0.4.0", name);
+  });
+
+  test("the manifest's latest is pharn-ci 0.9.1 and the install cases generate with it", () => {
+    assert.equal(manifest.latest, "0.9.1");
+    assert.equal(manifest.pharnCi["0.9.1"].sha, "dec4a0ed2d0b111233522753909c74a90b6d09e0");
+    assert.equal(manifest.pharnCi["0.9.1"].ref, "v0.9.1");
+    const installs = Object.keys(manifest.cases).filter((n) => n.startsWith("install-"));
+    assert.ok(installs.length >= 9);
+    for (const name of installs) assert.equal(manifest.cases[name].pharnCi, "0.9.1", name);
   });
 
   test("the pharn-ci-policy skill ships the schema it checks against", () => {

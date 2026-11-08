@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: install-upgrade-0-5
+context:
+  scaffold_script: scaffold.sh

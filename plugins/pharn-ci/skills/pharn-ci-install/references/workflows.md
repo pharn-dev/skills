@@ -1,14 +1,14 @@
-# Workflow and config templates (pharn-ci 0.4.0)
+# Workflow and config templates (pharn-ci 0.9.1)
 
-From pharn-ci 0.4.0's README, `action.yml` and `examples/workflows/`, at its
-release commit `a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` (tag `v0.4.0`). Copy
+From pharn-ci 0.9.1's README, `action.yml` and `examples/workflows/`, at its
+release commit `dec4a0ed2d0b111233522753909c74a90b6d09e0` (tag `v0.9.1`). Copy
 the pins exactly; they are the only ones this skill writes.
 
 ## Pins
 
 | Action | Pin |
 | ------ | --- |
-| pharn-ci | `pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0` |
+| pharn-ci | `pharn-dev/pharn-ci@dec4a0ed2d0b111233522753909c74a90b6d09e0 # v0.9.1` |
 | checkout | `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1` |
 | Node | `actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0` |
 | Python | `actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0` |
@@ -38,9 +38,17 @@ coverage:
 - `root: packages/core` only for package-relative paths in a single package.
 - `exclude:` a block list of globs, only for generated code the person agrees
   to leave out.
-- Only `coverage`, `setup` and `test_integrity` keys exist; no tabs; no `{}`,
-  anchors or `|`. Leave `test_integrity` out: the mode is the workflow's
-  `test-integrity` input (see [Test integrity](#test-integrity-and-the-accept-label)).
+- Only `coverage`, `setup`, `test_integrity` and `dependencies` keys exist; no
+  tabs; no `{}`, anchors or `|`. Leave `test_integrity` out: the mode is the
+  workflow's `test-integrity` input (see
+  [Test integrity](#test-integrity-and-the-accept-label)). Leave `dependencies`
+  out too: it can only tighten the workflow's `dependencies` input (see
+  [Dependency safety](#dependency-safety-the-dependencies-input)), and this skill
+  never writes it.
+- `.pharn/ci.yml` can only tighten: a `coverage.threshold` or `setup.require:
+  true` in it applies over a looser `threshold` input or `require-agent-setup:
+  false` (since 0.6.0). A threshold lives in this file and not in an input for
+  that reason too.
 - An `exclude:` the setup PR adds shows up on that PR as
   `TEST_INTEGRITY_TI14` (a new coverage exclusion): a warning in mode `warn`,
   a failing check in mode `block`.
@@ -80,7 +88,7 @@ jobs:
       - run: npm ci
       - run: npm run test:coverage
       - id: pharn-ci
-        uses: pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0
+        uses: pharn-dev/pharn-ci@dec4a0ed2d0b111233522753909c74a90b6d09e0 # v0.9.1
         timeout-minutes: 5
         with:
           test-integrity: warn # or block; never in .pharn/ci.yml
@@ -94,8 +102,13 @@ jobs:
 
 - `fetch-depth: 0` lets pharn-ci diff against the PR base locally; a shallow
   checkout falls back to the API and can end in `DIFF_UNAVAILABLE`.
-- The pharn-ci step's only input is `test-integrity`; every other setting is
-  in `.pharn/ci.yml`.
+- The pharn-ci step's input is `test-integrity`; every other setting is in
+  `.pharn/ci.yml`. The one other input this skill writes is `junit-paths`, and
+  only when the person asks or the repository already writes JUnit XML (see
+  [JUnit results](#junit-results-only-when-asked-or-already-there)). A
+  `dependencies`, `fail-on-verdict` or `policy` input is written only for the
+  reasons in the sections below; the defaults (`auto`, `true`, `auto`) need no
+  line.
 - Toolchain lines per ecosystem (the coverage commands are in
   [coverage.md](coverage.md)):
   - Node: `setup-node` with `node-version`, then the lockfile's install
@@ -127,7 +140,7 @@ only:
 ```yaml
       - id: pharn-ci
         if: (github.event_name == 'pull_request' || github.event_name == 'merge_group') && matrix.node == 24
-        uses: pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0
+        uses: pharn-dev/pharn-ci@dec4a0ed2d0b111233522753909c74a90b6d09e0 # v0.9.1
         timeout-minutes: 5
         with:
           test-integrity: warn
@@ -190,7 +203,7 @@ jobs:
           path: |
             coverage/lcov.info
             pr-number
-      - uses: pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0
+      - uses: pharn-dev/pharn-ci@dec4a0ed2d0b111233522753909c74a90b6d09e0 # v0.9.1
         timeout-minutes: 5
         with:
           comment: false
@@ -231,13 +244,13 @@ jobs:
         env:
           PR_FILE: ${{ runner.temp }}/pharn-ci-input/pr-number
         run: echo "number=$(tr -dc '0-9' < "$PR_FILE" | head -c 10)" >> "$GITHUB_OUTPUT"
-      - uses: pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0
+      - uses: pharn-dev/pharn-ci@dec4a0ed2d0b111233522753909c74a90b6d09e0 # v0.9.1
         timeout-minutes: 5
         with:
           coverage-file: ${{ runner.temp }}/pharn-ci-input/coverage/lcov.info
           pr-number: ${{ steps.pr.outputs.number }}
           head-sha: ${{ github.event.workflow_run.head_sha }}
-          fail-on-threshold: false # the first workflow already gates
+          fail-on-verdict: false # the first workflow already gates
           test-integrity: warn # the same mode as the first workflow
 ```
 
@@ -256,6 +269,13 @@ jobs:
   and reads the label itself through `pr-number`.
 - The coverage path in the artifact and in `coverage-file` must match the
   repository's `coverage.file`.
+- The comment workflow's `fail-on-verdict: false` is the 0.5.0 name of what
+  `fail-on-threshold` did (the old name still works with a warning; this skill
+  never writes it). The first workflow keeps the gate.
+- In `pr-number` mode the diff comes from the API, not local git, and the
+  README says a manifest or lockfile read from a diff that is not local git is
+  listed in `dependencies.unread` with one `DEPENDENCY_CHECK_INCOMPLETE`
+  warning. The first workflow is where dependency safety runs in full.
 - pharn-ci reads the PR's diff and files through the API in this mode and
   fails when the PR head is not `head-sha`. It cannot tell whether the
   coverage file is what the tests produced: the first workflow's verdict is
@@ -269,7 +289,7 @@ jobs:
 
 ## Test integrity and the accept label
 
-pharn-ci 0.2.x to 0.4.x check every PR for changes that weaken the tests: a
+pharn-ci 0.2.x and later (0.9.1 included) check every PR for changes that weaken the tests: a
 test file deleted (TI01), a test removed from a file that stays (TI02), a skip
 added (TI03), `.only`/`fit` added (TI04), a test emptied of its assertions
 (TI05), a test script weakened (TI10), CI no longer running tests (TI11), a
@@ -277,7 +297,10 @@ coverage-ignore comment (TI13), a lower threshold or a new exclusion in
 `.pharn/ci.yml` (TI14), and warnings or notes for weaker assertions, edited
 expected values, bulk snapshot updates, loosened runner settings, mocked
 modules under test and lint suppressions (TI06 to TI09, TI12, TI15, TI16). Each
-finding asks for a reviewer to look; most have an ordinary reason.
+finding asks for a reviewer to look; most have an ordinary reason. From
+0.7.0 a PR that changes JS or TS source without a test file that imports it
+also gets one `TESTS_NOT_EXERCISING_CHANGES` warning, in every mode and never a
+failure, so a setup PR that adds source shows it.
 
 - **`test-integrity: warn`** (the default, and what this skill writes): the
   findings are warnings in the comment. Nothing fails because of them.
@@ -324,6 +347,167 @@ affected. For it to work:
   findings were accepted still fails its `merge_group` run; say so before
   writing `block` into a workflow that runs on `merge_group`.
 
+## JUnit results (only when asked or already there)
+
+`junit-paths` (0.8.0) reads the JUnit XML the test step writes, fills the
+report's `flaky` object and a **🧫 Flaky** comment section and applies the
+org's quarantine list from pharn.dev. Test results never change the verdict.
+Write it only when the person asks, or when the repository already produces
+JUnit XML: a JUnit reporter in the test script or runner config (`jest-junit`,
+vitest's `junit` reporter, `pytest --junitxml`, ...) or a `junit.xml` the CI
+job already writes or uploads. Use the path that test step writes; with no
+such path, ask instead of choosing one. In every other repository leave the
+input out.
+
+```yaml
+      - run: npm test -- --reporters=default --reporters=jest-junit   # writes junit.xml
+      - id: pharn-ci
+        if: ${{ !cancelled() }}   # also after a failed test step
+        uses: pharn-dev/pharn-ci@dec4a0ed2d0b111233522753909c74a90b6d09e0 # v0.9.1
+        timeout-minutes: 5
+        with:
+          test-integrity: warn
+          junit-paths: junit.xml
+```
+
+- Paths and globs (`*`, `**`, `?`) are relative to the workspace, one per line
+  or comma separated; a path outside the workspace fails the step. At most 50
+  files, 25 MiB and 20,000 test cases are read; the rest is left out with a
+  `JUNIT_TOO_LARGE` warning.
+- `junit-paths` is an Action input only: `.pharn/ci.yml` does not carry it.
+- The `if: ${{ !cancelled() }}` line is the README's example for reporting
+  after a failed test step. Add it only with the person's yes: it changes
+  when the step runs.
+- With an upload (`id-token: write`, see Org policy below) a normalised copy
+  of the results goes to pharn.dev, with test names, status, time and failure
+  messages redacted and cut, never `system-out` or `system-err`. Say so before
+  writing `junit-paths` into a workflow that has `id-token: write`.
+
+## Dependency safety (the `dependencies` input)
+
+pharn-ci 0.8.0 and later check the dependencies a pull request **adds or
+changes**, never the whole tree, in npm manifests and lockfiles and in Python
+requirements, `pyproject.toml`, `poetry.lock` and `uv.lock`. The `dependencies`
+input takes three values, and any other value fails the step:
+
+- **`auto`** (the default, so a workflow with no `dependencies` line runs it).
+  It runs the offline checks and makes no network call: D04, lockfile drift (a
+  manifest's dependencies changed while the lockfile that governs it did not
+  change or does not record them, or a lockfile gives a version the same hash
+  algorithm and a different hash), and D05, a source outside the npm and PyPI
+  registries (a dependency or lockfile entry from a git repository, a URL off
+  `registry.npmjs.org`, `registry.yarnpkg.com`, `pypi.org` and
+  `files.pythonhosted.org`, or a local file, or a requirements file that adds a
+  package index off them). **`auto` blocks on both:** each is a `block`
+  finding, an error that makes the verdict `fail`, and `fail-on-verdict` (true
+  by default) then fails the step. The test-integrity mode and the accept label
+  do not lower it. A Dependabot bump that changes a manifest and its lockfile
+  together, and a lockfile-only refresh, give no finding.
+- **`lookup`**. `auto` plus a look-up of each added unscoped npm and PyPI
+  package in `registry.npmjs.org`, `api.npmjs.org` and `pypi.org`, sending only
+  the package name in a `GET`: D01 (the package does not exist, `block`), D02
+  (first published fewer than 30 days before the head commit, `warn`) and D03
+  (fewer than 100 npm downloads last week, `warn`). A look-up that fails is
+  `DEPENDENCY_LOOKUP_UNAVAILABLE`, a warning. It sends names to third parties
+  and an unscoped private package name would leak, so write `lookup` only when
+  the person asks, after saying so. `dependencies.lookup: true` in
+  `.pharn/ci.yml` turns it on over `auto`, never over `never`.
+- **`never`**. Nothing runs: no D04, no D05, no look-ups. Never write it unless
+  the person chooses it after the private-registry question below or asks for
+  it, and then say what it switches off.
+
+The CLI makes no network call, so locally `lookup` runs as `auto`. What the
+check misses is in pharn-ci's `docs/LIMITS.md`, Dependency safety.
+
+### Private registries
+
+D05 flags every source outside the four hosts above. `docs/LIMITS.md` says a
+private registry or mirror that a lockfile records (Artifactory, Verdaccio,
+GitHub Packages, a private PyPI index) is reported as off the registry, and
+that private registries are not supported unless they are on the allowed list,
+which a later version may take as a policy list. A registry set only outside
+the lockfile (`.npmrc`, `.yarnrc.yml`, pip configuration) is not seen by D05
+for pnpm and yarn berry, but the person should still hear about it.
+
+Before writing a workflow, look for it: a lockfile `resolved` or `registry`
+host other than `registry.npmjs.org`, `registry.yarnpkg.com`, `pypi.org` or
+`files.pythonhosted.org`; a `registry=` line (or `@scope:registry=`) in
+`.npmrc`; a registry server in `.yarnrc.yml`; an `index-url` or
+`extra-index-url` in a pip config, `requirements*.txt` or `pyproject.toml`; a
+`PIP_INDEX_URL` or similar in the CI files. When there is one, say that D05
+flags dependencies from off-registry sources and ask how to proceed, offering
+only these options and no workflow written yet:
+
+1. `dependencies: auto` as it is (write no line). D05 then blocks every PR
+   that adds or changes a dependency a lockfile records from the private
+   host; D04 keeps running. Fine for a repository that rarely changes those
+   dependencies.
+2. `dependencies: never`, which switches off D04 as well. Only on the
+   person's explicit choice.
+3. `fail-on-verdict: false`, which reports and never gates: it lifts every
+   gate, not only D05. Only on the person's explicit choice.
+4. Wait: write nothing until pharn-ci can allow the registry.
+
+**Check for an allow-list before listing these.** In 0.9.1 neither
+`action.yml` nor `schema/policy.v1.json` has one: the policy's
+`dependencies.registries` takes only the ecosystems `npm` and `pypi` ("a
+policy never names a host"), so it cannot allow a host. When the person is on a
+later pharn-ci whose `action.yml`, README or policy schema names a registry or
+host allow-list, read that and offer it as well; never offer, or invent, an
+option this reference does not list.
+
+## Upgrading an existing setup
+
+An existing pharn-ci workflow (a `uses: pharn-dev/pharn-ci@` line, a SHA with
+a `# vX.Y.Z` comment or a tag) is updated, not duplicated: change that `uses:`
+line to this reference's pin, and nothing else unless the person asks. Say
+what the move brings, from pharn-ci's CHANGELOG, for the versions it crosses:
+
+| The pin is older than | Behaviour change the upgrade brings |
+| --------------------- | ----------------------------------- |
+| 0.6.0 | A stricter `coverage.threshold` or `setup.require: true` in `.pharn/ci.yml` now applies over a looser `threshold` input or `require-agent-setup: false`; to get the looser value back, lower it in `.pharn/ci.yml` itself. |
+| 0.7.0 | PI01 is an error by default: a PR that adds a zero-width character, a bidi override or isolate, a tag character or a stray byte order mark now fails the check where it passed (test files, `fixtures/`, `__fixtures__/` and `testdata/` are exempt). A PR that changes JS/TS source without a test importing it gets a `warn` verdict where it got `pass` (`TESTS_NOT_EXERCISING_CHANGES`); it never fails the check. |
+| 0.8.0 | Dependency safety runs by default (`dependencies: auto`) and D04 and D05 are errors: a PR that changes a manifest's dependencies without its lockfile, or adds a git, URL or local-file dependency, now fails the check where it passed. `dependencies: never` gets the old behaviour back. |
+
+A pin of 0.8.0 or later crosses none of these: 0.9.0 added the `fix` objects
+to the report and says verdicts, inputs and the comment are unchanged, and
+0.9.1 changes only how the release is published. Name only the rows the pin
+crosses (a `# v0.5.0` pin crosses all three, a `# v0.7.0` pin only the last).
+A pin older than 0.5.0 crosses all three as well; for what 0.2.0 to 0.4.0
+added (test integrity, the secret scan, the opt-in org policy and upload), see
+the Test integrity and Org policy sections.
+
+Also, from the 0.5.0 summary: the input `fail-on-threshold` is renamed
+`fail-on-verdict`. The old name still works, with a warning, and is ignored
+(with a warning) when both are set. In an existing workflow, tell the person
+and rename it only when they say yes; a new file never carries the old name.
+
+## `pharn-ci test` (optional, never written by default)
+
+For a team that wants a failure caused only by quarantined flaky tests not to
+fail the job, the pharn-ci CLI can wrap the test command:
+
+```bash
+pharn-ci test --junit 'reports/*.xml' --quarantine-file quarantine.json -- npx vitest run
+```
+
+It runs the command without a shell, reads the JUnit files and exits `0` when
+the command failed, the results show at least one failed test, every failed
+test is on the `--quarantine-file` list (a JSON array of test ids,
+`<classname>::<name>`) and every matched file was read whole; otherwise it
+exits with the command's own code. `--dry-run` prints what would run. It makes
+no network call.
+
+- The CLI is not published to npm: it is built from pharn-ci's source
+  (`pnpm install && pnpm build`). Never run `npx pharn-ci`, and build nothing
+  without asking.
+- A quarantine file the pull request can edit lets the pull request quarantine
+  its own failures; keep it where the pull request cannot change it.
+- This skill does not write the wrapper, the quarantine file or a changed
+  test command unless the person asks for it. It changes what makes the job
+  fail, so say so, and note that replacing `npm test` shows up as
+  `TEST_INTEGRITY_TI11` on the setup PR.
+
 ## Dependabot
 
 `.github/dependabot.yml`, only with the person's yes:
@@ -339,7 +523,7 @@ updates:
 
 ## Org policy (only when asked)
 
-pharn-ci 0.4.x can apply an org policy: one gate for every repository of an
+pharn-ci 0.4.x and later can apply an org policy: one gate for every repository of an
 organization, which a pull request cannot loosen. Offer this section only when
 the person wants an org policy; the templates above carry no `policy` input and
 no `id-token: write`, and a repository without a policy runs exactly as before.
