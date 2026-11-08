@@ -43,10 +43,11 @@ jobs:
           fi
           echo "number=$number" >> "$GITHUB_OUTPUT"
       - if: steps.download.outcome == 'success'
-        uses: pharn-dev/pharn-ci@a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756 # v0.4.0
+        uses: pharn-dev/pharn-ci@dec4a0ed2d0b111233522753909c74a90b6d09e0 # v0.9.1
         timeout-minutes: 5
         with:
           coverage-file: ${{ runner.temp }}/pharn-ci-input/coverage/lcov.info
           pr-number: ${{ steps.pr.outputs.number }}
           head-sha: ${{ github.event.workflow_run.head_sha }}
-          fail-on-threshold: false # the phargus job in ci.yml already gates
+          fail-on-verdict: false # the phargus job in ci.yml already gates
+          test-integrity: warn # the same mode as the first workflow
