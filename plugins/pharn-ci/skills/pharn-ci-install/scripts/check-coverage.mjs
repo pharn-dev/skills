@@ -14,7 +14,7 @@
 // This mirrors pharn-ci's rules; it is not pharn-ci, and the CI run decides.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { closeSync, constants as fsConstants, existsSync, fstatSync, openSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
@@ -1047,11 +1047,17 @@ export function run(argv, { cwd = process.cwd(), git = realGit } = {}) {
   const repo = locateRepo(cwd, git);
   const readText = (name) => {
     const full = path.resolve(repo.repoRoot, name);
+    let fd;
     try {
-      if (!statSync(full).isFile()) return null;
-      return readFileSync(full, "utf8");
+      // Check and read through one file descriptor so the file cannot change between the two.
+      // O_NONBLOCK so a FIFO is rejected by the isFile check instead of blocking the open.
+      fd = openSync(full, fsConstants.O_RDONLY | fsConstants.O_NONBLOCK);
+      if (!fstatSync(fd).isFile()) return null;
+      return readFileSync(fd, "utf8");
     } catch {
       return null;
+    } finally {
+      if (fd !== undefined) closeSync(fd);
     }
   };
   const isIgnored = (rel) => (repo.git ? gitIgnores(git, repo.repoRoot, rel) : null);
