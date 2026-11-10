@@ -225,6 +225,17 @@ function setIn(obj, at, value) {
   parent[at[at.length - 1]] = value;
 }
 
+// Read a file in one step, returning null when it is absent: no existence check
+// first, so the file cannot change between the check and the read (CWE-367).
+function readTextIfExists(file) {
+  try {
+    return readFileSync(file, "utf8");
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
 function readInput(name) {
   if (name.includes("/") || !name.endsWith(".json")) throw new RegenError(`input must be a .json file in fixtures/inputs: ${name}`);
   return JSON.parse(readFileSync(path.join(FIXTURES, "inputs", name), "utf8"));
@@ -256,7 +267,14 @@ export function fixFacts(report) {
 }
 
 function checkExpect(name, expect, reports) {
-  const report = reports.get(expect.file) ?? (existsSync(path.join(FIXTURES, "inputs", expect.file)) ? readInput(expect.file) : undefined);
+  let report = reports.get(expect.file);
+  if (report === undefined) {
+    try {
+      report = readInput(expect.file);
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+    }
+  }
   if (report === undefined) throw new RegenError(`${name}: expect.file ${expect.file} is neither an artifact nor an input`);
   const facts = { verdict: report.verdict, codes: report.messages.map((m) => m.code) };
   if ("diffCoverage" in expect) facts.diffCoverage = report.diffCoverage;
@@ -290,9 +308,9 @@ function regenCase(name, spec, tools, latest) {
     run(["bash", scaffoldPath], tmp);
     const graders = new Map();
     for (const file of spec.wholeFileGraders) {
-      const full = path.join(tmp, file);
-      if (!existsSync(full)) continue;
-      graders.set(`unchanged-${graderSlug(file)}.md`, wholeFileGrader(file, readFileSync(full, "utf8")));
+      const text = readTextIfExists(path.join(tmp, file));
+      if (text === null) continue;
+      graders.set(`unchanged-${graderSlug(file)}.md`, wholeFileGrader(file, text));
     }
     for (const [grader, file] of Object.entries(spec.pinGraders ?? {})) graders.set(grader, pinGrader(latest, file));
     if (spec.testCommand !== null) run(spec.testCommand.argv, path.join(tmp, spec.testCommand.cwd));
@@ -522,7 +540,7 @@ export async function main(argv) {
     const stale = readdirSync(graderDir).filter((f) => /^unchanged-.*\.md$/.test(f) && !graders.has(f));
     for (const [rel, content] of want) {
       const file = path.join(EVALS, name, rel);
-      const current = existsSync(file) ? readFileSync(file, "utf8") : null;
+      const current = readTextIfExists(file);
       if (current === content) continue;
       if (mode === "write") writeFileSync(file, content);
       else diffs.push(current === null ? `missing ${name}/${rel}` : lineDiff(`${name}/${rel}`, current, content));
