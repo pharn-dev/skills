@@ -13,6 +13,15 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Changed
 
+- `pharn` (no plugin version change yet): the `pharn-cli` skill reads a
+  `status --json` layout mismatch the way pharn-cli does after 0.19.0
+  (unreleased, pharn-cli PR #377). `drift` is `null` under `--no-drift` or
+  when `layout.upstream` is set and differs from `layout.recorded`; the two are
+  told apart by `layout.upstream`. On a mismatch no file drift or
+  not-shipped-upstream check runs and `status --strict` fails; the advice is a
+  plain `pharn update`, then `pharn update --force` (which overwrites edited
+  files after a backup) only if that answers "Already up to date". Through CLI
+  0.19.0 a mismatch stays advisory, as the skill said before.
 - `phargus` tooling (no plugin version change): the behavioral release gate
   needs checkable evidence and a human sign-off. `npm run eval` records every
   trial in `VERIFICATION.json` itself, and writes redacted `final.json`,
