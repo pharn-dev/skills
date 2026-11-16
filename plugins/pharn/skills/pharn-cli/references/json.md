@@ -2,9 +2,12 @@
 
 Source: the CLI's `docs/commands/status.md` and `docs/commands/update.md` at
 0.10.0, at 0.14.0 for `plan.rootMigration`, and at 0.16.1 for the keys added
-since (`src/lib/update-report.ts`, `src/lib/status-report.ts`). The `status`
-layout-mismatch rules marked "after 0.19.0" come from `docs/commands/status.md`
-on the CLI's `main` (pharn-cli PR #377), not yet in a release. Both reports have `schemaVersion: 1`; match it exactly. New keys may
+since (`src/lib/update-report.ts`, `src/lib/status-report.ts`). The rules
+marked "0.20.0" come from the CLI's `main`, for the release 0.20.0 that is not
+out yet: the `status` layout mismatch from `docs/commands/status.md`
+(pharn-cli PR #377), and `--json` implying `--dry-run` (PR #386) and the
+plan-decided `up-to-date` (PR #390) from `docs/commands/update.md`. Both
+reports have `schemaVersion: 1`; match it exactly. New keys may
 appear within 1, so ignore keys you do not know. The two schema versions are
 independent.
 
@@ -29,15 +32,14 @@ Read-only. Exit 0 even when outdated. With `--strict` the report is still
 printed and the exit code is 1 when `strict.failed` is true.
 `--no-drift` makes `drift`, `hooks` and `unknownCapabilities` `null`.
 
-After 0.19.0 (unreleased), `drift` is also `null` on a layout mismatch
+From 0.20.0 (unreleased), `drift` is also `null` on a layout mismatch
 (`layout.recorded` differs from `layout.upstream`), and that mismatch fails
 `--strict`. Tell the two `null`s apart by `layout.upstream`: `null` under
 `--no-drift`, set on a mismatch. On a mismatch neither the file drift nor
 `absentUpstream` is checked, so say that drift is unknown until the install is
 moved, not that it is clean. The fix is a plain `pharn update`, which moves the
-install; if it answers "Already up to date", `pharn update --force` moves it
-but also overwrites the person's edited files (backed up first), so ask before
-running it. `--no-drift` fetches no clone and cannot see a mismatch.
+install at any skills version: 0.20.0 plans every update, so no `--force` is
+needed. `--no-drift` fetches no clone and cannot see a mismatch.
 
 | Key | Meaning |
 | --- | ------- |
@@ -45,8 +47,8 @@ running it. `--no-drift` fetches no clone and cannot see a mismatch.
 | `version` | `installed`, `latest`, `channel` (`main`/`latest`), `source` `{kind, tag}`, `ahead` (newer than the newest verified release; not outdated), `outdated`. |
 | `archetypes` | Recorded archetypes. |
 | `capabilities` | `{count}`; the list is `pharn list --json`. |
-| `drift` | `modified[]`, `missing[]`, `unreadable[{rel, reason}]`, `okCount`, and, from 0.13.0, `absentUpstream[{surface, path}]`: surfaces pharn-oss ships no file for, at its own layout. `drift.absentUpstream` is a `--strict` input. Byte comparison only: a modified file may still update cleanly, `update --dry-run` says which. `null` under `--no-drift` and, after 0.19.0 (unreleased), on a layout mismatch. |
-| `layout` | 0.13.0+: `recorded` (the layout the install is recorded at) and `upstream` (the layout the fetched clone ships; `null` under `--no-drift`). Through 0.19.0 a difference is advisory, not a `--strict` input, and `drift` is still filled. After 0.19.0 (unreleased) a difference fails `--strict` and makes `drift` `null`. |
+| `drift` | `modified[]`, `missing[]`, `unreadable[{rel, reason}]`, `okCount`, and, from 0.13.0, `absentUpstream[{surface, path}]`: surfaces pharn-oss ships no file for, at its own layout. `drift.absentUpstream` is a `--strict` input. Byte comparison only: a modified file may still update cleanly, `update --dry-run` says which. `null` under `--no-drift` and, from 0.20.0 (unreleased), on a layout mismatch. |
+| `layout` | 0.13.0+: `recorded` (the layout the install is recorded at) and `upstream` (the layout the fetched clone ships; `null` under `--no-drift`). Before 0.20.0 a difference is advisory, not a `--strict` input, and `drift` is still filled. From 0.20.0 (unreleased) a difference fails `--strict` and makes `drift` `null`. |
 | `orphans` | 0.13.0+: `[{path, state, reason?}]` for recorded files upstream no longer ships, still on disk; `state` is `unchanged`, `edited` or `unreadable`. `null` under `--no-drift`, without usable records, or with the clone at another layout. Never a `--strict` input. |
 | `hooks` | `status`: `match`, `local-only`, `missing`, `no-upstream`, `project-absent`, `unreadable`; `missing[]` and `localOnly[]` as `{event, matcher, command, args}`; `file`, `reason`. `local-only` counts as wired. |
 | `models` | `null` or `{conversionNeeded, verdict, stages, reds}`; verdict `valid`, `no-stages`, `invalid`, `old-format`. Never a `--strict` input. |
@@ -59,27 +61,35 @@ Branch on: `version.outdated` / `version.ahead`, `drift.modified` /
 with `--strict`. When `drift` is `null`, read `layout` before anything else: a
 set `layout.upstream` that differs from `layout.recorded` is a layout mismatch,
 not a skipped check. `orphans` is worth a line when it says something but
-never decides `strict.failed`; a layout difference decides it after 0.19.0
+never decides `strict.failed`; a layout difference decides it from 0.20.0
 (unreleased), never before.
 
 ## `pharn update --dry-run --json`
 
 Writes nothing (no lock, no backup, no config or records change). Exit 0 for
 every outcome below. Composes with `--force` and `--ref`; `--yes` does
-nothing. **`update --json` without `--dry-run` is refused** (exit 1,
-`Incomplete option for`). The plan is a snapshot: a real run fetches and
-decides again.
+nothing. Before 0.20.0, **`update --json` without `--dry-run` is refused**
+(exit 1, `Incomplete option for`). From 0.20.0 (unreleased) `--json` implies
+`--dry-run` and `--compact` implies `--json`, so `pharn update --json` and
+`pharn update --compact` run this same preview. Pass `--dry-run` explicitly
+anyway: it works on every version. The plan is a snapshot: a real run fetches
+and decides again.
 
 `status` field:
 
 | `status` | Meaning | `plan` |
 | -------- | ------- | ------ |
 | `planned` | A real run would proceed. | object |
-| `up-to-date` | Installed is the latest; nothing re-opens the run. | `null` |
+| `up-to-date` | Before 0.20.0: installed is the latest and nothing re-opens the run. From 0.20.0 (unreleased): the plan changes nothing, so a real run would ask nothing and write nothing; it may keep an edit of the person's, and `version.installed` may be behind `version.latest` when kept edits hold the bump back. | `null` |
 | `ahead-of-release` | Install is newer than the newest verified release (`--ref latest`); nothing changes without `--force`. | `null` |
 | `ahead-of-main` | 0.13.0+: install is newer than pharn-oss `main` (it moved back); nothing changes without `--force`. | `null` |
 
 Treat any other `status` as "do not apply".
+
+From 0.20.0 (unreleased) every `update` downloads pharn-oss and plans, at the
+current skills version too. A dry run at the current version that would
+restore a file, add an ignore line or move the layout is `planned`, not
+`up-to-date`; the `up-to-date` bytes are unchanged.
 
 Top level: `force`, `channel`, `channelChange` (`{from, to}` or `null`),
 `source`, `archetypes`, and `version`: `installed`, `latest`, and, with a

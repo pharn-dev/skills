@@ -13,6 +13,22 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Changed
 
+- `pharn` (no plugin version change yet): the `pharn-cli` skill describes the
+  `update` contract of pharn-cli 0.20.0 (unreleased, pharn-cli PRs #386 and
+  #390) next to the older one. From 0.20.0 `--json` implies `--dry-run` and
+  `--compact` implies `--json`, so `update --json` runs the preview instead of
+  being refused; the skill still spells out `--dry-run` for the preview and
+  never adds `--json` or `--compact` to a real run. From 0.20.0 every `update`
+  downloads and plans: `up-to-date` (still `plan: null`) means the plan changes
+  nothing, the text run ends `Up to date.` or `Nothing to change.`, and a plain
+  `update` restores missing files and moves a layout with no `--force`. The
+  "Already up to date" shortcut and its `--force` workaround are kept for CLIs
+  before 0.20.0. The `status` layout-mismatch rules are now labelled 0.20.0
+  instead of "after 0.19.0", and their advice no longer offers `--force` as a
+  fallback.
+- `pharn` evals: `status-layout-mismatch` now stubs 0.20.0's planned layout
+  move (a plain `update --dry-run` is `planned`; `--json` and `--compact` imply
+  `--dry-run`), and its grader no longer expects `--force` as a fallback.
 - `pharn` (no plugin version change yet): the `pharn-cli` skill reads a
   `status --json` layout mismatch the way pharn-cli does after 0.19.0
   (unreleased, pharn-cli PR #377). `drift` is `null` under `--no-drift` or
