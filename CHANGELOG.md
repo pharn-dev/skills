@@ -22,6 +22,11 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   plain `pharn update`, then `pharn update --force` (which overwrites edited
   files after a backup) only if that answers "Already up to date". Through CLI
   0.19.0 a mismatch stays advisory, as the skill said before.
+- `pharn` evals: a `status-layout-mismatch` case. Its stub CLI reports a
+  current install recorded at the flat layout while upstream ships the pharn
+  layout (`drift: null`, `layout` set, `status --strict` exits 1), and the
+  graders require the answer to call drift unknown rather than clean, to
+  advise a plain `pharn update` before `--force`, and never to run `--force`.
 - `phargus` tooling (no plugin version change): the behavioral release gate
   needs checkable evidence and a human sign-off. `npm run eval` records every
   trial in `VERIFICATION.json` itself, and writes redacted `final.json`,
