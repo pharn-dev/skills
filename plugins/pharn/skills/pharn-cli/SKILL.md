@@ -68,7 +68,8 @@ Always start here, whatever was asked. Branch on fields, not prose.
   no file was compared, so never call that drift clean. Only the layout
   mismatch fails `--strict`: then say the install is at another layout than
   upstream ships and that a plain `pharn update` moves it. These CLIs plan
-  every update, so moving it needs no `--force`.
+  every update, so moving it needs no `--force`, unless the install is ahead
+  of its source ([references/json.md](references/json.md)).
 - `pharn list --json`: the inventory.
 
 Without a `pharn.config.json` these fail with empty stdout; tell the person

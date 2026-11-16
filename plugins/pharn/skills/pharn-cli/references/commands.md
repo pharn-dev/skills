@@ -53,8 +53,11 @@ lock, so never run two CLI versions in one project at once.
   overwrites edited files (backed up first). From 0.20.0 (unreleased) it
   replaces the `DRIFT` note, neither the file drift nor `NOT SHIPPED UPSTREAM`
   is checked, and `--strict` exits 1; a plain `pharn update` moves the install
-  at any skills version, with no `--force`. `--no-drift` cannot see a
-  mismatch.
+  at any skills version, with no `--force`, unless the install is ahead of its
+  source (`ahead-of-release` or `ahead-of-main`): `update` refuses that before
+  it plans, so the mismatch stays. Then name the choices, `--force` (which
+  downgrades) or, on the release channel, `--ref main`, and run neither
+  without the person's consent. `--no-drift` cannot see a mismatch.
 - It needs network (GitHub) unless `--no-drift`.
 
 ## update

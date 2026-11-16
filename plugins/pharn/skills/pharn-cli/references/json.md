@@ -39,7 +39,12 @@ From 0.20.0 (unreleased), `drift` is also `null` on a layout mismatch
 `absentUpstream` is checked, so say that drift is unknown until the install is
 moved, not that it is clean. The fix is a plain `pharn update`, which moves the
 install at any skills version: 0.20.0 plans every update, so no `--force` is
-needed. `--no-drift` fetches no clone and cannot see a mismatch.
+needed. The exception is an install ahead of its source (`version.ahead`, or
+an update dry run that says `ahead-of-release` / `ahead-of-main`): `update`
+changes nothing there without `--force`, so the mismatch stays. Name the
+choices, `--force` (which downgrades) or, on the release channel,
+`--ref main`, and run neither without the person's consent. `--no-drift`
+fetches no clone and cannot see a mismatch.
 
 | Key | Meaning |
 | --- | ------- |
