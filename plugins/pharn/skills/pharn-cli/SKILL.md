@@ -63,6 +63,13 @@ Always start here, whatever was asked. Branch on fields, not prose.
   that apply: `version.channel`, `layout` (`recorded` and `upstream`), the
   top-level `orphans` and `drift.absentUpstream` (CLI 0.13.0+); each is
   described in [references/json.md](references/json.md).
+- `drift` is `null` under `--no-drift`, and, on CLIs after 0.19.0
+  (unreleased), when `layout.upstream` is set and differs from
+  `layout.recorded`. Then no file was compared and `--strict` fails: say the
+  install is at another layout than upstream ships, that a plain
+  `pharn update` moves it, and that `--force` (only if that answers "Already up
+  to date") also overwrites their edits after a backup. Never call that drift
+  clean.
 - `pharn list --json`: the inventory.
 
 Without a `pharn.config.json` these fail with empty stdout; tell the person

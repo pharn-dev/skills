@@ -44,6 +44,13 @@ lock, so never run two CLI versions in one project at once.
 - `--no-drift` skips the clone (version check only).
 - `--strict` exits 1 on outdated, differing, missing, unreadable, or an
   unwired hook. `MODELS` and `NODE` notes never affect it.
+- Layout: when the install is recorded at one layout (`flat` or `pharn`) and
+  the fetched clone ships the other, a `LAYOUT` note prints. Through 0.19.0 it
+  is advisory and drift is still listed. After 0.19.0 (unreleased) it replaces
+  the `DRIFT` note, neither the file drift nor `NOT SHIPPED UPSTREAM` is
+  checked, and `--strict` exits 1. `pharn update` moves the install; if it
+  answers "Already up to date", `pharn update --force` moves it but overwrites
+  edited files (backed up first). `--no-drift` cannot see a mismatch.
 - It needs network (GitHub) unless `--no-drift`.
 
 ## update
