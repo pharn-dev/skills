@@ -106,8 +106,8 @@ messages that decided it.
   Test results never change the verdict: `FLAKY_QUARANTINED_FAILURES` is
   `info`, and the JUnit codes are warnings.
 - `TESTS_NOT_EXERCISING_CHANGES` (0.7.x) is a `warn`, never an `error`: a
-  changed JS/TS source file no changed test imports. It shows under 🔍 Test
-  integrity.
+  changed JS/TS source file (from 0.12.0 also a Python one) no changed test
+  imports. It shows under 🔍 Test integrity.
 - The `fix` object (0.9.x) never changes a level or the verdict, and the
   comment does not show it: read it in `report.json`.
 
@@ -226,6 +226,9 @@ This skill changes nothing by default. When the person asks you to apply a fix:
   `TEST_INTEGRITY_TI11` (a workflow that runs fewer tests); an edit to an
   agent settings or MCP file can show up as `POLICY_P09`, and in an agent
   pull request as `POLICY_P13` (0.6.x) when it widens what an agent may do.
+  From pharn-ci 0.12.0 an edit to the config in use (`.pharn/ci.yml`) is not
+  applied to that pull request's own run, which reads the config at the merge
+  base: say that such a fix takes effect once it is merged.
 - The fix for a policy finding is a change to the flagged file only (a
   settings file, an MCP file, a tracked file, a workflow), never to the policy
   document, a rule's level, a protected path or `.pharn/ci.yml`.
