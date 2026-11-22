@@ -10,6 +10,11 @@ detectors under `packages/core/src/signals/`, the renderer's hints,
 README, CHANGELOG and `docs/LIMITS.md`. The report schema has no enum of
 codes: the `code` field is a string, and its description lists the known
 codes with their levels. Every code that list names at v0.9.1 is in this file.
+Notes marked "from 0.12.0" come from pharn-ci's `main` after v0.11.0
+(unreleased; its CHANGELOG `## [Unreleased]` and the code at that commit) and
+are gathered in
+[Behaviour changes in 0.12.0](#behaviour-changes-in-0120-unreleased); for a
+report whose `tool.version` is earlier, the "earlier" text applies.
 
 Every 0.1.x code keeps its meaning and level in later releases, and no code is
 removed or renamed before 1.0. The
@@ -86,6 +91,41 @@ first, and name the release that made the difference.
 - **0.9.0, fix hints.** Every message and finding carries an optional `fix`
   object; verdicts, inputs and the PR comment are unchanged.
 - **0.9.1** changes nothing in the Action apart from its version number.
+
+## Behaviour changes in 0.12.0 (unreleased)
+
+pharn-ci 0.12.0 is not released yet (the latest release is v0.11.0); these
+changes are on its `main`. They make some checks fail where they passed
+before, add no message code and change no report field. When `tool.version`
+is 0.12.0 or later, read the "from 0.12.0" notes under each code; for an
+earlier version, the "earlier" text.
+
+- **The config a pull request edits is read at the merge base (breaking).**
+  A change to `.pharn/ci.yml` (or the `config` input's file) applies after
+  merge, not to the pull request that makes it; an unreadable merge-base copy
+  makes `CONFIG_CHANGED_IN_DIFF` an error under a threshold or in `block`.
+  TI14 still reports a looser config. See `CONFIG_CHANGED_IN_DIFF` under
+  [Inputs the change controls](#inputs-the-change-controls-warnings).
+- **A committed coverage report the change edits fails a gated run:**
+  `COVERAGE_FILE_TRACKED` is an error under a threshold when the diff adds,
+  edits or renames to it.
+- **A covered source file the diff shows as binary fails a gated run:**
+  `DIFF_BINARY_COVERED_FILE` is an error under a threshold.
+- **Prompt-injection budgets:** two budgets of 8,000,000 characters (agent
+  instruction and Markdown files; every other file) instead of one, and
+  `INJECTION_TEXT_TRUNCATED` is an error when an instruction or Markdown file
+  was cut.
+- **An agent instruction file named like a test file is scanned:** the
+  `*.test.*` and `*.spec.*` exemptions no longer apply to it; `fixtures/`,
+  `__fixtures__/` and `testdata/` still exempt every path.
+- **Dependency safety fails closed:** `DEPENDENCY_CHECK_INCOMPLETE` is an error
+  unless every unread file is `unavailable`, and the cap for one file rises
+  from 5 MiB to 32 MiB. A `pyproject.toml` with an escaped quote in a
+  multi-line string is now read instead of being skipped.
+- **A file name with a backslash** is matched to its coverage record instead
+  of being dropped from diff coverage.
+- **`TESTS_NOT_EXERCISING_CHANGES` covers Python** source files too, so a
+  Python pull request can go from `pass` to `warn`.
 
 ## Diff coverage
 
@@ -187,18 +227,27 @@ the paths look relative to.
 - Paths relative to a package (`SF:src/index.ts` written in
   `packages/core`): set `coverage-root: packages/core` (`coverage.root`,
   `--coverage-root`). Check with `git ls-files packages/core/src/index.ts`.
+  From 0.12.0 a `coverage.root` added to `.pharn/ci.yml` in the same pull
+  request applies only after merge (see `CONFIG_CHANGED_IN_DIFF`).
 - One root per report: when several packages' reports are merged and each is
   package-relative, have each runner write repo-root-relative or absolute paths
   instead.
 - Absolute paths from another root (a Docker build's `/app/src/a.ts`, a
   symlinked workspace) are never remapped: write them relative to the repo,
   or as absolute paths under the checkout.
+- A file name with a backslash in it (legal on Linux and macOS): before
+  0.12.0 every backslash in a coverage path was read as a separator, so lcov
+  `SF:src/a\b.js` matched no tracked file and that file's lines were left out
+  of diff coverage. From 0.12.0 the backslash is part of the name when the
+  path read that way is a tracked file, and a separator (a Windows report)
+  otherwise, in lcov and Cobertura alike.
 
 ### `COVERAGE_PATHS_PARTIALLY_UNMATCHED` (info)
 
 Some coverage paths are not tracked files; their coverage is ignored. Nothing
 to do for generated or out-of-repo files. If a changed file is missing from the
-coverage table, its paths need a root (see above).
+coverage table, its paths need a root (see above), or, before 0.12.0, it may
+be a file with a backslash in its name (see above).
 
 ### `COVERAGE_LINES_SKIPPED` (info)
 
@@ -208,7 +257,7 @@ regenerate it and check the reporter finished.
 
 ## Inputs the change controls (warnings)
 
-### `CONFIG_CHANGED_IN_DIFF` (warn)
+### `CONFIG_CHANGED_IN_DIFF` (warn; from 0.12.0 error when the merge-base config cannot be read under a threshold or in block)
 
 The diff edits the pharn-ci config in use or a file under `.github/workflows/`,
 so the change may be grading itself. Read those hunks and say what they change
@@ -218,15 +267,50 @@ and the same edit can also give `TEST_INTEGRITY_TI14` (a lower threshold or a
 new exclusion in the config) or `TEST_INTEGRITY_TI11` (a workflow that stops
 running tests).
 
-### `COVERAGE_FILE_TRACKED` (warn)
+- From 0.12.0 (breaking): a pull request that edits the config in use
+  (`.pharn/ci.yml`, or the file the `config` input or `--config` names) is
+  checked with the config **as it is at the merge base**; the edit applies
+  after merge, as with CODEOWNERS. Modified, deleted or renamed away: the
+  merge-base copy is used. Added or renamed to: no config (`{}`), so the
+  defaults and inputs apply, and a `dependencies.lookup: true` in it switches
+  nothing on. Untouched, or no diff (an unavailable diff, `pr-number` mode, the
+  CLI without `--base`): the working tree, as before. The message adds a
+  sentence saying which copy was used. When the merge-base copy cannot be read
+  (no merge base, a shallow clone, a symbolic link at the path, over 1 MiB or
+  not UTF-8 text) the run goes on with `{}`, and the code is an `error`
+  (verdict `fail`) when a threshold is in force (0 included) or the
+  test-integrity mode is `block`, else a `warn`; its text names
+  `fetch-depth: 0`. A merge-base copy that does not parse fails the step. So a
+  config edit in a pull request, such as a `coverage.root`, `coverage.file`,
+  threshold or exclusion fix, does not change that pull request's own run:
+  merge the config change first, then the pull requests that rely on it.
+- Earlier: always a `warn`, and the run uses the config as the pull request
+  leaves it, so its own edit applies to its own run (from 0.6.0 a threshold or
+  mode looser than the workflow's is not applied, while an added exclusion is).
+
+### `COVERAGE_FILE_TRACKED` (warn; from 0.12.0 error when the change adds or edits it under a threshold)
 
 The coverage file is committed, so the change can supply its own numbers.
 Fix: generate it in CI, `git rm --cached <file>` and add it to `.gitignore`.
 
-### `DIFF_BINARY_COVERED_FILE` (warn)
+- From 0.12.0: an `error` (verdict `fail`, CLI exit `1`) when a threshold is
+  set, 0 included, and the diff adds, edits or renames to the tracked coverage
+  file the gate reads; the text names the path and says to remove the report
+  from git and let the test run write it. A tracked report the diff leaves
+  alone, or a run with no threshold, still gets the `warn`. A repository that
+  commits regenerated coverage in its pull requests fails every such pull
+  request under a threshold until it untracks the file.
+- Earlier: always a `warn`, whatever the diff does to the file.
+
+### `DIFF_BINARY_COVERED_FILE` (warn; from 0.12.0 error with a threshold)
 
 The diff shows a covered source file as binary, so its added lines were not
 measured. Look for `-diff` or `binary` on source files in `.gitattributes`.
+
+- From 0.12.0: an `error` when a threshold is set (0 included), since the gate
+  cannot measure that file and the pull request can cause it through
+  `.gitattributes`; still a `warn` without a threshold.
+- Earlier: always a `warn`.
 
 ### `TEST_FILES_DELETED` (info)
 
@@ -525,6 +609,13 @@ fires. Fix: restore the setting, or have the reviewers approve the looser one;
 `CONFIG_CHANGED_IN_DIFF` appears next to it. Recommend CODEOWNERS for the
 config.
 
+From 0.12.0 the pull request's own run uses the config at the merge base (see
+`CONFIG_CHANGED_IN_DIFF`), so the looser setting does not grade the change that
+makes it; TI14 still fires, including for an item appended to an existing
+`coverage.exclude` list, and its text ends by saying that once merged the
+looser setting applies to every later pull request. Before 0.12.0 the looser
+setting already applies to the run that reports it.
+
 ### `TEST_INTEGRITY_TI15` (info)
 
 0.3.0. A condition added to a JS/TS or Python source file (`===`, `!==`, `==`,
@@ -628,6 +719,19 @@ are not asked; import aliases, workspace packages, re-exports and per-test
 coverage are not followed. It is silent in mode `off`, without a diff and when
 the touched test files were not read.
 
+From 0.12.0 it also covers Python: for each changed `.py` source file it asks
+whether an added or modified Python test file imports it (`import pkg.billing`,
+`from pkg.billing import total`, `from . import billing`, anywhere in the test
+file) and keeps or raises its assertion count. A module name maps to
+`pkg/billing.py` or `pkg/billing/__init__.py` at the repository root or under
+`src/`; other source roots (`lib/`, a monorepo package), dynamic imports,
+namespace packages, `conftest.py` fixtures and `sys.path` edits are not
+followed. Python files are not asked when no usable `python3` was found for the
+touched Python test files. The message's closing words still say "a relative
+import"; for a Python file the module-name rule applies. Still a `warn`, with
+no new code or report field. Before 0.12.0 Python, Go and every other language
+are not checked, so a changed `.py` file never gets this warning.
+
 - Look at: each named source file, and whether a test the change touches
   imports it (an alias import or a re-export is not followed, so a test may
   exist that the check cannot see; say so when you find one).
@@ -727,6 +831,12 @@ text, on purpose: do not go and fetch it to quote it.**
 
 Exempt from every signal: `fixtures/**`, `**/__fixtures__/**`, `**/testdata/**`,
 `**/*.test.*` and `**/*.spec.*`; PI03 also skips `**/test/**` and locale files.
+From 0.12.0 the two name exemptions (`**/*.test.*`, `**/*.spec.*`) no longer
+apply to an agent instruction file, so `.cursor/rules/a.test.mdc` or
+`.claude/commands/x.spec.md`, which an agent loads, is scanned and can give
+PI01 to PI04; `fixtures/`, `__fixtures__/` and `testdata/`, and an app
+policy's `injection.exempt`, still exempt every path, instruction files
+included. Before 0.12.0 an instruction file named like a test file is exempt.
 An app policy can add exemptions (`injection.exempt`), add phrases
 (`injection.phrases`) and set each signal's severity (`injection.signals`); a
 `file:` policy can only add phrases and raise severities, and its exemptions
@@ -744,8 +854,9 @@ scan.
   a web page, a stray byte order mark from an editor, an HTML comment in a
   README. When the character or text is not meant, remove it. When it is
   meant (a test fixture of an attack string), it belongs under an exempt path
-  such as `fixtures/` or a test file, which is a change to the repository the
-  reviewer agrees to, not to the policy.
+  such as `fixtures/` or a test file (from 0.12.0 a test-file name does not
+  exempt an agent instruction file; a fixture directory does), which is a
+  change to the repository the reviewer agrees to, not to the policy.
 
 | Code | Default level | What it means |
 | ---- | ------------- | ------------- |
@@ -754,7 +865,7 @@ scan.
 | `INJECTION_PI03` | warn | An added line holds a known prompt-injection phrase of the versioned list (dropping earlier instructions, a persona switch, secrecy towards the user, chat-template tokens), or one of the policy's `injection.phrases`. |
 | `INJECTION_PI04` | warn | A line added to an agent instruction file holds a base64 or hex run of more than 200 characters. |
 | `INJECTION_PI05` | warn | An agent instruction file is added inside `node_modules/`, `vendor/`, `third_party/`, `.venv/`, `dist/` or `bower_components/`. |
-| `INJECTION_TEXT_TRUNCATED` | warn | A file had more added text than the scan reads (50,000 lines of a file, or 8,000,000 characters across the diff), so a finding past the cut is not seen. The text names up to 5 files. Fix (kind `none`): check the long added text by hand, or split the change. |
+| `INJECTION_TEXT_TRUNCATED` | warn; from 0.12.0 error when an instruction or Markdown file was cut | A file had more added text than the scan reads, so a finding past the cut is not seen. The text names up to 5 files. Before 0.12.0 the limits are 50,000 added lines of a file and one budget of 8,000,000 characters across the whole diff in diff order (a large generated file early in the diff can use it up before a later `AGENTS.md`), and the code is always a `warn`. From 0.12.0 there are two budgets of 8,000,000 characters each, in diff order: one for agent instruction files and Markdown files (`.md`, `.mdx`, `.markdown`, `.mdc`, any case), one for every other file; a file counts only against its own. The code is an `error` (verdict `fail`) when an instruction or Markdown file was cut, and a `warn` when only other files were (a 9 MB bundle); the text says which budget the cut files count against. `.mdown`, `.mkd` and plain text count as other files. Fix (kind `none`): check the long added text by hand, or split the change. |
 
 The scan misses encodings, homoglyphs, instructions split across lines,
 images and unchanged lines (`docs/LIMITS.md` in pharn-ci). No finding is proof
@@ -936,13 +1047,33 @@ packages and 60 s), so D01 to D03 were not checked for them;
 `dependencies.lookups` is `unavailable`. Lookups fail open. Fix (`none`):
 check that the runner can reach the registries, then run the check again.
 
-### `DEPENDENCY_CHECK_INCOMPLETE` (warn)
+### `DEPENDENCY_CHECK_INCOMPLETE` (warn; from 0.12.0 error unless every unread file is `unavailable`)
 
-A manifest or lockfile the change touches could not be read or parsed (over
-5 MiB, past the file or size caps, not valid, a TOML syntax error, or a diff
-not from local git), so dependency safety did not check it. Each is in
-`dependencies.unread` with a fixed reason. Fix (`none`): check that the named
-file can be read and parsed.
+A manifest or lockfile the change touches could not be read or parsed, so
+dependency safety did not check it. Each is in `dependencies.unread` with a
+fixed reason (`too-large`, `over-file-cap`, `over-total-cap`, `binary`,
+`missing`, `unsafe-path`, `unavailable`, `unparsable`). Fix (`none`): check
+that the named file can be read and parsed.
+
+- From 0.12.0: an `error` (verdict `fail`) when any unread file's reason is
+  one the pull request can cause (`unparsable`, `too-large`, `over-file-cap`,
+  `over-total-cap`, `binary`, `missing`, `unsafe-path`), so a broken or
+  oversized lockfile no longer passes where the same file read would block on
+  D05; the text names the cap a file went past. It stays a `warn` only when
+  every unread file is `unavailable` (git could not read that side at all: a
+  diff not from local git, a shallow clone). The cap for one file is 32 MiB,
+  the same as for one side (and 100 files a side), so an honest large lockfile
+  is read. A YAML or TOML feature pharn-ci's hand-written readers do not know
+  makes an honest file `unparsable`, and so an error: keep the file in the
+  shape the package manager writes. With `dependencies: never` nothing
+  changes.
+- Earlier: always a `warn`; a file over 5 MiB, past 100 files or 32 MiB a
+  side, not valid, with a TOML syntax error, or from a diff not from local git
+  is left unread.
+- A `pyproject.toml` whose multi-line string holds an escaped quote
+  (`"""A \"""quoted\""" word"""`) is valid TOML that pharn-ci before 0.12.0
+  reads as broken: it gives this code and the file's dependencies (a git
+  dependency included) go unchecked. From 0.12.0 it is read.
 
 ## JUnit results and flaky tests (0.8.x and later)
 

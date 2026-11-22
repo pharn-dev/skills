@@ -13,6 +13,24 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Changed
 
+- `pharn-ci` (no plugin version change yet): `pharn-ci-explain` describes the
+  level and behaviour changes on pharn-ci's `main` for 0.12.0 (unreleased,
+  epic CORE-8), each written as "from 0.12.0" next to the earlier behaviour,
+  which still applies to older reports. `references/codes.md` gains a
+  "Behaviour changes in 0.12.0" section and notes on `CONFIG_CHANGED_IN_DIFF`
+  and TI14 (a config the pull request edits is read at the merge base, and an
+  unreadable merge-base copy is an error under a threshold or in `block`;
+  breaking), `COVERAGE_FILE_TRACKED` (an error under a threshold when the diff
+  adds or edits the report), `DIFF_BINARY_COVERED_FILE` (an error under a
+  threshold), `INJECTION_TEXT_TRUNCATED` (two 8,000,000-character budgets; an
+  error when an instruction or Markdown file is cut), `DEPENDENCY_CHECK_INCOMPLETE`
+  (an error unless every unread file is `unavailable`; a 32 MiB cap per file;
+  `pyproject.toml` escaped quotes now read), the prompt-injection exemptions
+  (`*.test.*` and `*.spec.*` no longer exempt agent instruction files),
+  backslashes in coverage paths, and `TESTS_NOT_EXERCISING_CHANGES` for
+  Python. `SKILL.md` says a `.pharn/ci.yml` fix applies after merge from
+  0.12.0, and that the tests-exercise warning covers Python. The skill's
+  version range (0.1.x to 0.9.x) is unchanged.
 - `pharn` (no plugin version change yet): the `pharn-cli` skill describes the
   `update` contract of pharn-cli 0.20.0 (unreleased, pharn-cli PRs #386 and
   #390) next to the older one. From 0.20.0 `--json` implies `--dry-run` and
