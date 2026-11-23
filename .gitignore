@@ -12,3 +12,6 @@ src/*/coverage/
 pharn/.run/
 # PHARN run state and update backups (added by pharn)
 pharn/.backup/
+# Codex's import of the Claude Code setup (skills from .claude/commands, hooks); generated per machine, never committed
+.agents/skills/
+.codex/

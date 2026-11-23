@@ -76,6 +76,20 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
+- Repository (no plugin version change): the Skills CLI lists only the 11
+  product skills again. #47 committed the files Codex generated when it
+  imported the Claude Code setup, and the CLI scans `.agents/skills`, so
+  `npx skills add pharn-dev/skills --list` offered 27 skills, 16 of them
+  `source-command-pharn-*` copies of PHARN's own pipeline commands.
+  `.agents/skills/` and `.codex/` (a `hooks.json` with a path on the
+  maintainer's machine and stale hook copies) are removed and gitignored;
+  `.agents/plugins/marketplace.json`, the Codex marketplace, stays. A new
+  test fails when a `SKILL.md` is tracked anywhere but
+  `plugins/<plugin>/skills/<name>/`, or when the tracked skills differ from
+  README "What's inside" (CORE-209). If you ran
+  `npx skills add pharn-dev/skills --skill '*'`, the 16
+  `source-command-pharn-*` skills are installed and the CLI will not remove
+  them; delete them by hand (for example with `npx skills remove`).
 - `phargus` 0.1.1: the helpers accept the published `@pharn-dev/phargus` 0.1.x
   (`>=0.1.0 <0.2.0`) instead of only the unreleased 0.0.1, and the tested runtime
   is pinned to tag v0.1.0 (819a795875fc547e7daeccc0f0b50846ba642286). The setup
