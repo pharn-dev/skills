@@ -68,8 +68,10 @@ reports through its installed integration:
 Because `Phargus (Node 24)` runs pharn-ci with `test-integrity: block`, a pull
 request with a blocking test-integrity finding, such as a deleted test file
 (TI01) or a removed test (TI02), fails that check until a reviewer who is not
-the PR author applies the `pharn/accepted` label. The ruleset has no bypass,
-so it cannot merge before then.
+the PR author applies the `pharn/accepted` label and the check runs again. The
+`pull_request` trigger does not list `labeled`, so after the label is applied
+someone pushes or re-runs `Phargus (Node 24)`. The ruleset has no bypass, so
+the pull request cannot merge before then.
 
 These jobs also run on pull requests but are not required:
 
