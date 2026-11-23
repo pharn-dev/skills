@@ -68,6 +68,14 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
+- Repository (no plugin version change): `npm test` runs each suite once, and
+  no test pins a release number. `plugins/pharn-ci/tests/ac-0-4-5-test-suites.test.mjs`
+  ran the root suites again in a child `node --test`, so every test ran twice;
+  `npm test` itself is the check that they pass. It is removed, and so is
+  `.github/scripts/ac-pharn-cli-0-16-2-release.test.mjs`, which asserted that
+  the `pharn` plugin is at 0.5.0, so the next `pharn` release would have failed
+  it. A plugin version bump with its CHANGELOG heading no longer breaks a test
+  (CORE-260).
 - Repository (no plugin version change): the repository's own pharn-ci check
   measures the pharn-ci helpers. Only the Phargus tests wrote coverage, so a
   pull request that changed only `plugins/pharn-ci/skills/*/scripts/*.mjs` or
