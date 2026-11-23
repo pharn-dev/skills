@@ -8,8 +8,9 @@ on:
 permissions:
   contents: read
 
-# The job names Validate, Markdown lint and Phargus (Node …) are required status checks in
-# .github/rulesets/main.json: renaming one blocks every PR until the ruleset is edited to match.
+# The job names Validate, Markdown lint, Phargus (Node 22.18.0) and Phargus (Node 24) are required status
+# checks in .github/rulesets/main.json (the fifth, Socket Security: Project Report, comes from Socket):
+# renaming one, or a matrix value, blocks every PR until the live ruleset is edited to match.
 
 jobs:
   validate:

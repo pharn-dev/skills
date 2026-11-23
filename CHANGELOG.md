@@ -68,6 +68,20 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
+- Repository (no plugin version change): CONTRIBUTING and the rulesets README
+  describe the rules GitHub enforces. CONTRIBUTING "CI gates" said "the first
+  four" of four bullets run in `ci.yml` and that Validate runs
+  `node --test plugins/pharn-ci/tests/*.test.mjs`. It now names the five
+  required checks one per line, says Validate runs the format check, lint, the
+  action pin check, `npm test`, `claude plugin validate --strict` and the `cmp`
+  checks of shared files, says that a blocking test-integrity finding (TI01,
+  TI02) in `Phargus (Node 24)` needs a reviewer other than the PR author to
+  apply `pharn/accepted`, and lists the jobs that run but are not required
+  (`gitleaks`, `Analyze (javascript-typescript)`, `Root tests (Node 22.18.0)`,
+  `pharn-ci fixtures`) with the reason for each. The rulesets README drops the
+  finished Argus rename and the pending community-files PR, records that the
+  rulesets were applied on 2026-11-23, and names all three Dependabot entries.
+  The `ci.yml` comment names all five required checks (CORE-214).
 - Repository (no plugin version change): `npm test` runs each suite once, and
   no test pins a release number. `plugins/pharn-ci/tests/ac-0-4-5-test-suites.test.mjs`
   ran the root suites again in a child `node --test`, so every test ran twice;
