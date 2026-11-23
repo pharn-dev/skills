@@ -1,6 +1,5 @@
-// Acceptance tests for pharn-ci-fix-skill AC-5 to AC-7: the pharn-ci-fix helper scripts/list-fixes.mjs lists the fix
-// objects of a Report v2 JSON file, names each malformed one by its JSON Pointer, and handles a report with none.
-// The helper is run (and imported) inside each test body.
+// The pharn-ci-fix helper scripts/list-fixes.mjs lists the fix objects of a Report v2 JSON file, names each malformed
+// one by its JSON Pointer, and handles a report with none. The helper is run (and imported) inside each test body.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -107,7 +106,7 @@ function validReport() {
   return r;
 }
 
-test("AC-5: list-fixes exits 0 and lists every valid fix with where it sits, its code or id, kind, target and hint, by kind", async () => {
+test("list-fixes exits 0 and lists every valid fix with where it sits, its code or id, kind, target and hint, by kind", async () => {
   const report = validReport();
   const r = runOn(report);
   assert.equal(r.status, 0, `exit ${r.status}: ${r.stderr}`);
@@ -146,7 +145,7 @@ test("AC-5: list-fixes exits 0 and lists every valid fix with where it sits, its
   assert.deepEqual(listFixes(report), out);
 });
 
-test("AC-6: list-fixes exits non-zero and names each malformed fix by its JSON Pointer", () => {
+test("list-fixes exits non-zero and names each malformed fix by its JSON Pointer", () => {
   const r0 = validReport();
   r0.messages[0].fix.target = "src/cart.mjs";
   r0.messages[1].fix.kind = "lower-threshold";
@@ -167,7 +166,7 @@ test("AC-6: list-fixes exits non-zero and names each malformed fix by its JSON P
   }
 });
 
-test("AC-7: list-fixes exits 0 on a report with no fix objects, with no fixes and the count of entries that have none", () => {
+test("list-fixes exits 0 on a report with no fix objects, with no fixes and the count of entries that have none", () => {
   const report = base();
   report.tool.version = "0.4.0";
   report.messages = [

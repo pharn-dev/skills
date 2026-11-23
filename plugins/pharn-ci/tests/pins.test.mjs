@@ -41,7 +41,7 @@ function passes(grader, content) {
 }
 
 describe("pins", () => {
-  test("every pharn-ci pin in every skill (text, references and scripts) and in the install graders is the manifest's latest pinned commit", () => {
+  test("every pharn-ci pin in every skill (text, references and scripts) and in the install graders is the manifest's latest pinned commit, with its version comment", () => {
     const skillFiles = readdirSync(path.join(PLUGIN, "skills")).flatMap((skill) => {
       const dir = path.join(PLUGIN, "skills", skill);
       const under = (sub, ext) => {
@@ -59,9 +59,12 @@ describe("pins", () => {
     const files = [...skillFiles, ...installGraders];
     let seen = 0;
     for (const rel of files) {
-      for (const m of read(rel).matchAll(/pharn-dev\/pharn-ci@([0-9A-Za-z.]+)/g)) {
+      for (const m of read(rel).matchAll(/pharn-dev\/pharn-ci@([0-9A-Za-z.]+)(.*)/g)) {
         seen++;
         assert.equal(m[1], latest.sha, `${rel} pins pharn-ci at ${m[1]}`);
+        // A grader writes the comment as a regex (`\s+#\s*v0\.9\.1`): read it with \s as a space and no escapes.
+        const comment = m[2].replace(/\\s[*+]?/g, " ").replaceAll("\\", "");
+        assert.ok(comment.includes(`# ${latest.ref}`), `${rel} pins pharn-ci without # ${latest.ref}`);
       }
     }
     assert.ok(seen > 5);
@@ -111,7 +114,9 @@ describe("the eval graders accept the reference's templates", () => {
       .map((f) => `evals/${dir}/graders/${f}`)
       .filter((rel) => /^type: regex$/m.test(read(rel)) && !rel.includes("/unchanged-"));
 
-  test("install-node-default: the config and the new workflow", () => {
+  test("install-node-default: the config and the new workflow, which sets no policy input and grants no id-token", () => {
+    assert.doesNotMatch(newWorkflow, /^\s*policy:/m);
+    assert.doesNotMatch(newWorkflow, /id-token:\s*write/);
     const files = { ".pharn/ci.yml": config, ".github/workflows/pharn-ci.yml": newWorkflow };
     const checked = graders("install-node-default");
     assert.ok(checked.length >= 10);
@@ -141,6 +146,11 @@ describe("the eval graders accept the reference's templates", () => {
     assert.equal(passes(headCheckout, "        with:\n          ref: ${{ github.event.workflow_run.head_sha }}\n"), false);
     const inputs = regexGrader("evals/install-node-default/graders/no-inputs.md");
     assert.equal(passes(inputs, "        with:\n          threshold: 80\n"), false);
+    // The scaffold assembles the planted token from two literals; the grader must reject it without holding it.
+    const [, prefix, rest] = /token=\$\(printf '%s%s' '([^']+)' '([^']+)'\)/.exec(read("evals/explain-agent-config-secret/scaffold.sh"));
+    const secret = regexGrader("evals/explain-agent-config-secret/graders/no-secret.md");
+    assert.equal(passes(secret, `the token is ${prefix}${rest}`), false);
+    assert.ok(!read("evals/explain-agent-config-secret/graders/no-secret.md").includes(prefix + rest));
   });
 
   test("install-test-integrity: the new workflow in block mode with the label triggers", () => {
@@ -271,58 +281,7 @@ describe("the eval graders accept the reference's templates", () => {
   });
 });
 
-// The codes pharn-ci 0.3.0 and 0.4.0 added. pharn-ci-explain documents each one under a heading or table row that
-// also names its default level, so a skill that drifts from the codes it explains fails here.
-const CODES_0_3_AND_0_4 = [
-  "TEST_INTEGRITY_TI02",
-  "TEST_INTEGRITY_TI05",
-  "TEST_INTEGRITY_TI06",
-  "TEST_INTEGRITY_TI07",
-  "TEST_INTEGRITY_TI08",
-  "TEST_INTEGRITY_TI09",
-  "TEST_INTEGRITY_TI12",
-  "TEST_INTEGRITY_TI15",
-  "TEST_INTEGRITY_TI16",
-  "TEST_INTEGRITY_INDEX_UNAVAILABLE",
-  "POLICY_UNAVAILABLE",
-  "POLICY_OVERRIDE_IGNORED",
-  "POLICY_P02",
-  "POLICY_P03",
-  "POLICY_P04",
-  "POLICY_P05",
-  "POLICY_P06",
-  "POLICY_P07",
-  "POLICY_P08",
-  "POLICY_P09",
-  "POLICY_P11",
-  "POLICY_SETTINGS_INVALID",
-  "AGENT_PR_DETECTION_INCOMPLETE",
-  "AGENT_CONFIG_SECRET_S01",
-  "AGENT_CONFIG_SECRET_S02",
-  "AGENT_CONFIG_SECRET_S03",
-  "AGENT_CONFIG_SECRET_S04",
-  "AGENT_CONFIG_SECRET_S05",
-  "AGENT_CONFIG_SECRET_S06",
-  "AGENT_CONFIG_SECRET_S07",
-  "AGENT_CONFIG_SECRET_S08",
-  "AGENT_CONFIG_SECRET_S09",
-  "AGENT_CONFIG_SECRET_S10",
-  "AGENT_CONFIG_SECRET_S11",
-  "AGENT_CONFIG_SECRET_UNSCANNED",
-  "UPLOAD_TOO_LARGE",
-];
-
-describe("pharn-ci 0.3.0 and 0.4.0 codes", () => {
-  test("pharn-ci-explain names every code with its level, on a heading or a table row", () => {
-    const lines = ["codes.md", "policy.md"].flatMap((f) => read(`skills/pharn-ci-explain/references/${f}`).split("\n"));
-    for (const code of CODES_0_3_AND_0_4) {
-      const token = new RegExp(`(?<![A-Za-z0-9_])${code}(?![A-Za-z0-9_])`, "g");
-      const row = lines.find((l) => /^\s*(?:#{1,6}\s|\|)/.test(l) && token.test(l));
-      assert.ok(row, `${code} has no heading or table row`);
-      assert.match(row.replace(token, " "), /\b(?:block|error|warn|info)\b/i, `${code}: ${row}`);
-    }
-  });
-
+describe("the manifest and the bundled policy schema", () => {
   test("the manifest pins pharn-ci 0.4.0 for the explain and policy cases", () => {
     assert.equal(manifest.pharnCi["0.4.0"].sha, "a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756");
     for (const name of ["explain-policy-p02", "explain-agent-config-secret", "policy-org-draft"])

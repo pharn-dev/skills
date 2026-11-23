@@ -70,7 +70,8 @@ describe("check-policy", () => {
           max_files: 20,
           max_changed_lines: 500,
         },
-        dependencies: { registries: ["npm", "pypi"], min_age_days: 7, min_weekly_downloads: 100 },
+        dependencies: { registries: ["npm", "pypi"], min_age_days: 7, min_weekly_downloads: 100, lookup: true },
+        injection: { exempt: ["docs/**"], phrases: ["ignore the reviewer"], signals: { PI01: "block", PI03: "warn" } },
       }),
       []
     );
@@ -85,6 +86,7 @@ describe("check-policy", () => {
       { path: "/agents/max_files", message: "must be an integer" },
     ]);
     assert.deepEqual(problemsOf({ version: 1, setup: { require: "yes" } }), [{ path: "/setup/require", message: "must be true or false" }]);
+    assert.deepEqual(pathsOf({ version: 1, dependencies: { lookup: "yes" } }), ["/dependencies/lookup"]);
     assert.deepEqual(problemsOf({ version: 1, setup: [] }), [{ path: "/setup", message: "must be an object" }]);
     assert.deepEqual(problemsOf({ version: 1, setup: { expect: "claude-code" } }), [{ path: "/setup/expect", message: "must be a list" }]);
     assert.deepEqual(problemsOf([]), [{ path: "", message: "must be an object" }]);
@@ -96,6 +98,7 @@ describe("check-policy", () => {
     assert.deepEqual(problemsOf({ version: 1, foo: 1 }), [{ path: "/foo", message: "unknown key" }]);
     assert.deepEqual(pathsOf({ version: 1, policy: { rules: { P15: "warn" } } }), ["/policy/rules/P15"]);
     assert.deepEqual(pathsOf({ version: 1, test_integrity: { signals: { TI17: "warn" } } }), ["/test_integrity/signals/TI17"]);
+    assert.deepEqual(pathsOf({ version: 1, injection: { signals: { PI06: "warn" } } }), ["/injection/signals/PI06"]);
     assert.deepEqual(pathsOf({ version: 1, setup: { required_hooks: [{ matcher: "Bash" }] } }), ["/setup/required_hooks/0/event"]);
     assert.deepEqual(pathsOf({ version: 1, setup: { required_hooks: [{ event: "Stop", extra: 1 }] } }), ["/setup/required_hooks/0/extra"]);
   });
