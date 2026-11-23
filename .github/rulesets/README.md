@@ -1,10 +1,12 @@
 # Repository settings
 
-These files describe the target configuration for `pharn-dev/skills`.
-Committing them does not configure GitHub. Apply them after the community-files
-PR is merged, from an up-to-date `main` checkout, using an account with repository
-administration access. Check the [live rules](https://github.com/pharn-dev/skills/rules)
-for current enforcement.
+These files describe the configuration of `pharn-dev/skills`. Committing them
+does not configure GitHub: apply a change from an up-to-date `main` checkout,
+using an account with repository administration access. Check the
+[live rules](https://github.com/pharn-dev/skills/rules) for current enforcement.
+
+Applied on 2026-11-23 and verified with the commands under
+[Verify activation](#verify-activation).
 
 ## Two rulesets
 
@@ -18,10 +20,6 @@ for current enforcement.
 The GitHub Actions checks use application ID `15368`; Socket uses `156372`.
 The post-merge skills.sh job is not a PR requirement.
 
-The Argus rename changes the CI contexts to `Phargus (Node 22.18.0)` and
-`Phargus (Node 24)`. If the live required checks include the old Argus names,
-replace them when the rename PR starts reporting the Phargus checks; otherwise
-GitHub will wait for the obsolete checks. Use the new names when activating this ruleset.
 Changing main.json in Git does not update the live ruleset.
 
 GitHub [applies all matching rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets).
@@ -82,9 +80,9 @@ gh api repos/pharn-dev/skills/actions/permissions \
 
 Keep the default workflow token read-only, workflow review approval disabled,
 and automatic merge disabled. Dependabot's version-update schedule is in
-[dependabot.yml](../dependabot.yml): npm in `/src/phargus`, GitHub Actions in `/`,
-weekly, with at most five open version-update PRs per ecosystem. Versions
-embedded in commands such as `npx skills@...` are updated deliberately.
+[dependabot.yml](../dependabot.yml): npm in `/`, npm in `/src/phargus` and
+GitHub Actions in `/`, weekly, with at most five open version-update PRs per
+entry. Versions embedded in commands such as `npx skills@...` are updated deliberately.
 
 ## Verify activation
 

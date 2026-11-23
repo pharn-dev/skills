@@ -40,24 +40,52 @@ security claims, read [LIMITS.md](LIMITS.md) and [THREAT-MODEL.md](THREAT-MODEL.
 
 ## CI gates
 
-Pull requests must pass the checks below. The first four run in
-`.github/workflows/ci.yml`; Socket reports through its installed integration:
+The `main` ruleset requires these five checks, and the branch must be up to
+date with `main`. The first four run in `.github/workflows/ci.yml`; Socket
+reports through its installed integration:
 
-- **Validate**: `claude plugin validate --strict` on the marketplace and on
-  each plugin, the pharn-ci helpers' and pins' unit tests
-  (`node --test plugins/pharn-ci/tests/*.test.mjs`), and the identical copies of
-  shared eval scaffolds and of the pharn-ci report reference.
+- **Validate**: the Prettier format check (`npm run format:check`), ESLint
+  (`npm run lint`), the action pin check (`npm run check:pins`), `npm test`
+  (the suites under
+  `.github/scripts/`, `plugins/pharn-ci/tests/` and
+  `plugins/pharn-ci/evals/fixtures/`, as globbed in `package.json`),
+  `claude plugin validate --strict` on the marketplace and on each plugin, and
+  `cmp` checks that the shared copies are identical: the pharn-ci report
+  reference and the shared pharn and pharn-ci eval scaffolds.
 - **Markdown lint**: `markdownlint-cli2` over all Markdown files.
-- **Phargus** (Node 22.18.0 and 24): formatting, generated files, skill
-  metadata, lint, typecheck, unit tests, integration tests against the pinned
-  Phargus commit, and the package check, all from `src/phargus`. The Node 24
-  leg also writes lcov, with repository-relative paths, for the Phargus tests
-  (`npm run test:coverage` in `src/phargus`) and for the root suites
-  (`npm run test:coverage` at the root: the pharn-ci helpers and
-  `.github/scripts`), then runs pharn-ci on the pull request with both reports
-  (`.pharn/ci.yml`, threshold 80, test integrity `block`).
+- **Phargus (Node 22.18.0)**: formatting, generated files, skill metadata,
+  lint, typecheck, unit tests, integration tests against the pinned Phargus
+  commit, and the package check, all from `src/phargus`.
+- **Phargus (Node 24)**: the same steps, and it also writes lcov, with
+  repository-relative paths, for the Phargus tests (`npm run test:coverage` in
+  `src/phargus`) and for the root suites (`npm run test:coverage` at the root:
+  the pharn-ci helpers and `.github/scripts`), then runs pharn-ci on the pull
+  request with both reports (`.pharn/ci.yml`, threshold 80, test integrity
+  `block`).
 - **Socket Security: Project Report**: the installed Socket integration's
   dependency report.
+
+Because `Phargus (Node 24)` runs pharn-ci with `test-integrity: block`, a pull
+request with a blocking test-integrity finding, such as a deleted test file
+(TI01) or a removed test (TI02), fails that check until a reviewer who is not
+the PR author applies the `pharn/accepted` label and the check runs again. The
+`pull_request` trigger does not list `labeled`, so after the label is applied
+someone pushes or re-runs `Phargus (Node 24)`. The ruleset has no bypass, so
+the pull request cannot merge before then.
+
+These jobs also run on pull requests but are not required:
+
+- **gitleaks** (`.github/workflows/gitleaks.yml`) scans the whole git history
+  for secrets; GitHub's secret scanning and push protection, enabled on the
+  repository, are the enforced secret checks.
+- **Analyze (javascript-typescript)** (`.github/workflows/codeql.yml`) is
+  CodeQL's `security-and-quality` scan; it reports its findings as code
+  scanning alerts rather than as a merge gate.
+- **Root tests (Node 22.18.0)** runs `npm test` on the `engines` floor;
+  Validate already runs the same tests on Node 24.
+- **pharn-ci fixtures** builds every pinned pharn-ci commit and checks the
+  eval fixtures against them (see [Evals](#evals)); the fixtures serve only the
+  evals, which CI does not run.
 
 The pharn-ci verdict is the pharn-ci step of `Phargus (Node 24)`, which reads
 the pull request head. The sticky pharn-ci comment comes from a second run,
@@ -140,8 +168,9 @@ Node must be the pinned version. The Action-only accept-label codes are
 produced by applying pharn-ci core's own accept-label functions to the case's
 gh fixture (`acceptLabel` in the manifest), as the Action does. The
 `pharn-ci fixtures` job in `.github/workflows/ci.yml` builds every pinned
-commit and runs `--check`; it is not one of the required checks above. Cases that need GitHub or a local CLI carry
-a stub `gh` or `pharn-ci` in `./bin` that logs its calls and refuses writes.
+commit and runs `--check`; it is not a required check (see
+[CI gates](#ci-gates)). Cases that need GitHub or a local CLI carry a stub
+`gh` or `pharn-ci` in `./bin` that logs its calls and refuses writes.
 The `pharn-ci-cover` cases run the fixture's tests on Node's own test runner,
 so they need Node 22 or later and no network; `Edit` and `Write` are granted so
 the graders can check which files were and were not changed.
@@ -247,9 +276,10 @@ and page refresh timing remain under skills.sh's control.
 ## Review and repository settings
 
 [CODEOWNERS](.github/CODEOWNERS) assigns every path to `@PrzemekGalarowicz`.
-The target `main` rules require PRs, the five checks above, an up-to-date branch,
-resolved review threads, and one approval from the code owner. New code changes
-invalidate existing approvals. Force pushes and branch deletion are blocked.
+The `main` rules require PRs, the five required checks in
+[CI gates](#ci-gates), an up-to-date branch, resolved review threads, and one
+approval from the code owner. New code changes invalidate existing approvals.
+Force pushes and branch deletion are blocked.
 
 The maintainer account has a PR-only exception to the review requirement so it
 can merge its own PRs, which GitHub does not allow it to approve. A separate
@@ -258,7 +288,7 @@ the maintainer's credentials receives the same exception; GitHub cannot
 distinguish it from the human maintainer.
 
 [Repository settings](.github/rulesets/README.md) describes the versioned rules
-and their post-merge activation. Committing these files does not activate the
-rules; the [live GitHub rules](https://github.com/pharn-dev/skills/rules) are the
+and how they are applied and verified. Committing these files does not
+activate the rules; the [live GitHub rules](https://github.com/pharn-dev/skills/rules) are the
 source of truth for current enforcement. Dependency updates require review and
 CI through the same process, with no automatic merge.
