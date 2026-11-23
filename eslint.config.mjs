@@ -15,6 +15,8 @@ export default [
       // Installed and updated by the PHARN CLI (pharn.records.json); not edited by hand.
       "pharn/**",
       ".claude/**",
+      // Codex's import of .claude (gitignored); regenerated on a maintainer's machine, never this repo's code.
+      ".codex/**",
     ],
   },
   js.configs.recommended,
