@@ -165,25 +165,38 @@ jobs:
         run: |
           npm test
           npm run test:integration
+      # The root suites' coverage of the pharn-ci helpers and .github/scripts, for the same
+      # pharn-ci gate (.pharn/ci.yml reads both reports). They import Node core only, so the
+      # root needs no npm ci. Validate already runs them as a check; this run is for coverage.
+      - id: root-tests
+        if: matrix.node == '24'
+        working-directory: ${{ github.workspace }}
+        run: npm run test:coverage
       - run: npm run check:package
-      # pharn-ci needs this leg's coverage and the PR number; a fork PR's token here
+      # pharn-ci needs this leg's two coverage reports and the PR number; a fork PR's token here
       # cannot comment, so pharn-ci-comment.yml posts it from the default branch instead.
       # `!cancelled()` (rather than a bare condition, which GitHub ANDs with success()) lets
-      # these still run after check:package fails, since the coverage above already succeeded.
+      # these still run after check:package fails, since both coverage runs above already
+      # succeeded (root-tests runs only after unit-tests succeeded).
       - name: Write PR number for pharn-ci
-        if: steps.unit-tests.outcome == 'success' && !cancelled() && matrix.node == '24' && github.event_name == 'pull_request'
+        if: steps.root-tests.outcome == 'success' && !cancelled() && matrix.node == '24' && github.event_name == 'pull_request'
+        working-directory: ${{ github.workspace }}
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: echo "$PR_NUMBER" > pr-number
-      - if: steps.unit-tests.outcome == 'success' && !cancelled() && matrix.node == '24' && github.event_name == 'pull_request'
+      # The artifact is rooted at these paths' common ancestor, the workspace, so it holds
+      # pr-number, coverage/lcov.info and src/phargus/coverage/lcov.info: the paths
+      # pharn-ci-comment.yml reads.
+      - if: steps.root-tests.outcome == 'success' && !cancelled() && matrix.node == '24' && github.event_name == 'pull_request'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pharn-ci-input
           path: |
+            pr-number
+            coverage/lcov.info
             src/phargus/coverage/lcov.info
-            src/phargus/pr-number
       - id: pharn-ci
-        if: steps.unit-tests.outcome == 'success' && !cancelled() && matrix.node == '24' && github.event_name == 'pull_request'
+        if: steps.root-tests.outcome == 'success' && !cancelled() && matrix.node == '24' && github.event_name == 'pull_request'
         uses: pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400 # v0.11.0
         timeout-minutes: 5
         with:

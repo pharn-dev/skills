@@ -6,7 +6,7 @@ plugins/*/evals/results/
 src/*/.cache/
 src/*/dist/
 src/*/evals/results/
-src/*/coverage/
+coverage/
 .cache/
 # PHARN's own run state (stage logs, markers, scopes); never committed
 pharn/.run/
