@@ -76,6 +76,26 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   the `pharn` plugin is at 0.5.0, so the next `pharn` release would have failed
   it. A plugin version bump with its CHANGELOG heading no longer breaks a test
   (CORE-260).
+- Repository (no plugin version change): the acceptance tests of wording are
+  retired. The remaining 19 `ac-*.test.mjs` files in `plugins/pharn-ci/tests/` and
+  `.github/scripts/` (about 2,500 lines) mostly matched English sentences in
+  `SKILL.md` files, references, `README.md` and `CHANGELOG.md` with their own
+  Markdown parsers, tested other tests or checked that files exist, so
+  rewording a sentence failed `npm test`. They are removed. What they guarded
+  that a machine can decide moved into the permanent tests:
+  `ac-fix-list-fixes.test.mjs` is now `list-fixes.test.mjs`;
+  `schema-drift.test.mjs` tests `tests/lib/schema-drift.mjs` itself, checks
+  every code of the report schema (not a hand-kept list) for a heading or table
+  row with its level, and checks that every fix kind is named in
+  `pharn-ci-explain`'s `report.md` and `pharn-ci-fix`'s `kinds.md`;
+  `pins.test.mjs` checks each pharn-ci pin's version comment, that the default
+  install workflow sets no `policy` input and grants no `id-token: write`, and
+  that the `explain-agent-config-secret` grader rejects the token its scaffold
+  plants without holding it; `check-policy.test.mjs` covers `injection.*` and
+  `dependencies.lookup`. CONTRIBUTING "Rules" says an `ac-*` file is folded
+  into a permanent test or dropped before its pull request merges
+  (CORE-261). The `pharn/features/*/AC-TESTS.lock.json` files that name the
+  removed files are left as they were, stale on purpose.
 - Repository (no plugin version change): the repository's own pharn-ci check
   measures the pharn-ci helpers. Only the Phargus tests wrote coverage, so a
   pull request that changed only `plugins/pharn-ci/skills/*/scripts/*.mjs` or

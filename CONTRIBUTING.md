@@ -28,6 +28,14 @@ security claims, read [LIMITS.md](LIMITS.md) and [THREAT-MODEL.md](THREAT-MODEL.
 - **Placement.** Skills that operate a tool from outside live here. Skills that
   are part of the PHARN methodology and need its floor ship with pharn-oss.
 - Describe only what the tool version named in the skill actually does.
+- **No `ac-*` test files are merged.** The acceptance tests a PHARN run writes
+  (`/pharn-test`) are not merged as `ac-*.test.mjs` files. Before the pull
+  request merges, fold each one into a permanent test under a name that says
+  what it guards, or drop it. Keep an assertion only when a machine can decide
+  it and it would be a defect if false: a pin equals the manifest, a schema
+  copy's hash, a code list is complete, a shared file is identical. A test that
+  matches English sentences in a `SKILL.md`, a reference or the changelog is
+  dropped.
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/).
 
 ## CI gates
