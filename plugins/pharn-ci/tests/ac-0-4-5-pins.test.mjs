@@ -1,6 +1,6 @@
 // Acceptance tests for pharn-ci-plugin-0-4-5: AC-1 (every pharn-ci pin names the latest release, v0.4.0 when this was written), AC-2 (the fixtures manifest
-// pins exactly the versions ci.yml checks out and passes to regen.mjs --check). AC-4 (plugin.json 0.2.0) was retired
-// when the plugin moved to 0.2.1 (CORE-210): a version pin belongs to a release, not to a test.
+// pins exactly the versions ci.yml checks out and passes to regen.mjs --check) and AC-4 (plugin.json declares the version
+// of the newest pharn-ci release in CHANGELOG.md; it pinned "0.2.0" until CORE-210, so a release no longer edits it).
 // Every target is read inside its test body, so a missing file is a failed test, never an uncollected file.
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -144,4 +144,11 @@ test("AC-2: the fixtures manifest pins its latest and exactly the versions ci.ym
     assert.equal(checkout.ref, pin.ref, `ci.yml's ref comment for ${version} differs from the manifest's ref`);
     assert.equal(passed.get(version), checkout.path, `regen.mjs --check is passed another path for ${version} than its checkout`);
   }
+});
+
+test("AC-4: plugin.json declares the version of the newest pharn-ci release in CHANGELOG.md", () => {
+  const manifest = JSON.parse(read(join(PLUGIN, ".claude-plugin/plugin.json")));
+  const release = /^## \[pharn-ci (\d+\.\d+\.\d+)\]/m.exec(read(join(ROOT, "CHANGELOG.md")));
+  assert.ok(release, "CHANGELOG.md has no pharn-ci release heading");
+  assert.equal(manifest.version, release[1]);
 });
