@@ -68,6 +68,17 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
+- Repository (no plugin version change): the repository's own pharn-ci check
+  measures the pharn-ci helpers. Only the Phargus tests wrote coverage, so a
+  pull request that changed only `plugins/pharn-ci/skills/*/scripts/*.mjs` or
+  `.github/scripts/*.mjs` got `NO_COVERABLE_CHANGES`. The Node 24 leg of
+  `Phargus` now also writes lcov for the root suites (`npm run test:coverage`,
+  test files excluded), the Phargus report's paths are repository-relative too,
+  and `.pharn/ci.yml` lists both files without `coverage.root`; the threshold
+  stays 80. `pharn-ci-comment.yml` passes both reports, and CONTRIBUTING "CI
+  gates" says why its `pr-number`-mode comment always carries
+  `AGENT_CONFIG_SECRET_UNSCANNED` and that `Phargus (Node 24)` is the verdict
+  (CORE-216).
 - Repository (no plugin version change): the Skills CLI lists only the 11
   product skills again. #47 committed the files Codex generated when it
   imported the Claude Code setup, and the CLI scans `.agents/skills`, so

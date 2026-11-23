@@ -1,5 +1,8 @@
 # pharn-ci settings. The pharn-ci Action and `pharn-ci check` both read this file.
+# Both reports have repository-relative paths, so no coverage.root: the root suites'
+# (`npm run test:coverage`) and phargus's (`npm run test:coverage` in src/phargus).
 coverage:
-  file: src/phargus/coverage/lcov.info
-  root: src/phargus
+  file:
+    - coverage/lcov.info
+    - src/phargus/coverage/lcov.info
   threshold: 80

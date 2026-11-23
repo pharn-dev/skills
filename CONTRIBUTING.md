@@ -42,9 +42,27 @@ Pull requests must pass the checks below. The first four run in
 - **Markdown lint**: `markdownlint-cli2` over all Markdown files.
 - **Phargus** (Node 22.18.0 and 24): formatting, generated files, skill
   metadata, lint, typecheck, unit tests, integration tests against the pinned
-  Phargus commit, and the package check, all from `src/phargus`.
+  Phargus commit, and the package check, all from `src/phargus`. The Node 24
+  leg also writes lcov, with repository-relative paths, for the Phargus tests
+  (`npm run test:coverage` in `src/phargus`) and for the root suites
+  (`npm run test:coverage` at the root: the pharn-ci helpers and
+  `.github/scripts`), then runs pharn-ci on the pull request with both reports
+  (`.pharn/ci.yml`, threshold 80, test integrity `block`).
 - **Socket Security: Project Report**: the installed Socket integration's
   dependency report.
+
+The pharn-ci verdict is the pharn-ci step of `Phargus (Node 24)`, which reads
+the pull request head. The sticky pharn-ci comment comes from a second run,
+`.github/workflows/pharn-ci-comment.yml`, which posts from the default branch
+because a fork's token cannot comment, and never fails (`fail-on-verdict:
+false`). That run uses `pr-number` mode: its checkout is the default branch, so
+the agent config files are not scanned for secrets and every comment carries
+`AGENT_CONFIG_SECRET_UNSCANNED` (warn). When the pull request touches test
+files it also carries `TEST_INTEGRITY_INDEX_UNAVAILABLE`, an error under
+`test-integrity: block`, because the diff comes from the GitHub API without
+the files' text. Neither is a finding about the change. The comment run uses
+the default branch's workflow and `.pharn/ci.yml`, so a change to either shows
+in the comment only after it merges.
 
 Evals need model credentials, so CI does not run them. For changes to skill
 instructions, runtime helpers, references, or other behavior-affecting content,
