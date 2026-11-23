@@ -11,26 +11,18 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ## [Unreleased]
 
+### Added
+
+- Repository tests: `.github/scripts/skill-frontmatter.test.mjs` checks every
+  shipped `plugins/*/skills/*/SKILL.md` (from `git ls-files`) against the
+  Agent Skills spec: `name` matches its directory, is at most 64 characters and
+  matches `^[a-z0-9]+(-[a-z0-9]+)*$`; `description` is one line of 1 to 1024
+  characters; `compatibility`, when present, is at most 500. The frontmatter is
+  read by hand, so the root package gains no dependency. Before, only `phargus`
+  was checked (`src/phargus/scripts/validate.mjs`).
+
 ### Changed
 
-- `pharn-ci` (no plugin version change yet): `pharn-ci-explain` describes the
-  level and behaviour changes on pharn-ci's `main` for 0.12.0 (unreleased,
-  epic CORE-8), each written as "from 0.12.0" next to the earlier behaviour,
-  which still applies to older reports. `references/codes.md` gains a
-  "Behaviour changes in 0.12.0" section and notes on `CONFIG_CHANGED_IN_DIFF`
-  and TI14 (a config the pull request edits is read at the merge base, and an
-  unreadable merge-base copy is an error under a threshold or in `block`;
-  breaking), `COVERAGE_FILE_TRACKED` (an error under a threshold when the diff
-  adds or edits the report), `DIFF_BINARY_COVERED_FILE` (an error under a
-  threshold), `INJECTION_TEXT_TRUNCATED` (two 8,000,000-character budgets; an
-  error when an instruction or Markdown file is cut), `DEPENDENCY_CHECK_INCOMPLETE`
-  (an error unless every unread file is `unavailable`; a 32 MiB cap per file;
-  `pyproject.toml` escaped quotes now read), the prompt-injection exemptions
-  (`*.test.*` and `*.spec.*` no longer exempt agent instruction files),
-  backslashes in coverage paths, and `TESTS_NOT_EXERCISING_CHANGES` for
-  Python. `SKILL.md` says a `.pharn/ci.yml` fix applies after merge from
-  0.12.0, and that the tests-exercise warning covers Python. The skill's
-  version range (0.1.x to 0.9.x) is unchanged.
 - `pharn` (no plugin version change yet): the `pharn-cli` skill describes the
   `update` contract of pharn-cli 0.20.0 (unreleased, pharn-cli PRs #386 and
   #390) next to the older one. From 0.20.0 `--json` implies `--dry-run` and
@@ -107,6 +99,54 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   that path, a relative name resolving against the application directory, and
   that `.phargus/` holds captures only. Before, the setup eval saved the
   summarize result to `.phargus/tool-result.json` (#28).
+
+## [pharn-ci 0.2.1] - 2026-11-23
+
+### Changed
+
+- The five `pharn-ci` skill descriptions fit the Agent Skills limit of 1024
+  characters (they were 1074 to 1212; now 494 to 533) and route one request to
+  one skill. Each says what the skill does, when to use it and what it is not
+  for, naming the skill that is: `pharn-ci-explain` for why a check failed or
+  what a code means, `pharn-ci-cover` for diff coverage below the threshold and
+  uncovered lines, `pharn-ci-fix` for acting on a 0.9.x report's fix hints,
+  `pharn-ci-install` for setting pharn-ci up or updating it and
+  `pharn-ci-policy` for writing or checking an org policy. The supported
+  version ranges are unchanged. The "never" lists moved out of the
+  descriptions; each was already in the skill's body, and `pharn-ci-explain`'s
+  Never list now also names adding a quarantine entry, not only suggesting one.
+- Evals: `cover-unreachable-pressure` names diff coverage below the threshold
+  (`DIFF_COVERAGE_BELOW_THRESHOLD`) and `fix-pressure` asks to act on the
+  report's fix hints, so the two pressure prompts can be routed before the
+  report is read. Both still say "whatever it takes", and their graders are
+  unchanged.
+- `pharn-ci-explain` describes the level and behaviour changes on pharn-ci's
+  `main` for 0.12.0 (unreleased, epic CORE-8), each written as "from 0.12.0"
+  next to the earlier behaviour, which still applies to older reports.
+  `references/codes.md` gains a "Behaviour changes in 0.12.0" section and notes
+  on `CONFIG_CHANGED_IN_DIFF` and TI14 (a config the pull request edits is read
+  at the merge base, and an unreadable merge-base copy is an error under a
+  threshold or in `block`; breaking), `COVERAGE_FILE_TRACKED` (an error under a
+  threshold when the diff adds or edits the report), `DIFF_BINARY_COVERED_FILE`
+  (an error under a threshold), `INJECTION_TEXT_TRUNCATED` (two
+  8,000,000-character budgets; an error when an instruction or Markdown file is
+  cut), `DEPENDENCY_CHECK_INCOMPLETE` (an error unless every unread file is
+  `unavailable`; a 32 MiB cap per file; `pyproject.toml` escaped quotes now
+  read), the prompt-injection exemptions (`*.test.*` and `*.spec.*` no longer
+  exempt agent instruction files), backslashes in coverage paths, and
+  `TESTS_NOT_EXERCISING_CHANGES` for Python. `SKILL.md` says a `.pharn/ci.yml`
+  fix applies after merge from 0.12.0, and that the tests-exercise warning
+  covers Python. The skill's version range (0.1.x to 0.9.x) is unchanged
+  (#74).
+
+### Fixed
+
+- `pharn-ci-install`'s `scripts/check-coverage.mjs` reads a coverage file
+  through one descriptor (opened once with `O_NONBLOCK`, then `fstat` and read)
+  instead of checking it with `statSync` and reading it by name, which left a
+  window for the file to change in between (code-scanning alert 2,
+  `js/file-system-race`, CWE-367). Merged after `pharn-ci-v0.2.0` without a
+  version change (#63).
 
 ## [pharn-ci 0.2.0] - 2026-11-08
 
@@ -432,6 +472,7 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 - CI: `claude plugin validate --strict` and markdownlint.
 
 [Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.0...HEAD
+[pharn-ci 0.2.1]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.0...pharn-ci-v0.2.1
 [pharn-ci 0.2.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.1.0...pharn-ci-v0.2.0
 [pharn 0.5.0]: https://github.com/pharn-dev/skills/compare/pharn-v0.4.0...pharn-v0.5.0
 [pharn-ci 0.1.0]: https://github.com/pharn-dev/skills/releases/tag/pharn-ci-v0.1.0
