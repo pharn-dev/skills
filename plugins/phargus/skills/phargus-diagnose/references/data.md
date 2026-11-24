@@ -30,6 +30,12 @@ are counted in one route whose method and path are both (other), and requests.ro
 is true. The route table is then partial and requests.distinctRoutes is a lower bound;
 request counts, percentiles, errors and rate still use every selected span. A route with
 few spans has unstable percentiles; read count before p99Ns.
+A span's path, and a backpressure hotspot's site, longer than the 200-character limit is
+cut to its first 200 characters followed by …, before routes and hotspots are grouped. A
+method that is not 1 to 32 letters or hyphens is reported as (other) and keeps its own
+path. quality.shortenedValues counts every cut value; it is not an evidence problem and
+does not change comparable. From raw samples, memory.first and memory.last keep only
+heapUsed, heapTotal, rss, external and arrayBuffers.
 
 Raw sample period end, gap detection and coverage use the sampling interval: explicit
 flag, else the capture manifest's recorded intervalMs, else declared conditions.intervalMs,
