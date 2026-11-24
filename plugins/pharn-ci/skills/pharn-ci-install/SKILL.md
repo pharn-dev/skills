@@ -127,7 +127,12 @@ Follow [references/coverage.md](references/coverage.md) for the runner:
   - `paths.unmatchedExample`: one coverage path that matched no tracked file,
     or `null` under the same name rules.
   - `coverage[].ignored` and `tracked`: fix `.gitignore` when `ignored` is
-    `false`.
+    `false`. `ignored` is `null` when git cannot tell, for example for a file
+    behind a symlinked directory such as Bazel's `bazel-out`; check that path
+    by hand.
+  - `discovery`: `{"kind": "not-run", "files": []}` whenever `--coverage` is
+    given, since pharn-ci does not use auto-discovery while `coverage.file` is
+    set.
   - `paths.untrackedOnDisk`: paths of files not committed yet; they match
     once committed.
   - `"git": false`: git could not run, so paths were matched against files

@@ -697,7 +697,7 @@ const VERDICTS = new Set(["pass", "warn", "fail"]);
 export function readReport(text) {
   let r;
   try {
-    r = JSON.parse(text);
+    r = JSON.parse(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text);
   } catch (err) {
     throw new UsageError(`the report is not JSON: ${err.message}`);
   }
@@ -1073,7 +1073,8 @@ function realGit(cwd, args) {
   return execFileSync("git", ["--literal-pathspecs", ...args], {
     cwd,
     encoding: "utf8",
-    env: { ...process.env, LC_ALL: "C" },
+    // GIT_OPTIONAL_LOCKS=0 stops `git status` from refreshing .git/index, so the helper writes nothing.
+    env: { ...process.env, LC_ALL: "C", GIT_OPTIONAL_LOCKS: "0" },
     stdio: ["ignore", "pipe", "pipe"],
     maxBuffer: 256 * 1024 * 1024,
     timeout: 120_000,
@@ -1110,17 +1111,48 @@ function runGit(git, repoRoot, args, what) {
   }
 }
 
-/** The commit for `ref`, tried as given and then as origin/<ref>; a ref found neither way is an error. */
+/**
+ * The commit for `ref`. An origin/ ref or a full SHA is used as given. Any other ref is tried as given and
+ * as origin/<ref>: when both exist at different commits, the one ahead wins (as given if they diverged),
+ * with a note naming both commits. A ref found neither way is an error.
+ */
 function resolveBase(git, repoRoot, ref) {
-  const candidates = ref.startsWith("origin/") ? [ref] : [ref, `origin/${ref}`];
-  for (const candidate of candidates) {
+  const commitOf = (candidate) => {
     try {
-      return { ref: candidate, sha: git(repoRoot, ["rev-parse", "--verify", "--quiet", `${candidate}^{commit}`]).trim() };
+      return git(repoRoot, ["rev-parse", "--verify", "--quiet", `${candidate}^{commit}`]).trim();
     } catch (err) {
       if (gitCannotRun(err)) throw new UsageError(`git failed: ${gitMessage(err)}`);
+      return null;
     }
+  };
+  const local = commitOf(ref);
+  const remoteRef = `origin/${ref}`;
+  const remote = ref.startsWith("origin/") || /^[0-9a-f]{40}$/i.test(ref) ? null : commitOf(remoteRef);
+  if (local === null && remote === null) {
+    throw new UsageError(`base ${ref} was not found in this checkout; fetch it, or pass the ref the CI run diffed against`);
   }
-  throw new UsageError(`base ${ref} was not found in this checkout; fetch it, or pass the ref the CI run diffed against`);
+  if (remote === null) return { ref, sha: local, note: null };
+  if (local === null) return { ref: remoteRef, sha: remote, note: null };
+  if (local === remote) return { ref, sha: local, note: null };
+  let mergeBase = null;
+  try {
+    mergeBase = git(repoRoot, ["merge-base", local, remote]).trim();
+  } catch (err) {
+    if (gitCannotRun(err)) throw new UsageError(`git failed: ${gitMessage(err)}`);
+  }
+  // The note is a fixed sentence plus the two SHAs git printed: the --base value can be a revision expression
+  // carrying any text, so neither it nor a ref name built from it goes into the note.
+  const l = local.slice(0, 12);
+  const r = remote.slice(0, 12);
+  const used = "base.ref and base.sha name the one used";
+  const fetchHint = "if neither is the base CI used, fetch it and run again";
+  if (mergeBase === local) {
+    return { ref: remoteRef, sha: remote, note: `--base: the local base branch (${l}) is behind origin's (${r}), so origin's was used; ${used}; ${fetchHint}` };
+  }
+  if (mergeBase === remote) {
+    return { ref, sha: local, note: `--base: origin's base branch (${r}) is behind the local one (${l}), so the local one was used; ${used}; ${fetchHint}` };
+  }
+  return { ref, sha: local, note: `--base: the local base branch (${l}) and origin's (${r}) have diverged, so the local one was used as given; ${used}; pass the ref the CI run diffed against` };
 }
 
 function diffAgainst(git, repoRoot, sha) {
@@ -1186,6 +1218,7 @@ export function run(argv, { cwd = process.cwd(), git = realGit } = {}) {
   let diff = null;
   if (opts.base !== null && repo.git) {
     const resolved = resolveBase(git, repoRoot, opts.base);
+    if (resolved.note !== null) notes.push(resolved.note);
     diff = diffAgainst(git, repoRoot, resolved.sha);
     const renamedFrom = new Map(diff.filter((f) => f.status === "renamed").map((f) => [f.path, f.oldPath]));
     const reportPaths = report.files.map((f) => f.path);

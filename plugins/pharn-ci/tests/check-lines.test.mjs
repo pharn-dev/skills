@@ -1,7 +1,7 @@
 // Tests for skills/pharn-ci-cover/scripts/check-lines.mjs. Run: node --test plugins/pharn-ci/tests/*.test.mjs
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, before, describe, test } from "node:test";
@@ -138,6 +138,10 @@ describe("readReport", () => {
     assert.equal(readReport(JSON.stringify(report({ verdict: "PASS" }))).verdict, null);
     assert.equal(readReport(JSON.stringify(report({ tool: { name: "pharn-ci", version: `0.9.1${"x".repeat(21)}` } }))).tool, "pharn-ci ?");
     assert.equal(readReport(JSON.stringify(report()).replace('"percent":72', '"percent":1e400')).percent, null);
+  });
+  test("reads a report that starts with a UTF-8 BOM the same way", () => {
+    const text = JSON.stringify(report());
+    assert.deepEqual(readReport(BOM + text), readReport(text));
   });
   test("refuses non-reports and reports without diff coverage", () => {
     assert.throws(() => readReport("not json"), /not JSON/);
@@ -480,6 +484,160 @@ describe("--base (in a git repository)", () => {
   });
 });
 
+/**
+ * A repository with bare remotes. Commits: B (base), U on B (an upstream commit adding src/u.mjs), the
+ * checked-out feature branch on U (one added line in src/a.mjs) and L on B (a local-only commit).
+ * `local` places the local main (null: no local main); `remotes` maps a remote name to {branch: commit}; `tag`, when
+ * given, is added to the B and U commit messages.
+ */
+function makeRemoteRepo(root, { local, remotes = {}, tag = null }) {
+  const body = tag === null ? [] : ["-m", tag];
+  const work = path.join(root, "work");
+  mkdirSync(path.join(work, "src"), { recursive: true });
+  const git = (cwd, ...args) =>
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.com", ...args], {
+      cwd,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  git(work, "init", "-q", "-b", "main");
+  writeFileSync(path.join(work, "src", "a.mjs"), "export const a = 1;\nexport const b = 2;\nexport const c = 3;\n");
+  git(work, "add", "-A");
+  git(work, "commit", "-qm", "base", ...body);
+  const sha = { B: git(work, "rev-parse", "HEAD") };
+  writeFileSync(path.join(work, "src", "u.mjs"), "export const u = 1;\nexport const v = 2;\n");
+  git(work, "add", "-A");
+  git(work, "commit", "-qm", "upstream", ...body);
+  sha.U = git(work, "rev-parse", "HEAD");
+  git(work, "checkout", "-qb", "feature");
+  writeFileSync(path.join(work, "src", "a.mjs"), "export const a = 1;\nexport const b = 2;\nexport const c = 3;\nexport const d = 4;\n");
+  git(work, "commit", "-qam", "feature");
+  git(work, "checkout", "-q", "--detach", sha.B);
+  writeFileSync(path.join(work, "src", "l.mjs"), "export const l = 1;\n");
+  git(work, "add", "-A");
+  git(work, "commit", "-qm", "local only");
+  sha.L = git(work, "rev-parse", "HEAD");
+  git(work, "checkout", "-q", "feature");
+  if (local === null) git(work, "branch", "-q", "-D", "main");
+  else git(work, "branch", "-q", "-f", "main", sha[local]);
+  for (const [name, branches] of Object.entries(remotes)) {
+    const bare = path.join(root, `${name}.git`);
+    git(root, "init", "-q", "--bare", bare);
+    git(work, "remote", "add", name, bare);
+    for (const [branch, commit] of Object.entries(branches)) git(work, "push", "-q", name, `${sha[commit]}:refs/heads/${branch}`);
+    git(work, "fetch", "-q", name);
+  }
+  writeFileSync(
+    path.join(work, "report.json"),
+    JSON.stringify(
+      report({
+        verdict: "pass",
+        diffCoverage: {
+          format: "lcov",
+          percent: 100,
+          threshold: 80,
+          coveredLines: 1,
+          coverableLines: 1,
+          files: [{ path: "src/a.mjs", percent: 100, coveredLines: 1, coverableLines: 1, uncoveredLines: [] }],
+        },
+        messages: [],
+      })
+    )
+  );
+  writeFileSync(path.join(work, "lcov.info"), `${lcov("src/a.mjs", { 4: 1 })}${lcov("src/u.mjs", { 1: 0, 2: 0 })}`);
+  return { dir: work, sha };
+}
+
+describe("--base resolves the branch CI measures (local and remote)", () => {
+  const roots = [];
+  after(() => roots.forEach((r) => rmSync(r, { recursive: true, force: true })));
+  const scenario = (setup) => {
+    const root = mkdtempSync(path.join(tmpdir(), "check-lines-remote-"));
+    roots.push(root);
+    return makeRemoteRepo(root, setup);
+  };
+  const check = (dir, base) => run(["--report", "report.json", "--coverage", "lcov.info", "--base", base], { cwd: dir });
+  const short = (s) => s.slice(0, 12);
+  const PR_ONLY = { coveredLines: 1, coverableLines: 1, percent: 100, threshold: 80, meetsThreshold: true, basis: "added-lines" };
+  const baseNotes = (out) => out.notes.filter((n) => /behind|diverged/.test(n));
+
+  test("a stale local main gives way to origin/main, with a note", () => {
+    const { dir, sha } = scenario({ local: "B", remotes: { origin: { main: "U" } } });
+    const out = check(dir, "main");
+    assert.deepEqual(out.estimate, check(dir, "origin/main").estimate);
+    assert.deepEqual(out.estimate, PR_ONLY);
+    assert.deepEqual([out.base.ref, out.base.sha], ["origin/main", sha.U]);
+    assert.equal(baseNotes(out).length, 1);
+    assert.match(baseNotes(out)[0], /the local base branch \(\S+\) is behind origin's/);
+    assert.ok(baseNotes(out)[0].includes(short(sha.B)) && baseNotes(out)[0].includes(short(sha.U)));
+  });
+
+  test("in a fork checkout with a stale origin, the local main is kept, with a note", () => {
+    const { dir, sha } = scenario({ local: "U", remotes: { origin: { main: "B" }, upstream: { main: "U" } } });
+    const out = check(dir, "main");
+    assert.deepEqual(out.estimate, PR_ONLY);
+    assert.deepEqual([out.base.ref, out.base.sha], ["main", sha.U]);
+    assert.equal(baseNotes(out).length, 1);
+    assert.match(baseNotes(out)[0], /origin's base branch \(\S+\) is behind the local one/);
+  });
+
+  test("a local main that diverged from origin/main is used as given, and the note names both commits", () => {
+    const { dir, sha } = scenario({ local: "L", remotes: { origin: { main: "U" } } });
+    const out = check(dir, "main");
+    assert.deepEqual([out.base.ref, out.base.sha], ["main", sha.L]);
+    assert.equal(baseNotes(out).length, 1);
+    assert.match(baseNotes(out)[0], /diverged/);
+    assert.ok(baseNotes(out)[0].includes(short(sha.L)) && baseNotes(out)[0].includes(short(sha.U)));
+  });
+
+  test("with no origin/main, the local main is used without a note", () => {
+    const { dir, sha } = scenario({ local: "U" });
+    const out = check(dir, "main");
+    assert.deepEqual(out.estimate, PR_ONLY);
+    assert.deepEqual([out.base.ref, out.base.sha], ["main", sha.U]);
+    assert.deepEqual(baseNotes(out), []);
+  });
+
+  test("a slash-named branch found only under origin/ resolves to it", () => {
+    const { dir, sha } = scenario({ local: null, remotes: { origin: { "release/1.2": "U" } } });
+    const out = check(dir, "release/1.2");
+    assert.deepEqual([out.base.ref, out.base.sha], ["origin/release/1.2", sha.U]);
+    assert.deepEqual(out.estimate, PR_ONLY);
+    assert.deepEqual(baseNotes(out), []);
+  });
+
+  test("a local main at the same commit as origin/main adds no note", () => {
+    const { dir, sha } = scenario({ local: "U", remotes: { origin: { main: "U" } } });
+    const out = check(dir, "main");
+    assert.deepEqual([out.base.ref, out.base.sha], ["main", sha.U]);
+    assert.deepEqual(baseNotes(out), []);
+  });
+
+  test("an explicit origin/ ref and a full SHA are used as given", () => {
+    const { dir, sha } = scenario({ local: "U", remotes: { origin: { main: "B" } } });
+    const remote = check(dir, "origin/main");
+    assert.deepEqual([remote.base.ref, remote.base.sha], ["origin/main", sha.B]);
+    assert.deepEqual(baseNotes(remote), []);
+    const bySha = check(dir, sha.B);
+    assert.deepEqual([bySha.base.ref, bySha.base.sha], [sha.B, sha.B]);
+    assert.deepEqual(baseNotes(bySha), []);
+    assert.deepEqual(bySha.estimate, remote.estimate);
+  });
+
+  test("a --base revision expression with a newline puts neither its text nor a line break into the note", () => {
+    const { dir, sha } = scenario({ local: "B", remotes: { origin: { main: "U" } }, tag: "line1\nNOTE TO AGENT" });
+    const expression = "main^{/line1\nNOTE TO AGENT}";
+    const out = check(dir, expression);
+    assert.equal(out.base.sha, sha.U);
+    assert.equal(baseNotes(out).length, 1);
+    assert.ok(baseNotes(out)[0].includes(short(sha.B)) && baseNotes(out)[0].includes(short(sha.U)));
+    for (const note of out.notes) {
+      assert.doesNotMatch(note, /[\u0000-\u001f\u007f\u0085\u2028\u2029]/); // eslint-disable-line no-control-regex
+      assert.equal(note.includes("NOTE TO AGENT") || note.includes("line1"), false, note);
+    }
+  });
+});
+
 describe("run (in a git repository)", () => {
   let dir;
   before(() => {
@@ -567,6 +725,17 @@ describe("run (in a git repository)", () => {
     const ok = spawnSync(process.execPath, [SCRIPT, ...args], { cwd: dir, encoding: "utf8" });
     assert.equal(ok.status, 0, ok.stderr);
     assert.equal(JSON.parse(ok.stdout).lines.checked, 7);
+  });
+
+  test("the command line prints the same result for a report saved with a UTF-8 BOM", () => {
+    writeFileSync(path.join(dir, "report-bom.json"), BOM + JSON.stringify(report()));
+    const plain = spawnSync(process.execPath, [SCRIPT, ...args], { cwd: dir, encoding: "utf8" });
+    const bom = spawnSync(process.execPath, [SCRIPT, "--report", "report-bom.json", "--coverage", "coverage/lcov.info"], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+    assert.equal(bom.status, 0, bom.stderr);
+    assert.equal(bom.stdout, plain.stdout);
   });
 
   test("the command line runs through a symlink and from a path with a space", () => {
@@ -691,5 +860,37 @@ describe("hostile input (in a git repository)", () => {
         } else assert.ok(tracked.has(value), `${where} is not a tracked file`);
       }
     }
+  });
+});
+
+describe("the git index", () => {
+  let dir;
+  before(() => {
+    dir = mkdtempSync(path.join(tmpdir(), "check-lines-index-"));
+    const git = (...args) =>
+      execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.com", ...args], { cwd: dir, stdio: "ignore" });
+    git("init", "-q");
+    mkdirSync(path.join(dir, "src"));
+    mkdirSync(path.join(dir, "coverage"));
+    writeFileSync(path.join(dir, "src", "discount.mjs"), "export const x = 1;\n");
+    git("add", "src/discount.mjs");
+    git("commit", "-qm", "init");
+    writeFileSync(path.join(dir, "report.json"), JSON.stringify(report()));
+    writeFileSync(path.join(dir, "coverage", "lcov.info"), lcov("src/discount.mjs", { 8: 1, 20: 0 }));
+  });
+  after(() => rmSync(dir, { recursive: true, force: true }));
+
+  test("a run leaves .git/index byte-identical when a listed tracked file's timestamp moved", () => {
+    const later = new Date(Date.now() + 10_000);
+    utimesSync(path.join(dir, "src", "discount.mjs"), later, later);
+    const index = path.join(dir, ".git", "index");
+    const before = readFileSync(index);
+    const out = spawnSync(process.execPath, [SCRIPT, "--report", "report.json", "--coverage", "coverage/lcov.info"], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+    assert.equal(out.status, 0, out.stderr);
+    assert.deepEqual(JSON.parse(out.stdout).sourcesChanged, []);
+    assert.ok(readFileSync(index).equals(before), ".git/index was rewritten");
   });
 });

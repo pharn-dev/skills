@@ -194,6 +194,36 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   file as `"exists": false`; one it cannot read (`EACCES`, not a regular file,
   over the cap) now ends the run with exit 2, as in pharn-ci, which treats
   only a missing file as missing.
+- `pharn-ci-cover`: `check-lines.mjs` runs git with `GIT_OPTIONAL_LOCKS=0`, so
+  `git status` no longer rewrites `.git/index` when a listed tracked file's
+  timestamp changed, and the helper writes nothing, as its header and
+  `THREAT-MODEL.md` say. It also reads a `report.json` that starts with a UTF-8
+  BOM (saved by a Windows editor or PowerShell redirection), as `list-fixes.mjs`
+  and `check-policy.mjs` already did, instead of calling it "not JSON".
+  (CORE-259)
+- `pharn-ci-cover`: `check-lines --base <branch>` measures against the branch
+  CI measures. When both the local branch and `origin/<branch>` exist at
+  different commits, it uses the one that is ahead (one `git merge-base`), or
+  the branch as given if they diverged, and adds a note naming both short SHAs.
+  Before, a local `main` that was never pulled won over a newer `origin/main`,
+  so other people's commits counted as the pull request's added lines (33%
+  where CI reported 100%) with no note. A ref starting with `origin/`, a full
+  SHA, and a branch found only under `origin/` resolve as before; the helper
+  still never fetches.
+- `pharn-ci-install`'s `check-coverage.mjs` survives a coverage file git cannot
+  check, skips auto-discovery when `--coverage` is given, and asks git once
+  (CORE-258). A file behind a symlinked directory (Bazel's `bazel-out`) made
+  `git check-ignore` fail and the helper exit 2 with no JSON; it now gets
+  `coverage[].ignored: null` and the normal result. Every path goes to git as
+  `./<path>`, so a file named `:!x.info` is checked as a file name, not read as
+  pathspec magic. All coverage files are checked in one
+  `git check-ignore --stdin` call (300 .NET `TestResults` files took 300 git
+  processes and 11 s), falling back to one call per path only when that batch
+  fails, and the "not git-ignored" note is one note with the count. With
+  `--coverage`, `discovery` is `{"kind": "not-run", "files": []}` and the tree
+  is not walked, so a large ignored build directory no longer adds a false
+  "auto-discovery went over pharn-ci's limit" note, and the ambiguity note is
+  gone.
 
 ## [pharn-ci 0.2.1] - 2026-11-23
 
