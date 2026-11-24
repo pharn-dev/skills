@@ -255,7 +255,7 @@ scripts, so a single copied skill works without this repository.
 
 These are instructions, not a sandbox: your agent client's permissions decide
 what an agent can actually do. The `phargus` model evals check them, but no
-behavioral review is recorded yet for the current `phargus` content; see its
+reviewed eval run is recorded yet for the current `phargus` content; see its
 [verification record](src/phargus/VERIFICATION.md). The trust boundaries are in
 [THREAT-MODEL.md](THREAT-MODEL.md).
 
@@ -267,7 +267,7 @@ behavioral review is recorded yet for the current `phargus` content; see its
 | ------ | ------ | -------- |
 | `pharn` | Claude Code (verified with 2.1.295). Codex not verified. | PHARN CLI `@pharn-dev/pharn` 0.10.0+, best on 0.16.0 (the `pharn/` root layout), text-flow fallback for 0.9.x. |
 | `pharn-ci` | Claude Code. Codex not verified. | pharn-ci 0.1.x (Report v1) to 0.12.x (Report v2: test integrity, org policy, agent-config secrets, prompt-injection and dependency checks, fix hints, a private registry allow-list): the Action `pharn-dev/pharn-ci` and the `pharn-ci check` CLI. The `pharn-ci-install`, `pharn-ci-cover`, `pharn-ci-policy` and `pharn-ci-fix` helpers need Node 22 or later; `pharn-ci-install` writes workflows for pharn-ci 0.12.0 (`node24` Actions runners), pinned to the commit of tag v0.12.0. |
-| `phargus` | Codex and Claude Code. Behavioral review of 0.1.1 pending; see the [verification record](src/phargus/VERIFICATION.md). | `@pharn-dev/phargus` 0.1.x from npm (tested: 0.1.0, tag v0.1.0), pinned in [compatibility.json](src/phargus/compatibility.json). Node 22.18.0 or later. |
+| `phargus` | Codex and Claude Code. No reviewed eval run recorded for 0.1.1; see the [verification record](src/phargus/VERIFICATION.md). | `@pharn-dev/phargus` 0.1.x from npm (tested: 0.1.0, tag v0.1.0), pinned in [compatibility.json](src/phargus/compatibility.json). Node 22.18.0 or later. |
 
 **Plugin versions and tool versions move separately.** The badges above show
 each plugin's own version. The tool version a plugin was written for is stated

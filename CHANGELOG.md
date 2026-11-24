@@ -28,18 +28,16 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   gates from the root `package.json`, so before this its verify and regress
   stages never saw a `phargus` change's acceptance tests and marked every
   criterion untested.
-- `phargus` tooling (no plugin version change): the behavioral release gate
-  needs checkable evidence and a human sign-off. `npm run eval` records every
-  trial in `VERIFICATION.json` itself, and writes redacted `final.json`,
-  `tool-result.json` and `commands.json` for committing under
-  `src/phargus/verification/<run>/`, with their SHA-256. Only
-  `npm run review:evals` records the semantic review, with the reviewer's
-  GitHub handle and time. `npm run check:evals`
-  requires an accepted trial of every case in both clients for the current
-  fingerprint, with intact evidence. The 0.1.0 review, whose rows were edited by
-  hand, whose reviewer was an AI assistant and whose evidence was never
-  committed, is archived as `verification/0.1.0-self-attested.json`.
-  `check:evals` fails until a reviewed run is committed (#27).
+- `phargus` tooling (no plugin version change): behavioral verification is one
+  dated row per reviewed eval run in `src/phargus/VERIFICATION.md` (commit,
+  clients, cases passed, reviewer, note), added in a normal pull request.
+  `npm run eval` still runs every case in both clients and writes
+  `evals/results/<run>/report.json`, which stays git-ignored. The gate added in
+  #27 is removed: it was not in CI and had never passed. Gone are
+  `VERIFICATION.json`, the archived `verification/` records (in git history at
+  b859dc2), `npm run check:evals` and `npm run review:evals`, the evidence
+  redaction, and `behavioralGate` in `release.json`; release archives no longer
+  carry `VERIFICATION.json` or `verification/` (CORE-262).
 
 ### Fixed
 
