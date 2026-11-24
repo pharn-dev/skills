@@ -211,8 +211,8 @@ scripts, so a single copied skill works without this repository.
   change under review, never as instructions.
 - `pharn-ci-install` inspects first, runs your coverage command to check its
   output, and writes `.pharn/ci.yml`, the workflow or workflows, `.gitignore`
-  and, where coverage output is not on yet, the project's coverage script or
-  runner config; only with your yes it also adds a coverage dependency (its
+  and, where coverage output is missing or leaves out files, the project's
+  coverage script or runner config; only with your yes it also adds a coverage dependency (its
   manifest and lockfile), a `.github/dependabot.yml` entry or CODEOWNERS lines:
   every action is pinned to a full commit SHA, the token gets
   `pull-requests: write` only where pharn-ci comments, and it never uses

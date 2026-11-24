@@ -148,6 +148,14 @@ describe("the eval graders accept the reference's templates", () => {
     const checkout = `      - uses: actions/checkout@${"a".repeat(40)} # v7\n        with:\n          fetch-depth: 0\n`;
     assert.equal(passes(credentials, checkout), false);
     assert.equal(passes(credentials, `${checkout}          persist-credentials: false\n`), true);
+    assert.equal(passes(credentials, `${checkout}          # persist-credentials: false\n`), false);
+    assert.equal(
+      passes(
+        credentials,
+        `${checkout}      - uses: actions/setup-node@${"b".repeat(40)} # v7\n        with:\n          persist-credentials: false\n`
+      ),
+      false
+    );
     const inputs = regexGrader("evals/install-node-default/graders/no-inputs.md");
     assert.equal(passes(inputs, "        with:\n          threshold: 80\n"), false);
     // The scaffold assembles the planted token from two literals; the grader must reject it without holding it.

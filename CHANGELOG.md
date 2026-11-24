@@ -202,14 +202,15 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   tests, so on a same-repository branch the test code could read the token
   from `.git/config`. When a later step in the job pushes, tags or otherwise
   needs git credentials, the skill does not set it and asks instead. The
-  `install-existing-ci` eval gains the grader `no-credentials.md`; its
-  scaffold's job never pushes.
+  `install-existing-ci` eval gains the grader `no-credentials.md`, which
+  accepts the setting only inside the checkout step (not in a comment or
+  another step); its scaffold's job never pushes.
 - README: the `pharn-ci-install` bullet lists every file the skill writes:
   `.pharn/ci.yml`, the workflow or workflows, `.gitignore` and, where coverage
-  output is not on yet, the coverage script or runner config; only with a yes,
-  a coverage dependency (manifest and lockfile), a `.github/dependabot.yml`
-  entry or CODEOWNERS lines. Before, it said "writes only `.pharn/ci.yml`, the
-  workflow and `.gitignore`".
+  output is missing or leaves out files, the coverage script or runner config;
+  only with a yes, a coverage dependency (manifest and lockfile), a
+  `.github/dependabot.yml` entry or CODEOWNERS lines. Before, it said "writes
+  only `.pharn/ci.yml`, the workflow and `.gitignore`".
 - THREAT-MODEL: an extended job runs pharn-ci on `pull_request` and
   `merge_group`, as the skill says; it named only `pull_request`.
 
