@@ -40,8 +40,10 @@ for (const runtimeKind of ['samples', 'windows']) {
     test(
       'request metrics use only contained spans: ' + runtimeKind + ', ' + spanOrder,
       async () => {
+        // Both measured 1000 to 3000: a sample covers the interval ending at its timestamp,
+        // a window covers its own start and end.
         const runtime =
-          runtimeKind === 'samples' ? [sample(1000), sample(2000)] : [window(1000), window(2000)];
+          runtimeKind === 'samples' ? [sample(2000), sample(3000)] : [window(1000), window(2000)];
         const requests = [
           span(0, 5_000_000),
           span(900, 200_000_000),
@@ -49,6 +51,7 @@ for (const runtimeKind of ['samples', 'windows']) {
           span(1500, 100_000_000),
           { ...span(2900, 100_000_000), statusCode: 502 },
           span(2950, 100_000_000),
+          // The period end is inclusive: an instant span at 3000 is contained.
           span(3000, 0),
           span(6000, 5_000_000),
         ];
@@ -58,13 +61,13 @@ for (const runtimeKind of ['samples', 'windows']) {
         assert.deepEqual(result.period, { startMs: 1000, endMs: 3000, durationMs: 2000 });
         assert.equal(result.counts.spans, 8);
         assert.deepEqual(result.requests.period, { startMs: 0, endMs: 6005, durationMs: 6005 });
-        assert.equal(result.requests.inPeriod, 3);
-        assert.equal(result.requests.outsidePeriod, 5);
+        assert.equal(result.requests.inPeriod, 4);
+        assert.equal(result.requests.outsidePeriod, 4);
         assert.equal(typeof result.requests.selection, 'string');
         assert(result.requests.selection.length > 0);
-        assert.equal(result.metrics.observedRequestP50Ns, 100_000_000);
+        assert.equal(result.metrics.observedRequestP50Ns, 10_000_000);
         assert.equal(result.metrics.observedRequestP99Ns, 100_000_000);
-        assert.equal(result.metrics.observedRequestRatePerSecond, 1.5);
+        assert.equal(result.metrics.observedRequestRatePerSecond, 2);
         assert.equal(result.metrics.observedServerErrors, 2);
       },
     );
@@ -94,8 +97,8 @@ test('span-only data cannot manufacture a runtime interval or aligned request me
 test('retained request history cannot inflate recent runtime coverage', async () => {
   const result = await summarize([
     span(0, 20_000_000),
-    sample(60_000),
     sample(61_000),
+    sample(62_000),
     span(61_000, 20_000_000),
   ]);
   assert.deepEqual(result.period, { startMs: 60_000, endMs: 62_000, durationMs: 2000 });

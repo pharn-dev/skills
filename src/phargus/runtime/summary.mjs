@@ -1,6 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { fileEvents, quality, qualityTracker, object, samplingInterval } from './records.mjs';
+import {
+  fileEvents,
+  quality,
+  qualityTracker,
+  object,
+  samplingInterval,
+  sampleInterval,
+} from './records.mjs';
 
 /** @typedef {import('./types.js').Summary} Summary */
 /** @typedef {import('./types.js').Event} Event */
@@ -107,8 +114,9 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
         if (previousTimestamp !== undefined && record.data.timestamp > previousTimestamp)
           spacing.push(record.data.timestamp - previousTimestamp);
         previousTimestamp = record.data.timestamp;
-        start = Math.min(start, record.data.timestamp);
-        end = Math.max(end, record.data.timestamp + intervalMs);
+        const interval = sampleInterval(record.data.timestamp, intervalMs);
+        start = Math.min(start, interval.startMs);
+        end = Math.max(end, interval.endMs);
         lastRaw = { ...record.data.memory };
         firstRaw ??= lastRaw;
         for (const site of record.data.backpressure.hotspots ?? []) {
@@ -172,8 +180,10 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
   const durationMs = Number.isFinite(start) ? Math.max(0, end - start) : 0;
   // Dashboard spans and windows have independent retention. Align requests only after
   // all records have established the runtime interval, regardless of arrival order.
+  // Timestamps are whole milliseconds while durationNs is not: a span drained at the last
+  // tick can end a fraction of a millisecond after it, so compare its end in milliseconds.
   const selectedSpans = spans.filter(
-    (span) => span.startMs >= start && span.startMs < end && span.endMs <= end,
+    (span) => span.startMs >= start && span.startMs <= end && Math.floor(span.endMs) <= end,
   );
   const durations = selectedSpans.map((span) => span.durationNs);
   const errors = selectedSpans.filter((span) => span.statusCode >= 500).length;

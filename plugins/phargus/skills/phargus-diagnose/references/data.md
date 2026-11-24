@@ -20,14 +20,19 @@ Summary period describes the runtime samples/windows only. Dashboard windows and
 have independent ring-buffer retention, so requests.period reports the separate bounds
 of all observed spans. counts.spans includes every observed span; requests.inPeriod and
 outsidePeriod explain which spans are selected. Request percentiles, observed errors and
-request rate use only spans fully contained within the runtime period [startMs, endMs).
-Spans crossing either boundary are excluded. Without runtime data, those request metrics
-are null. Zero observed requests does not establish complete request tracing coverage.
+request rate use only spans fully contained within the runtime period [startMs, endMs],
+compared in whole milliseconds: a span ending a fraction of a millisecond after endMs is
+contained. Spans crossing either boundary are excluded. Without runtime data, those
+request metrics are null. Zero observed requests does not establish complete request tracing coverage.
 requests.routes groups the same selected spans by exact method and path (top 20 by
 count, then p99Ns); requests.distinctRoutes is the untruncated number of groups. A route
 with few spans has unstable percentiles; read count before p99Ns.
 
-Raw sample period end, gap detection and coverage use the sampling interval: explicit
+The agent stamps a raw sample when its interval closes, so a sample stamped T measured
+(T - interval, T]. The raw sample period runs from the first timestamp minus one interval to
+the last timestamp. Window records keep their own start and end; they can lag by up to one
+interval, because the aggregator files a sample stamped T under floor(T / windowMs).
+The raw sample period, gap detection and coverage use the sampling interval: explicit
 flag, else the capture manifest's recorded intervalMs, else declared conditions.intervalMs,
 else 1000 (coverage.samplingIntervalSource).
 coverage.observedIntervalMs is the median positive spacing between consecutive samples.

@@ -68,6 +68,18 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
+- phargus 0.1.1: a raw sample covers the interval that ends at its timestamp, as
+  the agent stamps it when the interval closes. `summarize` treated the
+  timestamp as the start, so the measured period was one interval late:
+  requests in the first second after start counted as `outsidePeriod`, requests
+  after the last sample counted as inside, and `compare` answered
+  `inconclusive` ("request evidence outside runtime interval") for a normal
+  capture. The period now runs from the first timestamp minus one interval to
+  the last timestamp; `period.durationMs` is unchanged and window records keep
+  their own start and end. The period end is inclusive and a span's end is
+  compared in whole milliseconds, so a span drained at the last tick is still
+  contained. `capture` and `summarize` share one definition of a sample's
+  interval, and `knowledge/data.md` states the rule (CORE-235).
 - Repository (no plugin version change): CONTRIBUTING and the rulesets README
   describe the rules GitHub enforces. CONTRIBUTING "CI gates" said "the first
   four" of four bullets run in `ci.yml` and that Validate runs

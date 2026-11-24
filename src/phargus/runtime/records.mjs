@@ -201,6 +201,15 @@ export async function* fileEvents(path, status, options = {}) {
   }
 }
 
+/**
+ * The runtime stamps a raw sample when its interval closes and resets the event-loop
+ * histogram on each read, so a sample stamped T measured (T - intervalMs, T].
+ * @param {number} timestamp @param {number} intervalMs
+ */
+export function sampleInterval(timestamp, intervalMs) {
+  return { startMs: timestamp - intervalMs, endMs: timestamp };
+}
+
 /** @param {unknown} value @returns {value is number} */
 function positiveInteger(value) {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
