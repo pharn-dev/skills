@@ -56,9 +56,12 @@ uncovered lines: the JSON, or a comment whose table is not cut (`…and N more`)
   numbers may not match: say so and stop.
 - Know the base the CI run diffed against: the PR's base branch on
   `pull_request` (CI measured the merge commit), the previous commit on
-  `push`. Pass it as `--base` to the helper (step 4) from the start: before
-  you write any test, run it on the report and the coverage file CI used, or
-  a fresh run of the unchanged suite, and read:
+  `push`. Given a branch name, the helper diffs against whichever of the
+  local branch and `origin/<branch>` is ahead (the local one if they
+  diverged) and notes both commits when they differ; an `origin/` ref or a
+  full SHA is used as given. Pass it as `--base` to the helper (step 4) from
+  the start: before you write any test, run it on the report and the coverage
+  file CI used, or a fresh run of the unchanged suite, and read:
   - `lines.notAdded` not empty and `base.changedFiles` empty: the listed lines
     are not added lines in this checkout, so this is not the commit the report
     measured. Say so and stop.
@@ -147,10 +150,19 @@ Follow [references/tests.md](references/tests.md):
       new run no longer covers. Lost coverage: find which change caused it
       and fix the tests, never the gate;
     - `lines.notAdded` and `base.changedFiles`: read as in step 1;
+    - `base.ref` and `base.sha`: the commit the diff was taken against (the
+      rule is in step 1). A note that the local branch or `origin/<base>` is
+      behind, or that they diverged, means the base may be stale: ask before
+      running `git fetch`, then run the helper again;
     - `coverableMismatch`: files whose coverable line count differs from the
       report's (a file a test now loads, a different tool version);
     - `sourcesChanged`: listed files that differ from `HEAD`; should be empty,
       since you changed only tests;
+    - `invalidPaths`: how many report paths were left out because they are
+      not tracked files here; their lines are not checked;
+    - `coverage.unmatchedExample`: one coverage path that matched no tracked
+      file, or `null` when it has a control character or line break, leading
+      or trailing space or over 200 characters;
     - `estimate`: covered, coverable, percent and `meetsThreshold`. With
       `--base` (`basis: "added-lines"`) it is recomputed from the diff the way
       pharn-ci does; without it (`"listed-lines"`) it assumes every line the

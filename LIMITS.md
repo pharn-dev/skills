@@ -68,9 +68,15 @@ correct. The CI run's verdict decides. On macOS the eval sandbox cannot run
 `pharn-ci-install`'s [check-coverage helper](plugins/pharn-ci/skills/pharn-ci-install/scripts/check-coverage.mjs)
 mirrors pharn-ci's coverage rules (auto-discovery, format detection, path
 mapping, the coverage-root suggestion) with the same ported code, and the
-fixture check compares it with the pinned CLI on the eval trees. It is not
+fixture check compares it with the pinned CLI on the eval trees. Where
+pharn-ci would name a coverage root whose directory name has a control
+character or line break, leading or trailing space or over 200 characters, the
+helper prints `null` and a note instead, so such a name never reaches
+`.pharn/ci.yml`. It is not
 pharn-ci: it does not read `.pharn/ci.yml`, diff the change or apply
 exclusions, and when git cannot run it matches paths against files on disk.
+It and `check-lines.mjs` refuse a coverage file over 256 MiB; that cap is the
+helpers', not pharn-ci's, which streams a coverage file and sets no size limit.
 When the project's coverage command cannot run locally (a missing dependency,
 no toolchain), the skill writes the setup unverified and says so. The
 workflows it writes target pharn-ci 0.11.0 on GitHub-hosted runners (`node24`
