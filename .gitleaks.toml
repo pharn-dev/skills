@@ -9,9 +9,3 @@ useDefault = true
 description = "pharn.records.json holds path-to-SHA-256 pairs, not credentials"
 targetRules = ["generic-api-key"]
 paths = ['''^pharn\.records\.json$''']
-
-# The redaction test feeds made-up tokens through redactJson() to prove they are masked.
-[[allowlists]]
-description = "phargus redaction test fixtures are fake tokens"
-targetRules = ["aws-access-token", "curl-auth-header", "jwt"]
-paths = ['''^src/phargus/test/redact\.test\.mjs$''']

@@ -32,9 +32,7 @@
     "test:coverage": "mkdir -p coverage && cd ../.. && node --test --experimental-test-coverage --test-coverage-exclude='src/phargus/.cache/**' --test-coverage-exclude='src/phargus/test/**' --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=src/phargus/coverage/lcov.info src/phargus/test/*.test.mjs src/phargus/test/integration/*.test.mjs",
     "test:integration": "node --test test/integration/*.test.mjs",
     "prepare:integration": "node scripts/prepare-integration.mjs",
-    "eval": "node evals/run.mjs",
-    "check:evals": "node scripts/check-evals.mjs",
-    "review:evals": "node scripts/review-evals.mjs"
+    "eval": "node evals/run.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

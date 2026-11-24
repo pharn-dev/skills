@@ -6,7 +6,7 @@
 | ------ | -------------- | -------------------------- |
 | `pharn` | Claude Code; development instructions verified with 2.1.295. Codex behavior has not been verified. | The [skill](plugins/pharn/skills/pharn-cli/SKILL.md) targets PHARN CLI 0.10.0+, is best on 0.16.0, describes the 0.14.0 root layout migration and the 0.16.0 `.gitignore` lines, and describes a 0.9.x fallback. Its [evals](plugins/pharn/evals/) use stub CLIs that print 0.11.0-, 0.14.0-, 0.16.1- and unreleased 0.20.0-shaped output, and 0.9.0's older text flow. They do not establish compatibility with every real CLI release. |
 | `pharn-ci` | Claude Code; not yet verified with recorded eval runs. Codex behavior has not been verified. | The [skills](plugins/pharn-ci/skills/) target pharn-ci 0.1.x (Report v1) to 0.12.x (Report v2, test integrity, org policy, agent-config secrets, prompt-injection and dependency checks, fix hints, a private registry allow-list); `pharn-ci-install` writes 0.12.0, pinned to its release commit (tag `v0.12.0`). Their [evals](plugins/pharn-ci/evals/) replay reports, comments and CLI output generated with the real pharn-ci CLI and renderer at the pinned 0.1.0, 0.2.0, 0.4.0, 0.9.0 and 0.12.0 commits, through stub `gh` and `pharn-ci` executables where a case needs them. Accept-label results come from pharn-ci core's own functions applied to the stub's label events. The cases added since pharn-ci 0.1.0 (the 0.4.0 policy and secret cases, the 0.9.x `fix-*`, `explain-dependency-d05`, `cover-fix-kinds`, `cover-import-pressure` and new `install-*` cases, and the cases moved to 0.9.1, then 0.11.0 and then 0.12.0) are not yet recorded in an eval run. The evals do not exercise a real GitHub API, a real Action run, an app policy served by pharn.dev, an upload, or later pharn-ci releases. |
-| `phargus` | Targets Codex and Claude Code. No behavioral review is recorded for the current content; the 0.1.0 and predecessor reviews are archived as self-attested. See the [verification record](src/phargus/VERIFICATION.md). | The tested runtime release (tag and commit), the accepted package versions, and the minimum Node version are in [compatibility.json](src/phargus/compatibility.json). CI targets Node 22.18.0 and 24. |
+| `phargus` | Targets Codex and Claude Code. No reviewed eval run is recorded for the current content. See the [verification record](src/phargus/VERIFICATION.md). | The tested runtime release (tag and commit), the accepted package versions, and the minimum Node version are in [compatibility.json](src/phargus/compatibility.json). CI targets Node 22.18.0 and 24. |
 
 The runtime is `@pharn-dev/phargus`, published on npm. The skills are tested against
 0.1.0 (tag v0.1.0); the helpers accept `>=0.1.0 <0.2.0`, so a later 0.1.x patch is
@@ -24,14 +24,10 @@ not listed in the Codex marketplace while its Codex behavior remains unverified.
 Deterministic CI checks validate the marketplaces, Markdown, generated Phargus
 files, metadata, formatting, types, unit tests, and pinned-source integration
 tests. Behavioral evals are separate and require model credentials. For `phargus`,
-the eval runner writes each trial into the
-[verification metadata](src/phargus/VERIFICATION.json) with redacted evidence committed
-under `src/phargus/verification/`, and a maintainer signs off each trial under their
-GitHub handle. `npm run check:evals` passes only when every case has a signed-off trial
-for the shipped content and its evidence hashes match. For `phargus` 0.1.1 none is
-recorded yet, so the gate fails. The earlier 0.1.0 and predecessor reviews are archived
-as self-attested: their reviewer was an AI assistant and their evidence was never
-committed. A sign-off records one person's judgment of one bounded trial.
+a person who reviews an eval run adds one dated row (commit, clients, cases passed,
+reviewer) to the [verification record](src/phargus/VERIFICATION.md); the run's report
+and transcripts stay local. For `phargus` 0.1.1 no row is recorded yet. A row records
+one person's judgment of one run; nothing checks it automatically.
 
 Evals cover named scenarios with bounded workloads and time limits. They do not
 prove that an agent will follow every instruction, diagnose an arbitrary incident

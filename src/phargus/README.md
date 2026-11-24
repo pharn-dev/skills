@@ -5,9 +5,8 @@ memory analysis, fix verification, and alert rules. This directory holds the sou
 and tooling for the `phargus` plugin in [pharn-dev/skills](https://github.com/pharn-dev/skills);
 the plugin itself is generated into plugins/phargus/ at the repository root.
 
-Status: 0.1.1 development draft. Deterministic checks pass; no behavioral review is
-recorded for the shipped content, so npm run check:evals fails. See
-[VERIFICATION.md](VERIFICATION.md).
+Status: 0.1.1 development draft. Deterministic checks pass; no reviewed eval run is
+recorded for the shipped content. See [VERIFICATION.md](VERIFICATION.md).
 
 Five workflows share one tested Phargus contract. Each skill includes its own references
 and Node-core-only helpers, so a single copied skill works without this checkout or its
@@ -121,8 +120,6 @@ npm run test:integration
 npm run check:package
 npm run format:check
 npm run eval
-npm run review:evals -- --run ID --client C --case ID --reviewer GITHUB-HANDLE --accept
-npm run check:evals
 npm run package
 ```
 
@@ -136,26 +133,21 @@ from a Phargus checkout next to the skills repository unless --source names anot
 Use --reuse-dependencies with prepare:integration only for local development against an
 existing matching Node installation; CI installs fresh dependencies for each Node version.
 
-The release model gate runs eight cases in each client, sequentially, with client-default
-models. See evals/README.md for rubrics and results. It runs on local fixtures and temporary
-applications; no production captures or global plugin installation are part of the tests.
-The CLI outputs and artifacts establish execution; semantic judgments use the saved rubric.
-Missing client access is a blocked release gate, not a passed or silently skipped evaluation.
+npm run eval runs eight cases in each client, sequentially, with client-default models.
+See evals/README.md for rubrics. It runs on local fixtures and temporary applications; no
+production captures or global plugin installation are part of the tests. The CLI outputs
+and artifacts establish execution; semantic judgments use the saved rubric. Missing client
+access is a blocked trial, not a passed or silently skipped evaluation.
 
 Use npm run eval -- --clean-codex only when explicitly choosing Codex's built-in default
-configuration for a trial. It leaves saved user settings unchanged. The runner, not a
-person, writes every trial into VERIFICATION.json with redacted evidence under
-verification/<run>/; a human reviewer signs each trial off with npm run review:evals under
-their GitHub handle. npm run check:evals fails until all sixteen cases have accepted trials
-for the current fingerprint with intact evidence. VERIFICATION.md describes the process
-and current outcomes. The 0.1.0 and pre-rename records in verification/ are self-attested
-history. Draft archives can still be built for inspection; their release.json records the
-blocked behavioral gate. Archives leave out the per-run evidence.
+configuration for a trial. It leaves saved user settings unchanged. The report and
+transcripts stay in ignored evals/results/<run>/. After reviewing a run, the reviewer adds
+one row to VERIFICATION.md in a normal pull request.
 
 Release ZIPs and release.json are produced in ignored dist/. This package is private;
 it is distributed through Git and plugin/skill archives, not npm. Tag (`phargus-vX.Y.Z`, see
-Releasing in ../../CONTRIBUTING.md) and publish only after the deterministic checks and the
-model gate pass.
+Releasing in ../../CONTRIBUTING.md) and publish only after the deterministic checks pass and
+a reviewed eval run is recorded in VERIFICATION.md.
 
 ## License
 
