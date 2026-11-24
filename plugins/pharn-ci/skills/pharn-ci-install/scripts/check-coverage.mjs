@@ -838,13 +838,15 @@ function suggestRoot(unmatched, repoFiles, coverageRoot) {
 /**
  * What pharn-ci would make of these coverage entries. `repo` is { repoRoot, files, tracked } where `files`
  * lists the repository's files (tracked ones, or files on disk when git cannot run) and `tracked` says which.
- * `isIgnored(rel)` answers whether git ignores a path (null when unknown). Codes are pharn-ci's own message
- * codes, in the order pharn-ci decides them; `blocking` is the one that stops diff coverage being measured.
+ * `isIgnored(rels)` answers, in one call for all coverage files, whether git ignores each path: one true, false
+ * or null (unknown) per path, in order. Discovery runs only without entries; with entries it is "not-run", as
+ * pharn-ci does not use it then. Codes are pharn-ci's own message codes, in the order pharn-ci decides them;
+ * `blocking` is the one that stops diff coverage being measured.
  */
 export function checkCoverage({ entries, coverageRoot, format = "auto" }, repo, { listDir, readText, isIgnored }) {
   const { repoRoot, files: repoFiles, tracked } = repo;
   const notes = [];
-  const discovery = discoverCoverage(listDir);
+  const discovery = entries.length > 0 ? { kind: "not-run", files: [] } : discoverCoverage(listDir);
   if (discovery.kind === "over-limit") {
     notes.push(`auto-discovery went over pharn-ci's ${discovery.limit} limit, so pharn-ci would fail the step; set coverage.file`);
   }
@@ -871,9 +873,6 @@ export function checkCoverage({ entries, coverageRoot, format = "auto" }, repo, 
       if (matches.length === 0) names.push({ name: entry, missing: true });
       for (const m of matches) names.push({ name: m, missing: false });
     }
-    if (discovery.kind === "ambiguous") {
-      notes.push("auto-discovery would be ambiguous here; it is not used while coverage.file or the coverage-file input is set");
-    }
   } else {
     from = "discovery";
     names = discovery.files.map((name) => ({ name, missing: false }));
@@ -889,14 +888,15 @@ export function checkCoverage({ entries, coverageRoot, format = "auto" }, repo, 
   let missingFile = false;
   let unreadable = null;
   const seen = new Set();
+  const trackedSet = tracked ? new Set(repoFiles) : null;
   for (const { name, missing } of blocking === null ? names : []) {
     const rel = normalizePath(name, repoRoot);
     if (seen.has(rel)) continue;
     seen.add(rel);
     const text = missing ? null : readText(name);
     const entry = { path: name, exists: text !== null, format: null, files: 0, lines: 0, skipped: 0 };
-    entry.tracked = tracked ? repoFiles.includes(rel) : null;
-    entry.ignored = isIgnored(rel);
+    entry.tracked = tracked ? trackedSet.has(rel) : null;
+    entry.ignored = null; // answered below, for every file in one call
     if (entry.tracked) trackedFile ??= rel;
     coverage.push(entry);
     if (text === null) {
@@ -915,6 +915,12 @@ export function checkCoverage({ entries, coverageRoot, format = "auto" }, repo, 
     if (parsed.map.size === 0) unreadable ??= "COVERAGE_FILE_EMPTY";
     skipped += parsed.skipped;
     maps.push(parsed.map);
+  }
+  if (coverage.length > 0) {
+    const answers = isIgnored([...seen]);
+    coverage.forEach((entry, i) => {
+      entry.ignored = answers[i] ?? null;
+    });
   }
   if (missingFile) blocking ??= "COVERAGE_FILE_MISSING";
   if (unreadable !== null) blocking ??= unreadable;
@@ -946,8 +952,11 @@ export function checkCoverage({ entries, coverageRoot, format = "auto" }, repo, 
   }
   if (trackedFile !== null) codes.push("COVERAGE_FILE_TRACKED");
   // Notes are fixed strings: they name the field that holds a path, never the path itself.
-  if (coverage.some((c) => c.tracked === false && c.ignored === false)) {
-    notes.push("a coverage file is not git-ignored (coverage[].ignored is false); ignore it so it is never committed (a committed one raises COVERAGE_FILE_TRACKED)");
+  const notIgnored = coverage.filter((c) => c.tracked === false && c.ignored === false).length;
+  if (notIgnored === 1) {
+    notes.push("1 coverage file is not git-ignored (coverage[].ignored is false); ignore it so it is never committed (a committed one raises COVERAGE_FILE_TRACKED)");
+  } else if (notIgnored > 1) {
+    notes.push(`${notIgnored} coverage files are not git-ignored (coverage[].ignored is false); ignore them so they are never committed (a committed one raises COVERAGE_FILE_TRACKED)`);
   }
   if (paths?.suggestedRoot) {
     notes.push("the coverage paths look relative to the directory in paths.suggestedRoot: set coverage.root to it, written as a quoted YAML string, in .pharn/ci.yml, or have the runner write repo-relative paths");
@@ -969,13 +978,15 @@ export function checkCoverage({ entries, coverageRoot, format = "auto" }, repo, 
 
 // --- git and the repository ----------------------------------------------------------------------------
 
-// check-ignore takes path names, not pathspecs, and refuses --literal-pathspecs.
-function realGit(cwd, args) {
+// check-ignore parses pathspec magic but is called without --literal-pathspecs, so gitIgnoresAll passes every path as
+// "./<rel>", which git never reads as magic. `input`, when given, is written to git's stdin.
+function realGit(cwd, args, input) {
   return execFileSync("git", args[0] === "check-ignore" ? args : ["--literal-pathspecs", ...args], {
     cwd,
     encoding: "utf8",
     env: { ...process.env, LC_ALL: "C" },
-    stdio: ["ignore", "pipe", "pipe"],
+    input,
+    stdio: [input === undefined ? "ignore" : "pipe", "pipe", "pipe"],
     maxBuffer: 256 * 1024 * 1024,
     timeout: 120_000,
   });
@@ -1024,16 +1035,39 @@ export function locateRepo(cwd, git) {
   }
 }
 
-/** Whether git ignores `rel`: true, false, or null when that cannot be asked (no git, or not a safe path). */
+/** Whether git ignores `rel`: true, false, or null when git cannot tell (a path behind a symlinked directory). */
 function gitIgnores(git, repoRoot, rel) {
-  if (!isSafeRepoPath(rel)) return null;
   try {
-    git(repoRoot, ["check-ignore", "-q", "--no-index", "--", rel]);
+    git(repoRoot, ["check-ignore", "-q", "--no-index", "--", `./${rel}`]);
     return true;
   } catch (err) {
-    if (err?.status === 1) return false;
-    throw new UsageError(`git check-ignore failed: ${gitMessage(err)}`);
+    return err?.status === 1 ? false : null;
   }
+}
+
+/**
+ * Whether git ignores each of `rels`, asking git once: true, false, or null when that cannot be asked (not a safe
+ * path) or git cannot tell. The batch stops at the first path git cannot check and prints nothing for the rest, so a
+ * batch that fails is discarded and each path is asked on its own.
+ */
+function gitIgnoresAll(git, repoRoot, rels) {
+  const asked = rels.filter(isSafeRepoPath);
+  const answers = new Map();
+  if (asked.length > 0) {
+    let out = null;
+    try {
+      out = git(repoRoot, ["check-ignore", "--no-index", "-z", "--stdin"], asked.map((rel) => `./${rel}\0`).join(""));
+    } catch (err) {
+      if (err?.status === 1) out = "";
+    }
+    if (out === null) {
+      for (const rel of asked) answers.set(rel, gitIgnores(git, repoRoot, rel));
+    } else {
+      const ignored = new Set(out.split("\0").map((p) => (p.startsWith("./") ? p.slice(2) : p)));
+      for (const rel of asked) answers.set(rel, ignored.has(rel));
+    }
+  }
+  return rels.map((rel) => answers.get(rel) ?? null);
 }
 
 export function parseCli(argv) {
@@ -1085,7 +1119,7 @@ export function run(argv, { cwd = process.cwd(), git = realGit } = {}) {
       if (fd !== undefined) closeSync(fd);
     }
   };
-  const isIgnored = (rel) => (repo.git ? gitIgnores(git, repo.repoRoot, rel) : null);
+  const isIgnored = (rels) => (repo.git ? gitIgnoresAll(git, repo.repoRoot, rels) : rels.map(() => null));
   const result = checkCoverage(opts, repo, { listDir: fsListDir(repo.repoRoot), readText, isIgnored });
   const notes = [];
   if (!repo.git) notes.push(`${NO_GIT_NOTE} (${repo.reason})`);

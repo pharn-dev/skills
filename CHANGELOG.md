@@ -196,6 +196,20 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   where CI reported 100%) with no note. A ref starting with `origin/`, a full
   SHA, and a branch found only under `origin/` resolve as before; the helper
   still never fetches.
+- `pharn-ci-install`'s `check-coverage.mjs` survives a coverage file git cannot
+  check, skips auto-discovery when `--coverage` is given, and asks git once
+  (CORE-258). A file behind a symlinked directory (Bazel's `bazel-out`) made
+  `git check-ignore` fail and the helper exit 2 with no JSON; it now gets
+  `coverage[].ignored: null` and the normal result. Every path goes to git as
+  `./<path>`, so a file named `:!x.info` is checked as a file name, not read as
+  pathspec magic. All coverage files are checked in one
+  `git check-ignore --stdin` call (300 .NET `TestResults` files took 300 git
+  processes and 11 s), falling back to one call per path only when that batch
+  fails, and the "not git-ignored" note is one note with the count. With
+  `--coverage`, `discovery` is `{"kind": "not-run", "files": []}` and the tree
+  is not walked, so a large ignored build directory no longer adds a false
+  "auto-discovery went over pharn-ci's limit" note, and the ambiguity note is
+  gone.
 
 ## [pharn-ci 0.2.1] - 2026-11-23
 

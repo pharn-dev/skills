@@ -128,7 +128,8 @@ prints a fix's `hint` and `target` as report text, at most 200 and 1024
 characters.
 The [install helper](plugins/pharn-ci/skills/pharn-ci-install/scripts/check-coverage.mjs)
 shares that parsing code byte for byte, runs only `git rev-parse`,
-`git ls-files` and `git check-ignore`, walks the disk without following links
+`git ls-files` and `git check-ignore` (each path passed as `./<path>`, so no
+name is read as pathspec magic), walks the disk without following links
 and within pharn-ci's limits, and never prints the repository's absolute path.
 Their
 [unit tests](plugins/pharn-ci/tests/) run in CI.
