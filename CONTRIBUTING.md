@@ -47,8 +47,9 @@ reports through its installed integration:
 - **Validate**: the Prettier format check (`npm run format:check`), ESLint
   (`npm run lint`), the action pin check (`npm run check:pins`), `npm test`
   (the suites under
-  `.github/scripts/`, `plugins/pharn-ci/tests/` and
-  `plugins/pharn-ci/evals/fixtures/`, as globbed in `package.json`),
+  `.github/scripts/`, `plugins/pharn-ci/tests/`,
+  `plugins/pharn-ci/evals/fixtures/` and `src/phargus/test/`, as globbed in
+  `package.json`),
   `claude plugin validate --strict` on the marketplace and on each plugin, and
   `cmp` checks that the shared copies are identical: the pharn-ci report
   reference and the shared pharn and pharn-ci eval scaffolds.
@@ -118,7 +119,12 @@ clients has an accepted trial for the shipped content (see
 `$PHARN_TEST_RESULTS` only when PHARN sets that variable, and writes nothing
 otherwise. PHARN reads the file only after a person adds
 `"testResults": { "test": "pharn-json" }` to `pharn.config.json`, which the
-PHARN CLI installs, so that line is a person's edit, not a build's.
+PHARN CLI installs, so that line is a person's edit, not a build's. PHARN
+discovers its gates from the root `package.json` only, so the root `npm test`
+also runs the `src/phargus` unit tests: without them, PHARN's verify and
+regress stages could not see a `phargus` change's acceptance tests. Those tests
+resolve `prettier` from the root install, so the root jobs need no `npm ci` in
+`src/phargus`.
 
 Pinned versions and action SHAs are bumped deliberately, never with a floating
 tag.
