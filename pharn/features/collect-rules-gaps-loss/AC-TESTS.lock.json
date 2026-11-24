@@ -1,0 +1,131 @@
+{
+  "schema": "ac-tests-lock/6",
+  "feature": "collect-rules-gaps-loss",
+  "mode": "test-first",
+  "spec": {
+    "spec_id": "collect-rules-gaps-loss",
+    "spec_content_hash": "36e48395c99e6675acedf9c5b02dbd32a4a01e3b25d3cac86630b9bda8c1bca7"
+  },
+  "mapping": {
+    "path": "pharn/features/collect-rules-gaps-loss/AC-TESTS.md",
+    "sha256": "3016e4e2aa639add1a9fbec2e2750976912719f001b0541d0ed3a3a8473ab19a"
+  },
+  "files": [
+    {
+      "path": "src/phargus/test/collect-rules-quality.test.mjs",
+      "sha256": "fcd7f75360d7cba135f4eb78e0aad62f61ff2e8ecdf51c89596bd665f9825409"
+    },
+    {
+      "path": "src/phargus/test/integration/collect-rules-quality.test.mjs",
+      "sha256": "dca9f1745cc7d127cc33b3ef897f93b8b58374b9a82be465168596493ca0b1e4"
+    }
+  ],
+  "bootstrap": null,
+  "red_run": {
+    "stamp_sha256": "dad222ee21d3542dd92c0c2c6cb52535da587c5575f7a13b75f2317548a3047e",
+    "files_sha256": "acd93eaca839afb7e724dc830dc0b9d74c77891e40c8933fdc00f65401427efc",
+    "gates": [
+      {
+        "gate": "test",
+        "results_sha256": "ad11ef4fe30cf07d0f47cce2318a39be7d8e6591cbca4bc16325a38c94bf796e"
+      }
+    ],
+    "acs": [
+      {
+        "id": "AC-1",
+        "tests": [
+          "src/phargus/test/integration/collect-rules-quality.test.mjs::AC-1: collect reports the 58 s hole as one gap and the same loss as summarize, from --file and --follow"
+        ]
+      },
+      {
+        "id": "AC-2",
+        "tests": [
+          "src/phargus/test/integration/collect-rules-quality.test.mjs::AC-2: rules results in alerts and sandbox modes carry a quality block; window records leave loss unknown"
+        ]
+      },
+      {
+        "id": "AC-3",
+        "tests": [
+          "src/phargus/test/integration/collect-rules-quality.test.mjs::AC-3: a forWindows alert fires across an hour hole exactly as before, and quality.gaps is 1"
+        ]
+      },
+      {
+        "id": "AC-4",
+        "tests": [
+          "src/phargus/test/integration/collect-rules-quality.test.mjs::AC-4: the CLI judges a 5000 ms recording at --interval-ms 5000 in collect and rules"
+        ]
+      },
+      {
+        "id": "AC-5",
+        "tests": [
+          "src/phargus/test/integration/collect-rules-quality.test.mjs::AC-5: a clean 1000 ms recording keeps collect and rules output as before and reports no gaps"
+        ]
+      },
+      {
+        "id": "AC-6",
+        "tests": [
+          "src/phargus/test/collect-rules-quality.test.mjs::AC-6: the window reader fills the caller quality record with one gap for one hole"
+        ]
+      },
+      {
+        "id": "AC-7",
+        "tests": [
+          "src/phargus/test/collect-rules-quality.test.mjs::AC-7: an invalid line is refused naming the invalid lines and that rules ignores --allow-logs",
+          "src/phargus/test/collect-rules-quality.test.mjs::AC-7: input over the replay cap is refused naming the event cap and --max-events"
+        ]
+      },
+      {
+        "id": "AC-8",
+        "tests": [
+          "src/phargus/test/integration/collect-rules-quality.test.mjs::AC-8: generated copies match and the knowledge and CHANGELOG describe the new quality output"
+        ]
+      }
+    ]
+  },
+  "test_infra": {
+    "levels": [
+      "integration",
+      "unit"
+    ],
+    "gates": [
+      {
+        "id": "test",
+        "script": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./.github/scripts/pharn-test-reporter.mjs --test-reporter-destination=stdout .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
+        "pre": null,
+        "post": null,
+        "results": "pharn-json"
+      }
+    ],
+    "chained": [],
+    "configs": [],
+    "script_files": [
+      {
+        "path": ".github/scripts/pharn-test-reporter.mjs",
+        "sha256": "0f6e7369360cc8d7621476f349dc5d3fb08ce968906304f8e6ee2f4ad2ea7058"
+      }
+    ],
+    "jest": null,
+    "exclude": [],
+    "other_gates": [
+      {
+        "id": "format:check",
+        "script": "prettier --check .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint",
+        "script": "eslint .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint:md",
+        "script": "markdownlint-cli2",
+        "pre": null,
+        "post": null
+      }
+    ],
+    "other_chained": []
+  }
+}

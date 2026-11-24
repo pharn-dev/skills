@@ -1,0 +1,108 @@
+{
+  "base": "248c0f6cf7571b91993fd98f8ab76eb0dc7ff503",
+  "inside": [
+    "CHANGELOG.md",
+    "plugins/phargus/skills/phargus-diagnose/references/tools.md",
+    "plugins/phargus/skills/phargus-diagnose/scripts/operations.mjs",
+    "plugins/phargus/skills/phargus-diagnose/scripts/phargus.mjs",
+    "plugins/phargus/skills/phargus-memory/references/tools.md",
+    "plugins/phargus/skills/phargus-memory/scripts/operations.mjs",
+    "plugins/phargus/skills/phargus-memory/scripts/phargus.mjs",
+    "plugins/phargus/skills/phargus-rules/references/rules.md",
+    "plugins/phargus/skills/phargus-rules/references/tools.md",
+    "plugins/phargus/skills/phargus-rules/scripts/operations.mjs",
+    "plugins/phargus/skills/phargus-rules/scripts/phargus.mjs",
+    "plugins/phargus/skills/phargus-setup/references/tools.md",
+    "plugins/phargus/skills/phargus-setup/scripts/operations.mjs",
+    "plugins/phargus/skills/phargus-setup/scripts/phargus.mjs",
+    "plugins/phargus/skills/phargus-verify/references/tools.md",
+    "plugins/phargus/skills/phargus-verify/scripts/operations.mjs",
+    "plugins/phargus/skills/phargus-verify/scripts/phargus.mjs",
+    "src/phargus/knowledge/rules.md",
+    "src/phargus/knowledge/tools.md",
+    "src/phargus/runtime/operations.mjs",
+    "src/phargus/runtime/phargus.mjs",
+    "pharn/features/collect-rules-gaps-loss/AC-TESTS.lock.json",
+    "pharn/features/collect-rules-gaps-loss/AC-TESTS.md",
+    "pharn/features/collect-rules-gaps-loss/BUILD.md",
+    "pharn/features/collect-rules-gaps-loss/GRILL.md",
+    "pharn/features/collect-rules-gaps-loss/PLAN.md",
+    "pharn/features/collect-rules-gaps-loss/SPEC.md",
+    "pharn/features/collect-rules-gaps-loss/grill-findings.json",
+    "pharn/features/collect-rules-gaps-loss/grill-triage.json",
+    "src/phargus/test/collect-rules-quality.test.mjs",
+    "src/phargus/test/integration/collect-rules-quality.test.mjs"
+  ],
+  "outside_gates": {
+    "test": {
+      "base": 0,
+      "head": 0
+    }
+  },
+  "regressions": [],
+  "pre_existing": [],
+  "verdict": "no-regressions",
+  "gate_run": {
+    "base": {
+      "stamp_sha256": "138be9e9f204aac8bc0cc96cc2e25fd809c56591c1693e32dae30347ce3c332e",
+      "source": "discover",
+      "fingerprint": {
+        "algo": "worktree-fingerprint/3+sha256+entry-feature-dir",
+        "final": "5ff39bfe9dbbbe623be3641d66d7e5d42ca0e0880c3ad4548a275ee5b2ec6124"
+      }
+    },
+    "head": {
+      "stamp_sha256": "7c177af2e76b60eeac44da6308f84797775742b84663e6722c29b7e5722ffb77",
+      "source": "discover",
+      "fingerprint": {
+        "algo": "worktree-fingerprint/3+sha256",
+        "final": "10f378bd1dfcf1e8ea6b0fa0601077aec47461a4e10211ac05482518e0d1fab3"
+      }
+    }
+  },
+  "base_evidence": {
+    "reused": false,
+    "miss": "no-record",
+    "requirement_sha256": "89840c59cf3d2b3aee0f9c6213fcbc76ec8b85e1355a725ad9d45d861c138d4e",
+    "recorded": false,
+    "source": "entry",
+    "entry": {
+      "used": true,
+      "miss": null,
+      "offer_sha256": "1d415bd56f69c06e1847435da85b55bafa357c1ece59c95c574d8e0c8d46ee43",
+      "entry_stamp_sha256": "1192f3f8bfe46aceab33339a57f4f0511b264c95259fffb65ffcd2ff3d6b60d9",
+      "base": "248c0f6cf7571b91993fd98f8ab76eb0dc7ff503",
+      "run": {
+        "command": "pharn-loop",
+        "marker_sha256": "ed4944db8e465aa47d0216ee6b5a7b0e1de25092933235cfc8df761e5ee8a4e2"
+      },
+      "reused_ids": [
+        "test"
+      ],
+      "no_files_ids": [],
+      "ignored_ids": [
+        "lint",
+        "format:check",
+        "lint:md",
+        "test"
+      ]
+    }
+  },
+  "pre_run_snapshot": {
+    "status": "applied",
+    "unchanged": []
+  },
+  "head_install": {
+    "state": "clean",
+    "why": null,
+    "family": "npm",
+    "lockfile": "package-lock.json",
+    "counts": {
+      "changed": 0,
+      "missing": 0,
+      "extraneous": 0,
+      "missing_unchecked": 166
+    }
+  },
+  "base_source": "explicit"
+}

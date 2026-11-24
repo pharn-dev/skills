@@ -1,0 +1,164 @@
+{
+  "feature": "collect-rules-gaps-loss",
+  "gates": {
+    "format:check": 0,
+    "instruction-growth": 0,
+    "lint": 0,
+    "lint:md": 0,
+    "reconcile": 0,
+    "test": 0
+  },
+  "verdict": "FAIL",
+  "failing_gates": [
+    "ac-delivery"
+  ],
+  "gate_run": {
+    "stamp_sha256": "eb33907d35e7aafb1bbd96b8e51dd9b5784e2c53d98ac46141421cc84ed07880",
+    "source": "discover",
+    "fingerprint": {
+      "algo": "worktree-fingerprint/3+sha256",
+      "final": "10f378bd1dfcf1e8ea6b0fa0601077aec47461a4e10211ac05482518e0d1fab3"
+    }
+  },
+  "ac_gate": {
+    "mode": "test-first",
+    "verdict": "FAIL",
+    "reason": null,
+    "evidence": [],
+    "acs": [
+      {
+        "id": "AC-1",
+        "level": "integration",
+        "tests": [],
+        "status": "none",
+        "reason": "ac-untested",
+        "detail": "no test titled `AC-1: …` in a file mapped to AC-1 was reported by test"
+      },
+      {
+        "id": "AC-2",
+        "level": "integration",
+        "tests": [],
+        "status": "none",
+        "reason": "ac-untested",
+        "detail": "no test titled `AC-2: …` in a file mapped to AC-2 was reported by test"
+      },
+      {
+        "id": "AC-3",
+        "level": "integration",
+        "tests": [],
+        "status": "none",
+        "reason": "ac-untested",
+        "detail": "no test titled `AC-3: …` in a file mapped to AC-3 was reported by test"
+      },
+      {
+        "id": "AC-4",
+        "level": "integration",
+        "tests": [],
+        "status": "none",
+        "reason": "ac-untested",
+        "detail": "no test titled `AC-4: …` in a file mapped to AC-4 was reported by test"
+      },
+      {
+        "id": "AC-5",
+        "level": "integration",
+        "tests": [],
+        "status": "none",
+        "reason": "ac-untested",
+        "detail": "no test titled `AC-5: …` in a file mapped to AC-5 was reported by test"
+      },
+      {
+        "id": "AC-6",
+        "level": "unit",
+        "tests": [],
+        "status": "none",
+        "reason": "ac-untested",
+        "detail": "no test titled `AC-6: …` in a file mapped to AC-6 was reported by test"
+      },
+      {
+        "id": "AC-7",
+        "level": "unit",
+        "tests": [],
+        "status": "none",
+        "reason": "ac-untested",
+        "detail": "no test titled `AC-7: …` in a file mapped to AC-7 was reported by test"
+      },
+      {
+        "id": "AC-8",
+        "level": "integration",
+        "tests": [],
+        "status": "none",
+        "reason": "ac-untested",
+        "detail": "no test titled `AC-8: …` in a file mapped to AC-8 was reported by test"
+      }
+    ],
+    "unmapped_anomalies": [],
+    "note": "an AC is delivered = a locked, once-red test titled AC-<n>:, in a file mapped to AC-<n>, passed on this head run. PHARN does not judge whether that test fully captures the AC's intent."
+  },
+  "completeness": {
+    "plan": "pharn/features/collect-rules-gaps-loss/PLAN.md",
+    "repoDir": ".",
+    "declared": [
+      "src/phargus/runtime/operations.mjs",
+      "src/phargus/runtime/phargus.mjs",
+      "src/phargus/knowledge/rules.md",
+      "src/phargus/knowledge/tools.md",
+      "plugins/phargus/skills/phargus-diagnose/scripts/operations.mjs",
+      "plugins/phargus/skills/phargus-diagnose/scripts/phargus.mjs",
+      "plugins/phargus/skills/phargus-diagnose/references/tools.md",
+      "plugins/phargus/skills/phargus-memory/scripts/operations.mjs",
+      "plugins/phargus/skills/phargus-memory/scripts/phargus.mjs",
+      "plugins/phargus/skills/phargus-memory/references/tools.md",
+      "plugins/phargus/skills/phargus-rules/scripts/operations.mjs",
+      "plugins/phargus/skills/phargus-rules/scripts/phargus.mjs",
+      "plugins/phargus/skills/phargus-rules/references/tools.md",
+      "plugins/phargus/skills/phargus-rules/references/rules.md",
+      "plugins/phargus/skills/phargus-setup/scripts/operations.mjs",
+      "plugins/phargus/skills/phargus-setup/scripts/phargus.mjs",
+      "plugins/phargus/skills/phargus-setup/references/tools.md",
+      "plugins/phargus/skills/phargus-verify/scripts/operations.mjs",
+      "plugins/phargus/skills/phargus-verify/scripts/phargus.mjs",
+      "plugins/phargus/skills/phargus-verify/references/tools.md",
+      "CHANGELOG.md"
+    ],
+    "skipped": [],
+    "missing": [],
+    "deletions": [],
+    "undeleted": [],
+    "complete": true,
+    "verdict": "complete"
+  },
+  "verifiers": {
+    "registered": 0,
+    "findings": []
+  },
+  "gate_reuse": {
+    "reused": [
+      {
+        "id": "test",
+        "stage": "regress",
+        "side": "head",
+        "seq": 0
+      }
+    ]
+  },
+  "head_install": {
+    "state": "clean",
+    "why": null,
+    "family": "npm",
+    "lockfile": "package-lock.json",
+    "counts": {
+      "changed": 0,
+      "missing": 0,
+      "extraneous": 0,
+      "missing_unchecked": 166
+    }
+  },
+  "reconcile_detail": {
+    "state": "parsed",
+    "exit": 0,
+    "verdict": "CLEAN",
+    "escapes": [],
+    "escapes_total": 0,
+    "merged_count": 0
+  }
+}

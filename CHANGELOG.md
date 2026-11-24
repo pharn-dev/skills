@@ -65,6 +65,37 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   `interrupted` and `quality.truncated` true, as `capture --url` does, instead
   of leaving a 0-byte `manifest.json` when killed. No signal listener stays
   registered after a command returns (CORE-239).
+- phargus 0.1.1: a raw sample covers the interval that ends at its timestamp, as
+  the agent stamps it when the interval closes. `summarize` treated the
+  timestamp as the start, so the measured period was one interval late:
+  requests in the first second after start counted as `outsidePeriod`, requests
+  after the last sample counted as inside, and `compare` answered
+  `inconclusive` ("request evidence outside runtime interval") for a normal
+  capture. The period now runs from the first timestamp minus one interval to
+  the last timestamp; `period.durationMs` is unchanged and window records keep
+  their own start and end. The period end is inclusive and a span's end is
+  compared in whole milliseconds, so a span drained at the last tick is still
+  contained. `capture` and `summarize` share one definition of a sample's
+  interval, and `knowledge/data.md` states the rule (CORE-235).
+- phargus 0.1.1: a raw sample delayed by a synchronous stall, and explained by
+  its own `eventLoop.max`, now counts in `quality.stalledSamples` and
+  `quality.stalledMs` instead of `quality.gaps`. A sample whose lateness is more
+  than half an interval but at most its own `eventLoop.max` plus half an
+  interval is stalled; a repeated or backwards timestamp, or a late sample its
+  stall does not explain, is still a gap. Sample coverage counts the stalled
+  time, so a recording with a stalled tick is neither short of the declared
+  `durationMs` nor of the other recording. Before, such a recording made
+  `compare` answer `inconclusive` ("measurement gaps"). Window records are
+  unchanged (CORE-236).
+- phargus 0.1.1: `collect` (from `--file` and `--follow`) and `rules` (both
+  modes) now count `quality.gaps`, `quality.stalledSamples`,
+  `quality.stalledMs` and `quality.loss` through the same tracker as
+  `summarize`. `rules` results gain a `quality` block, and `--interval-ms` now
+  reaches both commands, defaulting to 1000. The `rules` refusal names its
+  cause: invalid lines, or the event cap (raise it with `--max-events`). Before,
+  `collect`'s `gaps` and `loss` always stayed at their initial values and
+  `rules` reported no quality, so a `forWindows` alert could span a hole
+  unseen. Alert evaluation is unchanged (CORE-237).
 - Repository (no plugin version change): LIMITS, CONTRIBUTING and README state
   the versions the skills target today. LIMITS described pharn-ci 0.4.0 where
   its own table says 0.11.0: the workflows `pharn-ci-install` writes, the

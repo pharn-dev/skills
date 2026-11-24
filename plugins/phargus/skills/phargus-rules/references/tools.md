@@ -41,7 +41,8 @@ truncated Phargus JSON. A capture manifest whose quality.invalidRecords or
 quality.ignoredLogs is not a non-negative integer is refused.
 Collection fails on corrupt data in both file and --follow modes.
 Invalid records are not zeros. rules buffers its input, so replay keeps a 10,000-event
-default that rules --max-events raises.
+default that rules --max-events raises. rules does not apply --allow-logs, and its refusal
+names the cause: invalid lines, or the event cap (raise it with --max-events).
 
 Summarize and compare need no installed Phargus. doctor, collect, heap and rules load
 the target application's tested Phargus installation. Every result is JSON with
@@ -59,6 +60,8 @@ Raw sample interval precedence: explicit --interval-ms, then the intervalMs a ca
 recorded in its manifest, then declared conditions intervalMs, then 1000.
 coverage.samplingIntervalSource reports flag, manifest, conditions or default.
 compare derives each side from its own manifest unless --interval-ms is passed.
+That precedence applies to capture, summarize and compare. --interval-ms also applies to
+collect and rules, which read no manifest or conditions and default to 1000.
 --window-ms selects replay/collector aggregation, default 1000.
 Capture conditions are user-supplied JSON, not an environment dump. Comparison expects
 workload, concurrency, requests, warmupMs, durationMs, nodeVersion, machine, intervalMs
@@ -76,4 +79,5 @@ an ephemeral test port. The ready event on stderr contains the URL. --rules load
 collector alert JSON; --sinks loads a JSON array of file/webhook alert sinks (stdout is
 refused). --allowed-host NAME, repeatable, lets the dashboard answer a proxy's Host name.
 The result lists sink types/names, sinkErrors and allowedHosts, never sink paths or URLs.
-Rotation/truncation requires starting a fresh collection.
+Its quality reports gaps, stalled samples and loss as summarize does, over the records read
+before the run stopped. Rotation/truncation requires starting a fresh collection.

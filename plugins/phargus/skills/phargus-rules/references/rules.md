@@ -22,6 +22,10 @@ The evaluator emits firing once when enough successive input windows breach, the
 resolved on the first nonbreaching window. Equality differs for > and >=. forWindows
 counts input windows; gaps do not automatically reset the upstream evaluator. Check
 window continuity before describing the condition as a continuous wall-clock duration.
+rules results, in both modes, carry a quality block (gaps, stalledSamples, stalledMs,
+invalidRecords, ignoredLogs, truncated and loss), counted as summarize counts it. With
+quality.gaps above 0 a forWindows alert may span a hole, so do not describe it as a
+continuous wall-clock duration. Raw samples are judged at --interval-ms (default 1000).
 
 Replay the rule on separate normal and incident data with rules --mode alerts. Choose
 a threshold from the symptom and observed normal range, not from an arbitrary default.

@@ -27,11 +27,12 @@ test('validates every supported record and retains cumulative loss counters', ()
 });
 
 test('preserves nanoseconds, max-of-sample-p99 and observed request percentiles', async () => {
+  // Samples stamped 1000 and 2000 measured 0 to 2000, which contains both spans.
   const raw = [
-    sample(0, {
+    sample(1000, {
       eventLoop: { min: 1, max: 100_000_000, mean: 10_000_000, p50: 5_000_000, p99: 10_000_000 },
     }),
-    sample(1000),
+    sample(2000),
     span(0, 10_000_000),
     span(1000, 90_000_000),
   ];
@@ -139,7 +140,8 @@ test('a byte order mark does not cost the first record', async () => {
     const result = await summarizeFile(path);
     assert.equal(result.counts.samples, 6);
     assert.equal(result.quality.invalidRecords, 0);
-    assert.equal(result.period.startMs, 0);
+    // The first sample, stamped at 0, covers the interval (-1000, 0].
+    assert.equal(result.period.startMs, -1000);
     // The mark is dropped even when it arrives split across chunks.
     const bytes = [...Buffer.from(bom + '{"a":1}\n')].map((byte) => Buffer.from([byte]));
     const received = [];
