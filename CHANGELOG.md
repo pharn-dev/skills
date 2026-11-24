@@ -195,6 +195,24 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   or other `gh` write, an answer that leaves the label to the reviewers, and
   the gate files unchanged. CI now also checks that `cover-fix-kinds` and
   `fix-mixed-kinds` carry the same scaffold, as the manifest declares.
+- `pharn-ci-install`, extending an existing test job (`references/workflows.md`,
+  "Existing test job"): the job's `actions/checkout` step now gets
+  `persist-credentials: false` next to `fetch-depth: 0`. The skill raises that
+  job's token to `pull-requests: write` and the job runs the pull request's
+  tests, so on a same-repository branch the test code could read the token
+  from `.git/config`. When a later step in the job pushes, tags or otherwise
+  needs git credentials, the skill does not set it and asks instead. The
+  `install-existing-ci` eval gains the grader `no-credentials.md`, which
+  accepts the setting only inside the checkout step (not in a comment or
+  another step); its scaffold's job never pushes.
+- README: the `pharn-ci-install` bullet lists every file the skill writes:
+  `.pharn/ci.yml`, the workflow or workflows, `.gitignore` and, where coverage
+  output is missing or leaves out files, the coverage script or runner config;
+  only with a yes, a coverage dependency (manifest and lockfile), a
+  `.github/dependabot.yml` entry or CODEOWNERS lines. Before, it said "writes
+  only `.pharn/ci.yml`, the workflow and `.gitignore`".
+- THREAT-MODEL: an extended job runs pharn-ci on `pull_request` and
+  `merge_group`, as the skill says; it named only `pull_request`.
 
 ## [pharn-ci 0.2.1] - 2026-11-23
 

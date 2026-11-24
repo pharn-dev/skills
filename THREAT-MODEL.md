@@ -85,7 +85,7 @@ Checkouts use `persist-credentials: false`. Settings live only in
 because the PR carries `.pharn/ci.yml` and pharn-ci lets it only tighten the
 mode; the skill never writes `off`. It recommends CODEOWNERS for
 `.pharn/ci.yml` and `.github/workflows/`, and never creates the accept label. Extending an existing job, it keeps the job's triggers,
-matrix and steps, runs pharn-ci only on `pull_request` and one matrix leg, and
+matrix and steps, runs pharn-ci only on `pull_request` (and `merge_group`) and one matrix leg, and
 asks when the job's permissions are unclear. It runs the project's coverage
 command locally, which runs project code, and says so; it installs nothing
 without asking and commits nothing. Its evals include a request to use
