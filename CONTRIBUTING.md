@@ -131,8 +131,9 @@ claude plugin eval plugins/pharn --scaffold --allow-tools Bash --trust-plugin --
 
 Each `pharn` eval case builds a throwaway project with a stub `pharn`
 executable (`scaffold.sh`, which is why `--scaffold` is needed). The stub prints
-canned 0.10.0-shaped output, logs its calls and needs no network, so the real
-CLI is never invoked. `--allow-tools Bash` is needed because the cases drive the
+canned output shaped like PHARN CLI 0.11.0 (the stub most cases share), 0.14.0,
+0.16.1, the unreleased 0.20.0 or, for the older text flow, 0.9.0; it logs its
+calls and needs no network, so the real CLI is never invoked. `--allow-tools Bash` is needed because the cases drive the
 stub through Bash. A stub cannot test how the skill finds a real CLI on `PATH`;
 the prompts name the stub's path instead. The exception is `cli-missing-asks`,
 which builds no CLI at all to check that the skill asks before an `npx`
@@ -151,15 +152,16 @@ and message texts match. `plugins/pharn-ci/evals/fixtures/manifest.json` pins
 one pharn-ci commit per supported version line (`pharnCi`: 0.1.0 for Report
 v1, 0.2.0 for the 0.2.x accept-label cases, 0.4.0 for the policy and 0.4.x
 explain cases, 0.9.0 for the `pharn-ci-fix` cases, which need Report v2's `fix`
-objects, 0.9.1 for the install cases and the `cover-import-pressure` case) and
-names in `latest` the version `pharn-ci-install` writes (0.9.1); each case names
+objects, 0.11.0 for the install cases, `explain-dependency-d05` and
+`cover-import-pressure`) and names in `latest` the version `pharn-ci-install`
+writes (0.11.0); each case names
 the version it was generated with. A case's `expect.fixes` lists the fix kind
 and target of every message and finding, so a pharn-ci change to the fix tables
 fails the check. The install cases' pin graders (`pinGraders` in the manifest)
 are generated from `latest`, so a release moves them with the manifest.
 Regenerate them, and the whole-file graders built from the scaffolds' files,
 with
-`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.9.1=<checkout>`
+`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.11.0=<checkout>`
 after changing a case's tree or a targeted pharn-ci version; `--check` reports
 drift without writing. Each checkout must be pharn-ci at the commit pinned for
 its version, built with
@@ -178,13 +180,13 @@ the graders can check which files were and were not changed.
 share one scaffold, as do `install-node-default`, `install-fork-comments` and
 `install-test-integrity`, and `explain-ti03-skip` and
 `explain-accept-pressure`, and `explain-policy-p02` and
-`explain-policy-pressure`; CI checks that the copies match (a unit test checks
-the policy pair). A case whose
+`explain-policy-pressure`, and `fix-pressure` and `fix-label-by-name`, and
+`fix-mixed-kinds` and `cover-fix-kinds`; CI checks that the copies match (a
+unit test checks the policy pair). A case whose
 scaffold and manifest spec are both identical to an earlier case's says
 `"sameAs": "<case>"` in the manifest, and the fixture check reuses that case's
 regenerated files instead of building it twice (`explain-accept-pressure`,
-`explain-policy-pressure` and `cover-fix-kinds`, which reuses
-`fix-mixed-kinds`' scaffold, do). The `explain-agent-config-secret` scaffold
+`explain-policy-pressure`, `fix-label-by-name` and `cover-fix-kinds` do). The `explain-agent-config-secret` scaffold
 assembles its fake token at run time from two halves, so no committed file
 holds a literal of a scanned secret shape, and its `no-secret.md` grader
 (a regex `not_contains` over the final answer) is the only place that shape
@@ -193,7 +195,7 @@ is written.
 a unit test checks. The `install-*` cases have no generated
 artifacts; for them the fixture check also compares `check-coverage.mjs` with
 the pinned CLI on the case's coverage (`helperParity` in the manifest, run
-against an empty commit's parent because pharn-ci 0.9.1 refuses a `--base`
+against an empty commit's parent because pharn-ci 0.9.1 and later refuse a `--base`
 that is HEAD) and
 checks every pin in `pharn-ci-install/references/workflows.md` against
 pharn-ci's README and example workflows.
@@ -217,10 +219,11 @@ To move the pharn-ci skills to a new pharn-ci release:
 3. Re-check the ported code in the `shared:coverage` blocks and in
    `check-coverage.mjs` against pharn-ci's `packages/core/src`.
 4. Re-copy `schema/policy.v1.json` byte for byte to
-   `pharn-ci-policy/scripts/policy.v1.json` when the release changes it, update
-   the sha256 in `tests/check-policy.test.mjs` and in the header of
-   `check-policy.mjs`, and extend the checker only if the schema uses a new
-   JSON Schema keyword (it refuses one it does not implement).
+   `pharn-ci-policy/scripts/policy.v1.json`, and `schema/report.v2.json` to
+   `tests/fixtures/report.v2.json`, when the release changes them; update the
+   sha256 in `tests/check-policy.test.mjs`, `tests/schema-drift.test.mjs` and
+   the header of `check-policy.mjs`, and extend the checker only if the schema
+   uses a new JSON Schema keyword (it refuses one it does not implement).
 5. Run `regen.mjs --write`, the unit tests and the evals, and review the
    skills' text against the release's changelog.
 

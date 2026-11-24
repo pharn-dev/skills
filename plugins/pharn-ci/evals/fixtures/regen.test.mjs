@@ -155,7 +155,7 @@ test("pin graders hold the manifest's latest commit, so a release is one edit th
   }
   assert.ok(seen >= 8);
   const withoutPins = Object.keys(manifest.cases).filter((n) => n.startsWith("install-") && manifest.cases[n].pinGraders === undefined);
-  assert.deepEqual(withoutPins.sort(), ["install-private-registry", "install-upgrade-0-5"]);
+  assert.deepEqual(withoutPins.sort(), ["install-newer-pin", "install-private-registry", "install-upgrade-0-5"]);
 });
 
 test("one checkout per pinned version, and every case on a pinned version", () => {
