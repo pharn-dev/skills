@@ -2,7 +2,7 @@
   "name": "pharn-skills",
   "version": "0.0.0",
   "private": true,
-  "description": "Repo tooling for the pharn-dev skills marketplace: tests, ESLint, Prettier and markdownlint for the files outside src/phargus.",
+  "description": "Repo tooling for the pharn-dev skills marketplace: ESLint, Prettier and markdownlint for the files outside src/phargus, and tests that also run the src/phargus unit tests.",
   "type": "module",
   "license": "Apache-2.0",
   "repository": {
@@ -14,7 +14,7 @@
     "npm": ">=10"
   },
   "scripts": {
-    "test": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./.github/scripts/pharn-test-reporter.mjs --test-reporter-destination=stdout .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
+    "test": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./.github/scripts/pharn-test-reporter.mjs --test-reporter-destination=stdout .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs src/phargus/test/*.test.mjs",
     "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-exclude='**/*.test.mjs' --test-coverage-exclude='.github/scripts/*.test.mjs' --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
     "lint": "eslint .",
     "lint:md": "markdownlint-cli2",

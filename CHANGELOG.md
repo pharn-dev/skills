@@ -23,6 +23,11 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Changed
 
+- Repository (no plugin version change): the root `npm test` also runs the
+  `src/phargus` unit tests (`src/phargus/test/*.test.mjs`). PHARN discovers its
+  gates from the root `package.json`, so before this its verify and regress
+  stages never saw a `phargus` change's acceptance tests and marked every
+  criterion untested.
 - `phargus` tooling (no plugin version change): the behavioral release gate
   needs checkable evidence and a human sign-off. `npm run eval` records every
   trial in `VERIFICATION.json` itself, and writes redacted `final.json`,
