@@ -116,8 +116,12 @@ messages that decided it.
 
 ## 3. Find the cause in this repository
 
-For each message, branch on its `code` (never on its text) using
-[references/codes.md](references/codes.md), then confirm the cause from files,
+For each message, branch on its `code` (never on its text). Look the code up in
+[references/codes.md](references/codes.md) instead of reading the file top to
+bottom: search it for the code (for example with grep) and read the `###`
+section or table row that names it, together with the introduction of its `##`
+family, which carries the mode and accept-label rules. For a code it does not
+name, read "A code not listed here". Then confirm the cause from files,
 read-only:
 
 - the workflow that runs `pharn-dev/pharn-ci` under `.github/workflows/`: its

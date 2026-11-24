@@ -539,6 +539,7 @@ export async function main(argv) {
       spec.sameAs !== undefined ? results.get(spec.sameAs) : regenCase(name, spec, tools.get(spec.pharnCi), latestPin(manifest));
     results.set(name, result);
     const { scaffold, graders } = result;
+    let changed = false;
     const want = new Map([["scaffold.sh", scaffold], ...[...graders].map(([f, c]) => [`graders/${f}`, c])]);
     const graderDir = path.join(EVALS, name, "graders");
     const stale = readdirSync(graderDir).filter((f) => /^unchanged-.*\.md$/.test(f) && !graders.has(f));
@@ -546,14 +547,16 @@ export async function main(argv) {
       const file = path.join(EVALS, name, rel);
       const current = readTextIfExists(file);
       if (current === content) continue;
+      changed = true;
       if (mode === "write") writeFileSync(file, content);
       else diffs.push(current === null ? `missing ${name}/${rel}` : lineDiff(`${name}/${rel}`, current, content));
     }
     for (const f of stale) {
+      changed = true;
       if (mode === "write") unlinkSync(path.join(graderDir, f));
       else diffs.push(`stale ${name}/graders/${f}`);
     }
-    console.error(`${name}: ok`);
+    console.error(`${name}: ${!changed ? "ok" : mode === "write" ? "updated" : "out of date"}`);
   }
   if (diffs.length > 0) {
     console.log(diffs.join("\n\n"));
