@@ -29,7 +29,10 @@ npx skills add pharn-dev/skills
 </div>
 
 > **Status:** `pharn` and `pharn-ci` are ready to use with Claude Code; `pharn-ci`
-> covers pharn-ci 0.1.x to 0.12.x. `phargus` is a 0.1.1
+> covers pharn-ci 0.1.x to 0.12.x. One recorded eval run passed 14 of 15 `pharn`
+> and 24 of 32 `pharn-ci` cases, mostly failing on grader defects; `pharn-ci-fix`
+> can tell a PR author to apply the accept label, which pharn-ci ignores from the
+> author. See [LIMITS](LIMITS.md#tested-combinations). `phargus` is a 0.1.1
 > development draft for the `@pharn-dev/phargus` 0.1.x runtime published on npm;
 > see [Compatibility](#compatibility).
 
