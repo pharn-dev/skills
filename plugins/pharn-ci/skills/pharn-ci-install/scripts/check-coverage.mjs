@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Check a repository's coverage output the way pharn-ci (0.1.x to 0.4.x) will read it, before pharn-ci runs in CI:
+// Check a repository's coverage output the way pharn-ci (0.1.x to 0.11.x) will read it, before pharn-ci runs in CI:
 // which report auto-discovery would pick, the format of each file, whether its paths match tracked files,
 // and the coverage root they look relative to. Node core only; reads files and runs read-only git commands,
 // writes nothing.

@@ -131,8 +131,9 @@ claude plugin eval plugins/pharn --scaffold --allow-tools Bash --trust-plugin --
 
 Each `pharn` eval case builds a throwaway project with a stub `pharn`
 executable (`scaffold.sh`, which is why `--scaffold` is needed). The stub prints
-canned 0.10.0-shaped output, logs its calls and needs no network, so the real
-CLI is never invoked. `--allow-tools Bash` is needed because the cases drive the
+canned output shaped like PHARN CLI 0.11.0 (the stub most cases share), 0.14.0,
+0.16.1, the unreleased 0.20.0 or, for the older text flow, 0.9.0; it logs its
+calls and needs no network, so the real CLI is never invoked. `--allow-tools Bash` is needed because the cases drive the
 stub through Bash. A stub cannot test how the skill finds a real CLI on `PATH`;
 the prompts name the stub's path instead. The exception is `cli-missing-asks`,
 which builds no CLI at all to check that the skill asks before an `npx`
