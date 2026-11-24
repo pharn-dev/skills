@@ -1,6 +1,6 @@
 ---
 name: pharn-ci-explain
-description: Explain a pharn-ci result (pharn-ci 0.1.x to 0.12.x) - why a pull request's check failed or warned, what a code such as TEST_INTEGRITY_TI03, POLICY_P13, AGENT_CONFIG_SECRET_S01 or DEPENDENCY_D05 means, and what to change. Use when the person asks why pharn-ci failed, what a verdict, finding or report.json means, or to apply the accept label or relax the org policy for a PR. Not for covering lines (pharn-ci-cover), fix hints (pharn-ci-fix), setup (pharn-ci-install), writing a policy (pharn-ci-policy) or the PHARN CLI (pharn-cli).
+description: Explain a pharn-ci result (pharn-ci 0.1.x to 0.12.x) - why a pull request's check failed or warned, what a code such as TEST_INTEGRITY_TI03, POLICY_P13, AGENT_CONFIG_SECRET_S01 or DEPENDENCY_D05 means, and what to change. Use when the person asks why pharn-ci failed (also when they ask to run `pharn-ci check` locally and say why it fails), what a verdict, finding or report.json means, or to apply the accept label or relax the org policy for a PR. Not for covering lines (pharn-ci-cover), fix hints (pharn-ci-fix), setup (pharn-ci-install), writing a policy (pharn-ci-policy) or the PHARN CLI (pharn-cli).
 ---
 
 # pharn-ci-explain
