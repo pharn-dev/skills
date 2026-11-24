@@ -90,10 +90,14 @@ export async function main(args) {
     // Undefined lets capture/summarize use declared conditions.intervalMs, then 1000.
     intervalMs: number('interval-ms', undefined),
   };
+  // Only collect and capture stop cleanly on a signal: collect prints its result and capture keeps
+  // what it recorded. Every other command keeps Node's default action, so a signal ends it at once.
   const controller = new AbortController();
   const stop = () => controller.abort();
-  process.once('SIGINT', stop);
-  process.once('SIGTERM', stop);
+  if (command === 'collect' || command === 'capture') {
+    process.once('SIGINT', stop);
+    process.once('SIGTERM', stop);
+  }
   try {
     switch (command) {
       case 'doctor':

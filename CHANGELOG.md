@@ -84,6 +84,12 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   the same `--out` works, and the error names the network cause
   (`fetch failed: ECONNREFUSED`, `ENOTFOUND` or `unexpected redirect`)
   (CORE-240).
+- `phargus` 0.1.1: every command stops on the first SIGINT or SIGTERM.
+  `summarize`, `compare`, `heap`, `rules` and `doctor` end with Node's default
+  action. `capture --file` writes its manifest with `termination`
+  `interrupted` and `quality.truncated` true, as `capture --url` does, instead
+  of leaving a 0-byte `manifest.json` when killed. No signal listener stays
+  registered after a command returns (CORE-239).
 - Repository (no plugin version change): CONTRIBUTING and the rulesets README
   describe the rules GitHub enforces. CONTRIBUTING "CI gates" said "the first
   four" of four bullets run in `ci.yml` and that Validate runs

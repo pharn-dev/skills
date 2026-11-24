@@ -211,6 +211,11 @@ export async function capture(options) {
       if (!options.url) manifest.historyEvents += 1;
       await output.write(JSON.stringify(record) + '\n');
     }
+    // A file read stops quietly on the signal; record why, as sseEvents does for --url.
+    if (!options.url && options.signal?.aborted) {
+      manifest.termination = 'interrupted';
+      manifest.quality.truncated = true;
+    }
     if (!manifest.events) throw new Error('capture contains no valid Phargus events');
     if (manifest.quality.truncated && manifest.termination === 'eof')
       manifest.termination = 'limit';
