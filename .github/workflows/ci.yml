@@ -80,7 +80,7 @@ jobs:
       - name: Check shared pharn eval scaffolds
         if: ${{ !cancelled() }}
         run: |
-          for case in update-yes force-asks status-readonly status-strict add-refused-behind remove-by-name; do
+          for case in update-yes force-asks status-readonly status-strict add-refused-behind remove-by-name hooks-edit-refused; do
             cmp plugins/pharn/evals/update-preview/scaffold.sh "plugins/pharn/evals/$case/scaffold.sh"
           done
 

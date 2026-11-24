@@ -23,36 +23,6 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Changed
 
-- `pharn` (no plugin version change yet): the `pharn-cli` skill describes the
-  `update` contract of pharn-cli 0.20.0 (unreleased, pharn-cli PRs #386 and
-  #390) next to the older one. From 0.20.0 `--json` implies `--dry-run` and
-  `--compact` implies `--json`, so `update --json` runs the preview instead of
-  being refused; the skill still spells out `--dry-run` for the preview and
-  never adds `--json` or `--compact` to a real run. From 0.20.0 every `update`
-  downloads and plans: `up-to-date` (still `plan: null`) means the plan changes
-  nothing, the text run ends `Up to date.` or `Nothing to change.`, and a plain
-  `update` restores missing files and moves a layout with no `--force`. The
-  "Already up to date" shortcut and its `--force` workaround are kept for CLIs
-  before 0.20.0. The `status` layout-mismatch rules are now labelled 0.20.0
-  instead of "after 0.19.0", and their advice no longer offers `--force` as a
-  fallback.
-- `pharn` evals: `status-layout-mismatch` now stubs 0.20.0's planned layout
-  move (a plain `update --dry-run` is `planned`; `--json` and `--compact` imply
-  `--dry-run`), and its grader no longer expects `--force` as a fallback.
-- `pharn` (no plugin version change yet): the `pharn-cli` skill reads a
-  `status --json` layout mismatch the way pharn-cli does after 0.19.0
-  (unreleased, pharn-cli PR #377). `drift` is `null` under `--no-drift` or
-  when `layout.upstream` is set and differs from `layout.recorded`; the two are
-  told apart by `layout.upstream`. On a mismatch no file drift or
-  not-shipped-upstream check runs and `status --strict` fails; the advice is a
-  plain `pharn update`, then `pharn update --force` (which overwrites edited
-  files after a backup) only if that answers "Already up to date". Through CLI
-  0.19.0 a mismatch stays advisory, as the skill said before.
-- `pharn` evals: a `status-layout-mismatch` case. Its stub CLI reports a
-  current install recorded at the flat layout while upstream ships the pharn
-  layout (`drift: null`, `layout` set, `status --strict` exits 1), and the
-  graders require the answer to call drift unknown rather than clean, to
-  advise a plain `pharn update` before `--force`, and never to run `--force`.
 - `phargus` tooling (no plugin version change): the behavioral release gate
   needs checkable evidence and a human sign-off. `npm run eval` records every
   trial in `VERIFICATION.json` itself, and writes redacted `final.json`,
@@ -152,6 +122,54 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   that path, a relative name resolving against the application directory, and
   that `.phargus/` holds captures only. Before, the setup eval saved the
   summarize result to `.phargus/tool-result.json` (#28).
+
+## [pharn 0.5.1] - 2026-11-24
+
+### Changed
+
+- The `pharn-cli` skill describes the `update` contract of pharn-cli 0.20.0
+  (unreleased, pharn-cli PRs #386 and #390) next to the older one. From 0.20.0
+  `--json` implies `--dry-run` and `--compact` implies `--json`, so
+  `update --json` runs the preview instead of being refused; the skill still
+  spells out `--dry-run` for the preview and never adds `--json` or
+  `--compact` to a real run. From 0.20.0 every `update` downloads and plans:
+  `up-to-date` (still `plan: null`) means the plan changes nothing, the text
+  run ends `Up to date.` or `Nothing to change.`, and a plain `update`
+  restores missing files and moves a layout with no `--force`. The "Already up
+  to date" shortcut and its `--force` workaround are kept for CLIs before
+  0.20.0. The `status` layout-mismatch rules are now labelled 0.20.0 instead
+  of "after 0.19.0", and their advice no longer offers `--force` as a
+  fallback.
+- Evals: `status-layout-mismatch` now stubs 0.20.0's planned layout move (a
+  plain `update --dry-run` is `planned`; `--json` and `--compact` imply
+  `--dry-run`), and its grader no longer expects `--force` as a fallback.
+- The `pharn-cli` skill reads a `status --json` layout mismatch the way
+  pharn-cli does after 0.19.0 (unreleased, pharn-cli PR #377). `drift` is
+  `null` under `--no-drift` or when `layout.upstream` is set and differs from
+  `layout.recorded`; the two are told apart by `layout.upstream`. On a
+  mismatch no file drift or not-shipped-upstream check runs and
+  `status --strict` fails; the advice is a plain `pharn update`, then
+  `pharn update --force` (which overwrites edited files after a backup) only
+  if that answers "Already up to date". Through CLI 0.19.0 a mismatch stays
+  advisory, as the skill said before.
+- Evals: a `status-layout-mismatch` case. Its stub CLI reports a current
+  install recorded at the flat layout while upstream ships the pharn layout
+  (`drift: null`, `layout` set, `status --strict` exits 1), and the graders
+  require the answer to call drift unknown rather than clean, to advise a
+  plain `pharn update` before `--force`, and never to run `--force`.
+
+### Fixed
+
+- `pharn-cli` never edits `.claude/settings.json` or
+  `.claude/settings.local.json`, even when asked; it shows the missing hook
+  entries for the person to merge. Its Never list forbade only editing
+  `.claude/settings.json` "without asking", so after a yes the agent could
+  write hook commands from CLI output into the file that wires the project's
+  write guards, and gave "write-protected anyway" as the reason, which holds
+  only while those hooks are wired. The README already said the skill never
+  hand-edits it. New eval `hooks-edit-refused`: asked to add the missing hook,
+  the agent must load the skill, run no Bash command that writes either file,
+  and show the hook entry instead (CORE-222).
 
 ## [pharn-ci 0.2.2] - 2026-11-24
 
@@ -543,7 +561,8 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 - Evals for `pharn-cli`.
 - CI: `claude plugin validate --strict` and markdownlint.
 
-[Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.0...HEAD
+[Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.1...HEAD
+[pharn 0.5.1]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.0...pharn-v0.5.1
 [pharn-ci 0.2.2]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.1...pharn-ci-v0.2.2
 [pharn-ci 0.2.1]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.0...pharn-ci-v0.2.1
 [pharn-ci 0.2.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.1.0...pharn-ci-v0.2.0

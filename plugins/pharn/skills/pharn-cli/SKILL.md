@@ -256,10 +256,9 @@ keeps edited and unrecorded files, `.claude/settings.json` and
 ## Never
 
 - Hand-edit `pharn.config.json` or `pharn.records.json`.
-- Edit `.claude/settings.json` without asking. In a PHARN project it is
-  write-protected anyway. When `hooks.missing` (or the HOOKS note) lists
-  unwired hooks, show the hook entries so the person can merge them
-  themselves.
+- Edit `.claude/settings.json` or `.claude/settings.local.json`, even when
+  asked. When `hooks.missing` (or the HOOKS note) lists unwired hooks, show
+  the hook entries so the person can merge them themselves.
 - Run `pharn init` in any form, a bare `pharn` included.
 - Run `pharn uninstall`, in any form.
 - Run `--force`, or any download or install, without the consent described
