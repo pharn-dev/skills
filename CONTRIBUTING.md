@@ -151,15 +151,16 @@ and message texts match. `plugins/pharn-ci/evals/fixtures/manifest.json` pins
 one pharn-ci commit per supported version line (`pharnCi`: 0.1.0 for Report
 v1, 0.2.0 for the 0.2.x accept-label cases, 0.4.0 for the policy and 0.4.x
 explain cases, 0.9.0 for the `pharn-ci-fix` cases, which need Report v2's `fix`
-objects, 0.9.1 for the install cases and the `cover-import-pressure` case) and
-names in `latest` the version `pharn-ci-install` writes (0.9.1); each case names
+objects, 0.11.0 for the install cases, `explain-dependency-d05` and
+`cover-import-pressure`) and names in `latest` the version `pharn-ci-install`
+writes (0.11.0); each case names
 the version it was generated with. A case's `expect.fixes` lists the fix kind
 and target of every message and finding, so a pharn-ci change to the fix tables
 fails the check. The install cases' pin graders (`pinGraders` in the manifest)
 are generated from `latest`, so a release moves them with the manifest.
 Regenerate them, and the whole-file graders built from the scaffolds' files,
 with
-`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.9.1=<checkout>`
+`node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.11.0=<checkout>`
 after changing a case's tree or a targeted pharn-ci version; `--check` reports
 drift without writing. Each checkout must be pharn-ci at the commit pinned for
 its version, built with
@@ -193,7 +194,7 @@ is written.
 a unit test checks. The `install-*` cases have no generated
 artifacts; for them the fixture check also compares `check-coverage.mjs` with
 the pinned CLI on the case's coverage (`helperParity` in the manifest, run
-against an empty commit's parent because pharn-ci 0.9.1 refuses a `--base`
+against an empty commit's parent because pharn-ci 0.9.1 and later refuse a `--base`
 that is HEAD) and
 checks every pin in `pharn-ci-install/references/workflows.md` against
 pharn-ci's README and example workflows.
@@ -217,10 +218,11 @@ To move the pharn-ci skills to a new pharn-ci release:
 3. Re-check the ported code in the `shared:coverage` blocks and in
    `check-coverage.mjs` against pharn-ci's `packages/core/src`.
 4. Re-copy `schema/policy.v1.json` byte for byte to
-   `pharn-ci-policy/scripts/policy.v1.json` when the release changes it, update
-   the sha256 in `tests/check-policy.test.mjs` and in the header of
-   `check-policy.mjs`, and extend the checker only if the schema uses a new
-   JSON Schema keyword (it refuses one it does not implement).
+   `pharn-ci-policy/scripts/policy.v1.json`, and `schema/report.v2.json` to
+   `tests/fixtures/report.v2.json`, when the release changes them; update the
+   sha256 in `tests/check-policy.test.mjs`, `tests/schema-drift.test.mjs` and
+   the header of `check-policy.mjs`, and extend the checker only if the schema
+   uses a new JSON Schema keyword (it refuses one it does not implement).
 5. Run `regen.mjs --write`, the unit tests and the evals, and review the
    skills' text against the release's changelog.
 

@@ -36,9 +36,9 @@ function cli(args, files = {}) {
 }
 
 describe("check-policy", () => {
-  test("the bundled schema is byte for byte pharn-ci 0.9.1's schema/policy.v1.json", () => {
+  test("the bundled schema is byte for byte pharn-ci 0.11.0's schema/policy.v1.json", () => {
     const sha = createHash("sha256").update(readFileSync(SCHEMA_FILE)).digest("hex");
-    assert.equal(sha, "8dcd0f6971d89808deea68d3e5d24ced01ecd9a37b962eb63b04bbd0a9deb4c1");
+    assert.equal(sha, "f247accd493adfa2c9f89668e8b28358b7a6c1343b631b32ecb903e0fce7b61d");
   });
 
   test("a full valid policy and the minimal one pass", () => {
@@ -97,7 +97,7 @@ describe("check-policy", () => {
     assert.deepEqual(problemsOf({ coverage: {} }), [{ path: "/version", message: "required key missing" }]);
     assert.deepEqual(problemsOf({ version: 1, foo: 1 }), [{ path: "/foo", message: "unknown key" }]);
     assert.deepEqual(pathsOf({ version: 1, policy: { rules: { P15: "warn" } } }), ["/policy/rules/P15"]);
-    assert.deepEqual(pathsOf({ version: 1, test_integrity: { signals: { TI17: "warn" } } }), ["/test_integrity/signals/TI17"]);
+    assert.deepEqual(pathsOf({ version: 1, test_integrity: { signals: { TI18: "warn" } } }), ["/test_integrity/signals/TI18"]);
     assert.deepEqual(pathsOf({ version: 1, injection: { signals: { PI06: "warn" } } }), ["/injection/signals/PI06"]);
     assert.deepEqual(pathsOf({ version: 1, setup: { required_hooks: [{ matcher: "Bash" }] } }), ["/setup/required_hooks/0/event"]);
     assert.deepEqual(pathsOf({ version: 1, setup: { required_hooks: [{ event: "Stop", extra: 1 }] } }), ["/setup/required_hooks/0/extra"]);
@@ -203,7 +203,7 @@ describe("check-policy", () => {
   test("the CLI: exit 0 with the ok line, exit 1 with one pointer line per problem, exit 2 for input problems", () => {
     const ok = cli(["$DIR/p.json"], { "p.json": '{"version":1}' });
     assert.equal(ok.status, 0);
-    assert.match(ok.stdout, /^ok — .*p\.json is a valid pharn-ci policy \(policy\.v1\.json, pharn-ci 0\.9\.1\)\n$/);
+    assert.match(ok.stdout, /^ok — .*p\.json is a valid pharn-ci policy \(policy\.v1\.json, pharn-ci 0\.11\.0\)\n$/);
 
     const bad = cli(["$DIR/p.json"], { "p.json": '{"foo":1,"coverage":{"threshold":"80"}}' });
     assert.equal(bad.status, 1);

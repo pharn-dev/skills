@@ -4,8 +4,8 @@
 // pharn-ci commit per version line, and each case names the version it was generated with.
 // Node core only.
 //
-//   node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.9.1=<checkout>
-//   node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.9.1=<checkout>
+//   node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.11.0=<checkout>
+//   node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.11.0=<checkout>
 //
 // Pass one checkout per version in manifest.pharnCi, each at its pinned commit and built first:
 // pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build
@@ -405,7 +405,7 @@ const COVERAGE_CODES = new Set([
  * same suggested root, then, with that root applied, the same again.
  */
 function checkHelperParity(name, parity, tmp, tools) {
-  // pharn-ci 0.9.1 refuses a --base that is HEAD or a descendant of it (DIFF_UNAVAILABLE, and no coverage code at all),
+  // pharn-ci 0.9.1 and later refuse a --base that is HEAD or a descendant of it (DIFF_UNAVAILABLE, and no coverage code at all),
   // so a run against HEAD compares nothing. An empty commit makes HEAD~1 a real base with an empty diff, and the
   // files, and so the paths pharn-ci matches, stay as the scaffold left them.
   run(["git", "-c", "user.name=dev", "-c", "user.email=dev@example.com", "commit", "-q", "--allow-empty", "-m", "parity"], tmp);

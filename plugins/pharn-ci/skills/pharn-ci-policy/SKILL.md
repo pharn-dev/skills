@@ -1,6 +1,6 @@
 ---
 name: pharn-ci-policy
-description: Draft or check a pharn-ci org policy, the JSON that pharn-ci 0.4.x to 0.9.x apply over a repository's settings (0.3.x and earlier read none) - coverage floor, test-integrity severities, agent and MCP rules, protected paths and agent PR size caps (rules P01 to P14). Validates it offline with a bundled checker and says how to turn it on. Use when asked to write, draft, review or validate an org or team policy. Not for explaining a policy finding (pharn-ci-explain) or setup (pharn-ci-install).
+description: Draft or check a pharn-ci org policy, the JSON that pharn-ci 0.4.x to 0.11.x apply over a repository's settings (0.3.x and earlier read none) - coverage floor, test-integrity severities, agent and MCP rules, protected paths and agent PR size caps (rules P01 to P14). Validates it offline with a bundled checker and says how to turn it on. Use when asked to write, draft, review or validate an org or team policy. Not for explaining a policy finding (pharn-ci-explain) or setup (pharn-ci-install).
 compatibility: Node.js >=22 for scripts/check-policy.mjs
 ---
 
@@ -11,10 +11,12 @@ runs. A policy sets one gate for every repository of an organization: it
 is applied over the workflow inputs and `.pharn/ci.yml`, so a pull request cannot
 loosen it. pharn-ci 0.4.0 (release commit
 `a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756`) is the first version that reads
-one; 0.1.x, 0.2.x and 0.3.x ignore it. Written for 0.4.x to 0.9.x, up to
-v0.9.1 (commit `dec4a0ed2d0b111233522753909c74a90b6d09e0`): 0.6.0 adds rules
+one; 0.1.x, 0.2.x and 0.3.x ignore it. Written for 0.4.x to 0.11.x, up to
+v0.11.0 (commit `bd7b36ea07588884418f5002ae74afc35135c400`): 0.6.0 adds rules
 P13 and P14, 0.7.0 the `injection` keys, 0.8.0 `dependencies.lookup` and the
-use of `flaky.quarantine` and the other `dependencies` keys.
+use of `flaky.quarantine` and the other `dependencies` keys, 0.10.0
+`dependencies.allowed_hosts`, 0.11.0 `test_integrity.signals.TI17` and
+Enterprise Managed User logins.
 
 - What each key does, the rule it feeds and that rule's default level:
   [references/keys.md](references/keys.md).
@@ -24,10 +26,12 @@ use of `flaky.quarantine` and the other `dependencies` keys.
 - Checking a draft: `scripts/check-policy.mjs` in this skill's directory, Node
   core only, no network. Resolve this skill's absolute directory and run it by
   that path: `node <skill-dir>/scripts/check-policy.mjs <policy.json>`. It
-  validates against `scripts/policy.v1.json`, a byte copy of pharn-ci 0.9.1's
+  validates against `scripts/policy.v1.json`, a byte copy of pharn-ci 0.11.0's
   `schema/policy.v1.json`. A document valid there that uses only keys of the
-  0.4.0 schema is also valid for 0.4.x to 0.8.x; `injection` needs 0.7.x or
-  later and `dependencies.lookup` 0.8.x or later, since every object of the
+  0.4.0 schema is also valid for 0.4.x to 0.10.x; `injection` needs 0.7.x or
+  later, `dependencies.lookup` 0.8.x or later, `dependencies.allowed_hosts`
+  0.10.x or later, and `test_integrity.signals.TI17` and an Enterprise Managed
+  User login (`handle_shortcode`) 0.11.x or later, since every object of the
   schema is closed and an older release does not validate a key it does not
   know (an app policy that does not validate is `POLICY_UNAVAILABLE`).
 
@@ -62,7 +66,9 @@ blocks Dependabot and Renovate PRs, because they count as agent PRs, and a P14
 cap counts their files and lines too. P13 needs no key: any policy turns it on
 for agent pull requests. A `dependencies` key in an app policy requires
 dependency safety in every repository it covers, and D05 then blocks a
-dependency from a private registry (no policy key adds an allowed host).
+dependency from a private registry unless its host is in
+`dependencies.allowed_hosts` (0.10.0; it replaces the workflow's
+`dependency-allowed-hosts` input, and only an app policy may set it).
 
 ## 2. Draft the JSON
 
@@ -73,10 +79,11 @@ dependency from a private registry (no policy key adds an allowed host).
 - Write the file the person named (the usual place is `.pharn/policy.json`)
   and nothing else. Show the document.
 - Some keys are accepted by the schema and not enforced
-  (`agents.require_human_approval` and `policy.rules.P12` in 0.4.x to 0.9.x),
-  and others only from a later release (P13 and P14 and the size caps from
-  0.6.0, `injection` from 0.7.0, `flaky.quarantine` and `dependencies` from
-  0.8.0; listed in keys.md). Say so rather than present them as protection on
+  (`agents.require_human_approval` and `policy.rules.P12` in 0.4.x to
+  0.11.x), and others only from a later release (P13 and P14 and the size caps
+  from 0.6.0, `injection` from 0.7.0, `flaky.quarantine` and `dependencies`
+  from 0.8.0, `dependencies.allowed_hosts` from 0.10.0, TI17 from 0.11.0;
+  listed in keys.md). Say so rather than present them as protection on
   an older release.
 - `injection.exempt`, an `off` severity and a lower one hide findings for every
   repository: write them only when the person asks for that exact entry.

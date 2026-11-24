@@ -1,10 +1,10 @@
-# Getting and reading a pharn-ci report (0.1.x Report v1, 0.2.x to 0.9.x Report v2)
+# Getting and reading a pharn-ci report (0.1.x Report v1, 0.2.x to 0.11.x Report v2)
 
 Source: pharn-ci 0.1.0 (`schema/report.v1.json`), pharn-ci 0.2.0 at commit
 `0873ce23f3595a3497325635b7bf3ee93ea77687` (`schema/report.v2.json`), v0.3.0
 at `ad3b75f9f2b9863806055897e99430b06db7fd1c`, v0.4.0 at
-`a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` and v0.9.1 at
-`dec4a0ed2d0b111233522753909c74a90b6d09e0` (`action.yml`, README, CHANGELOG,
+`a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` and v0.11.0 at
+`bd7b36ea07588884418f5002ae74afc35135c400` (`action.yml`, README, CHANGELOG,
 `docs/LIMITS.md`, `packages/core/src/report.ts`, `render/markdown.ts` and
 `fix/`). This file is shared by the `pharn-ci-explain` and `pharn-ci-cover`
 skills; keep the copies identical.
@@ -14,7 +14,7 @@ skills; keep the copies identical.
 Switch on `schemaVersion`, never on `tool.version`:
 
 - `"1"`, a **string**: Report v1, written by pharn-ci 0.1.x.
-- `2`, a **number**: Report v2, written by pharn-ci 0.2.x to 0.9.x. It is v1
+- `2`, a **number**: Report v2, written by pharn-ci 0.2.x to 0.11.x. It is v1
   plus a `testIntegrity` block on every report and, from the Action, a `meta`
   block. Every v1 field keeps its name, type and meaning, and no v1 code
   changed. A v2 report does not validate against `report.v1.json`. Within v2
@@ -23,9 +23,9 @@ Switch on `schemaVersion`, never on `tool.version`:
   `policy` object and the `meta` agent-PR and upload fields; 0.7.0 the optional
   `injection`, `setupHealth` and `testIntegrity.exercise`; 0.8.0 the optional
   `dependencies` and a filled `flaky`; 0.9.0 the optional `fix` object on every
-  message and finding.
+  message and finding; 0.11.0 the signal id `TI17`.
 
-`tool.version` says the release (`0.9.1` for the current tag), but the
+`tool.version` says the release (`0.11.0` for the current tag), but the
 `schemaVersion` is what a tool should switch on. Any other `schemaVersion`:
 say this skill does not know it, and read only the fields named here.
 
@@ -42,7 +42,7 @@ rendering that drops detail.
    of `pharn-ci check --format json`.
 2. **A local CLI.** `pharn-ci --version` on `PATH`, or a pharn-ci checkout the
    person names, run as `node <checkout>/packages/cli/dist/index.js`.
-   - The CLI is **not on npm** in 0.1.x to 0.9.x. Never run `npx pharn-ci`: that name
+   - The CLI is **not on npm** in 0.1.x to 0.11.x. Never run `npx pharn-ci`: that name
      can resolve to an unrelated package. Never clone, build or install
      pharn-ci without asking the person first.
    - `pharn-ci check --format json [--base <ref>]` reads files and runs git;
@@ -230,7 +230,7 @@ it.
 
 Every message (`messages[]`) and every finding (`testIntegrity.signals`,
 `policy.violations`, `setupHealth.stale`, `injection.signals` and
-`dependencies.signals`) of a 0.9.x report carries an optional `fix` object:
+`dependencies.signals`) of a 0.9.0 or later report carries an optional `fix` object:
 
 - `kind`: what kind of change fixes it, one of `add-test` (add tests that run
   the changed code), `restore-test` (restore a deleted, removed or turned-off

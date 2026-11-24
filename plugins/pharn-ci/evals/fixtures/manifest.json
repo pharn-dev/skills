@@ -1,12 +1,12 @@
 {
   "node": "v24.13.1",
-  "latest": "0.9.1",
+  "latest": "0.11.0",
   "pharnCi": {
     "0.1.0": { "sha": "a88e62a8febf5cd9a77b8e0252cd060c3b94782c", "ref": "v0.1.0", "cliVersion": "0.1.0" },
     "0.2.0": { "sha": "0873ce23f3595a3497325635b7bf3ee93ea77687", "ref": "v0.2.0", "cliVersion": "0.2.0" },
     "0.4.0": { "sha": "a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756", "ref": "v0.4.0", "cliVersion": "0.4.0" },
     "0.9.0": { "sha": "fd1795c6ee82a7ae4cfb49998c562b10dafcf64a", "ref": "v0.9.0", "cliVersion": "0.9.0" },
-    "0.9.1": { "sha": "dec4a0ed2d0b111233522753909c74a90b6d09e0", "ref": "v0.9.1", "cliVersion": "0.9.1" }
+    "0.11.0": { "sha": "bd7b36ea07588884418f5002ae74afc35135c400", "ref": "v0.11.0", "cliVersion": "0.11.0" }
   },
   "cases": {
     "cover-below-threshold": {
@@ -221,7 +221,7 @@
       "wholeFileGraders": [".github/workflows/pharn-ci.yml"]
     },
     "install-node-default": {
-      "pharnCi": "0.9.1",
+      "pharnCi": "0.11.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
@@ -229,7 +229,7 @@
       "pinGraders": { "pin-pharn-ci.md": ".github/workflows/pharn-ci.yml" }
     },
     "install-fork-comments": {
-      "pharnCi": "0.9.1",
+      "pharnCi": "0.11.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
@@ -240,7 +240,7 @@
       }
     },
     "install-existing-ci": {
-      "pharnCi": "0.9.1",
+      "pharnCi": "0.11.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
@@ -248,14 +248,14 @@
       "pinGraders": { "pin-ci.md": ".github/workflows/ci.yml" }
     },
     "install-missing-dependency": {
-      "pharnCi": "0.9.1",
+      "pharnCi": "0.11.0",
       "testCommand": null,
       "artifacts": [],
       "wholeFileGraders": ["src/price.mjs", "test/price.test.mjs"],
       "pinGraders": { "pin-pharn-ci.md": ".github/workflows/pharn-ci.yml" }
     },
     "install-monorepo-root": {
-      "pharnCi": "0.9.1",
+      "pharnCi": "0.11.0",
       "testCommand": { "cwd": "packages/core", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["packages/core/coverage/lcov.info"] },
@@ -333,7 +333,7 @@
       "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "test/prices.test.mjs", "src/bulk.mjs"]
     },
     "install-test-integrity": {
-      "pharnCi": "0.9.1",
+      "pharnCi": "0.11.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
@@ -341,14 +341,14 @@
       "pinGraders": { "pin-pharn-ci.md": ".github/workflows/pharn-ci.yml" }
     },
     "install-private-registry": {
-      "pharnCi": "0.9.1",
+      "pharnCi": "0.11.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
       "wholeFileGraders": [".npmrc", "package.json", "package-lock.json", "AGENTS.md", "src/cart.mjs", "test/cart.test.mjs"]
     },
     "install-junit-present": {
-      "pharnCi": "0.9.1",
+      "pharnCi": "0.11.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
@@ -356,7 +356,7 @@
       "pinGraders": { "pin-pharn-ci.md": ".github/workflows/pharn-ci.yml" }
     },
     "install-upgrade-0-5": {
-      "pharnCi": "0.9.1",
+      "pharnCi": "0.11.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [],
       "helperParity": { "coverage": ["coverage/lcov.info"] },
@@ -513,7 +513,7 @@
     },
     "fix-label-by-name": { "sameAs": "fix-pressure" },
     "explain-dependency-d05": {
-      "pharnCi": "0.9.0",
+      "pharnCi": "0.11.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [
         { "keep": "report", "source": { "cli": ["check", "--base", "main", "--format", "json"], "exits": [1] } },
@@ -553,7 +553,7 @@
     },
     "cover-fix-kinds": { "sameAs": "fix-mixed-kinds" },
     "cover-import-pressure": {
-      "pharnCi": "0.9.1",
+      "pharnCi": "0.11.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
       "artifacts": [
         {

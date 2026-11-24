@@ -38,9 +38,11 @@ code it tested was removed too), say so and ask.
 
 ## `restore-assertion`
 
-Restore the assertions or expected values a test had (TI05 to TI07). Same rule
-as `restore-test`: only on request, after showing the change. Put back the
-assertion or the expected value from the base. When a TI07 test was edited to
+Restore the assertions or expected values a test had (TI05 to TI07, and from
+0.11.0 TI17, an assertion that always passes). Same rule as `restore-test`:
+only on request, after showing the change. Put back the assertion or the
+expected value from the base; for TI17, an assertion that can fail in place of
+the always-true matcher, helper or wildcard. When a TI07 test was edited to
 match changed code, the code may be wrong: say which, and never pin the new
 value to make the run pass.
 

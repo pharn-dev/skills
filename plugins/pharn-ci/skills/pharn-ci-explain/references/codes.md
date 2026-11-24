@@ -1,15 +1,15 @@
-# Message codes (pharn-ci 0.1.x to 0.9.x)
+# Message codes (pharn-ci 0.1.x to 0.11.x)
 
 Source: pharn-ci 0.1.0, pharn-ci 0.2.0 at commit
 `0873ce23f3595a3497325635b7bf3ee93ea77687`, v0.3.0 at
 `ad3b75f9f2b9863806055897e99430b06db7fd1c`, v0.4.0 at
-`a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` and v0.9.1 at
-`dec4a0ed2d0b111233522753909c74a90b6d09e0`: `packages/core/src/report.ts`, the
+`a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` and v0.11.0 at
+`bd7b36ea07588884418f5002ae74afc35135c400`: `packages/core/src/report.ts`, the
 detectors under `packages/core/src/signals/`, the renderer's hints,
 `packages/core/src/fix/table.ts`, `schema/report.v2.json`, `action.yml`,
 README, CHANGELOG and `docs/LIMITS.md`. The report schema has no enum of
 codes: the `code` field is a string, and its description lists the known
-codes with their levels. Every code that list names at v0.9.1 is in this file.
+codes with their levels. Every code that list names at v0.11.0 is in this file.
 Notes marked "from 0.12.0" come from pharn-ci's `main` after v0.11.0
 (unreleased; its CHANGELOG `## [Unreleased]` and the code at that commit) and
 are gathered in
@@ -29,9 +29,10 @@ agent-PR codes (below), and the org policy codes, which are in
 [prompt-injection](#prompt-injection-scan-07x-and-later) codes and
 `TESTS_NOT_EXERCISING_CHANGES`; 0.8.0 the
 [dependency safety](#dependency-safety-08x-and-later) and
-[JUnit and flaky](#junit-results-and-flaky-tests-08x-and-later) codes. 0.5.0,
-0.9.0 and 0.9.1 add no code. For each code: its level, what causes it, what to
-look at in the repository, and the fix. "Threshold set" means
+[JUnit and flaky](#junit-results-and-flaky-tests-08x-and-later) codes; 0.11.0
+`TEST_INTEGRITY_TI17`. 0.5.0, 0.9.0, 0.9.1 and 0.10.0 add no code. For each
+code: its level, what causes it, what to look at in the repository, and the
+fix. "Threshold set" means
 `diffCoverage.threshold` (or the workflow's `threshold`, `coverage.threshold`,
 `--threshold`) is a number, **0 included**.
 
@@ -39,7 +40,7 @@ Since 0.9.0 every message also carries a `fix` object (a `kind` and a fixed
 `hint`); see [report.md](report.md). It names the kind of change that fixes
 the message when it is real, and never changes the level or the verdict.
 
-## Behaviour changes 0.5.0 to 0.9.1
+## Behaviour changes 0.5.0 to 0.11.0
 
 These releases make some checks fail where they passed before. When a pull
 request fails on an upgrade with no change of its own to blame, look here
@@ -91,6 +92,27 @@ first, and name the release that made the difference.
 - **0.9.0, fix hints.** Every message and finding carries an optional `fix`
   object; verdicts, inputs and the PR comment are unchanged.
 - **0.9.1** changes nothing in the Action apart from its version number.
+- **0.10.0, private registry allow-list.** Nothing changes by default. A
+  private registry host named in the `dependency-allowed-hosts` input (the
+  CLI's `--dependency-allowed-host`) or an app policy's
+  `dependencies.allowed_hosts` is no longer D05; see `DEPENDENCY_D05` under
+  [Dependency safety](#dependency-safety-08x-and-later).
+- **0.11.0, TI17 and fail-closed fixes.** A pull request that adds an
+  assertion that always passes can go from `pass` to `warn`
+  (`TEST_INTEGRITY_TI17`). An exclusion glob (`coverage.exclude`, `--exclude`,
+  the `exclude` input, a coverage-file or `--junit` glob) longer than 1,024
+  characters is a config error that fails the run (exit 2 on the CLI). A run
+  with no diff reports `DIFF_UNAVAILABLE` first, before a missing or
+  undiscovered coverage file, so `test-integrity: block` no longer passes a
+  change nothing was checked against. `POLICY_SETTINGS_INVALID` is an error
+  when the settings files were not read and the policy sets
+  `forbidden_permissions` (P02), `allowed_mcp_servers` (P04) or
+  `forbidden_mcp_servers` (P05) at block (a shallow checkout or `pr-number`
+  mode: check out the pull request head with `fetch-depth: 0`). PI01 flags tag
+  characters after a black flag emoji unless they spell a subdivision flag
+  (England, Scotland, Wales). An Enterprise Managed User login
+  (`handle_shortcode`) is now a valid login, so such an author no longer counts
+  as an agent PR for that reason, and such a reviewer's accept label counts.
 
 ## Behaviour changes in 0.12.0 (unreleased)
 
@@ -217,6 +239,11 @@ computed:" says which case. Check the workflow:
 - A `push` with no previous commit, or a run outside a PR or merge queue
   without `base-ref`.
 - A diff over GitHub's compare API limit (API fallback and `pr-number` mode).
+
+From 0.11.0 a run with no diff always reports `DIFF_UNAVAILABLE`, ahead of a
+missing or undiscovered coverage file, and the comment's Test integrity section
+says "Not checked: the diff is unavailable". Fix the diff first; a coverage
+problem shows on the next run, once the diff is available.
 
 ### `COVERAGE_PATHS_UNMATCHED` (error with a threshold, warn without)
 
@@ -641,6 +668,22 @@ at `pass`.
 - Look at: the suppressed line, and whether the lint or type error is real.
 - Fix: fix the error the suppression hides, or keep it with a reason.
 
+### `TEST_INTEGRITY_TI17` (warn)
+
+0.11.0. A JS/TS or Python test file adds an assertion that always passes, read
+from the added lines of the diff alone: a custom matcher added to `expect`
+whose every `pass` is the constant `true`, an `assert` or `self.assertTrue`
+that is exactly a call to a Python helper the change adds whose every `return`
+is `True`, or `expect.anything()` or `ANY` in place of an expected value the
+same hunk removes. One finding per test file. It is `warn` in modes `block`
+and `warn` and never blocks unless an org policy sets
+`test_integrity.signals.TI17` to `block`.
+
+- Look at: the matcher, helper or wildcard at the named line, and what the
+  test compared before.
+- Fix (`restore-assertion`): put back an assertion that can fail in place of
+  the one that always passes.
+
 ### `TEST_INTEGRITY_INDEX_UNAVAILABLE` (warn)
 
 0.3.0. A touched JS/TS or Python test file could not be compared at the merge
@@ -1018,26 +1061,39 @@ meant. A hash that changed for the same version is worth a person's look.
 
 An added or changed dependency or lockfile entry comes from a git repository, a
 URL off the allowed hosts, or a local file, or a requirements file adds a
-package index off them. The allowed hosts are a fixed list in pharn-ci's code:
-`registry.npmjs.org`, `registry.yarnpkg.com`, `pypi.org` and
-`files.pythonhosted.org`, https only, with no user name, password or port. A
-private registry or mirror that the lockfile records (Artifactory, Verdaccio,
-GitHub Packages, a private PyPI index), `http://registry.npmjs.org`, a CDN
-mirror or a regional registry is D05: pharn-ci 0.8.x and 0.9.x have no list of
-extra allowed hosts. `dependencies.registries` in an org policy is not one: it
-names the ecosystems (`npm`, `pypi`) whose packages are looked up, and does not
-change D05. A registry set only outside the lockfile (`.npmrc`,
-`.yarnrc.yml`, pip configuration) is not seen, and pnpm records no host for a
-registry package, so D05 does not fire there.
+package index off them. The allowed hosts are `registry.npmjs.org`,
+`registry.yarnpkg.com`, `pypi.org` and `files.pythonhosted.org`, plus, from
+0.10.0, the private registry hosts the run allows; a URL on any of them must be
+https with no user name, password or port. A private registry or mirror that
+the lockfile records (Artifactory, Nexus, Verdaccio, GitHub Packages, a private
+PyPI index), `http://registry.npmjs.org`, a CDN mirror or a regional registry
+is D05 unless its host is allowed. A registry set only outside the lockfile
+(`.npmrc`, `.yarnrc.yml`, pip configuration) is not seen, and pnpm records no
+host for a registry package, so D05 does not fire there.
+
+From 0.10.0 a team names the hosts it runs in the `dependency-allowed-hosts`
+input of the pharn-ci step (comma or newline separated; the CLI's repeatable
+`--dependency-allowed-host`) or in an app policy's `dependencies.allowed_hosts`,
+which replaces the input's list (an input host it leaves out is named in
+`POLICY_OVERRIDE_IGNORED`). Each entry is an exact host name, at most 50, with
+no scheme, path, port, user name or wildcard: `artifactory.example.com`, not
+`https://artifactory.example.com/` or `*.example.com`. `.pharn/ci.yml` refuses
+`dependencies.allowed_hosts` with an error, and a `file:` policy may not set it
+(it is recorded and not applied): the pull request can edit both. In 0.8.x and
+0.9.x there is no allow-list, and `dependencies.registries` is never one: it
+names the ecosystems (`npm`, `pypi`) whose packages are looked up.
 
 - Look at: the entry's `resolved` URL (or git or file spec) at the named line,
-  and whether the same version is published on the public registry.
+  whether its host is a registry the team runs, and whether the same version is
+  published on the public registry.
 - Fix (`remove-dependency`): remove the dependency, or depend on the package's
-  release from the public registry so the lockfile resolves to an allowed
-  host. When the package exists only on a private registry, no change in the
-  pull request clears D05 in these versions: say so plainly, and that how the
-  workflow treats dependency safety is the workflow owner's decision, outside
-  the pull request.
+  release from the public registry. For a registry the team runs, from 0.10.0:
+  add its exact host to the workflow's `dependency-allowed-hosts` input, or the
+  org's app policy's `dependencies.allowed_hosts`. That is a change to the
+  workflow or the policy, which its owner decides (an edit to the workflow
+  shows as `CONFIG_CHANGED_IN_DIFF` on the pull request that makes it); never
+  `.pharn/ci.yml`. On 0.8.x or 0.9.x no change in the pull request clears D05:
+  upgrading pharn-ci and allowing the host is the workflow owner's decision.
 
 ### `DEPENDENCY_LOOKUP_UNAVAILABLE` (warn)
 

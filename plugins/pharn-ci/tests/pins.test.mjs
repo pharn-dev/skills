@@ -300,13 +300,13 @@ describe("the manifest and the bundled policy schema", () => {
       assert.equal(manifest.cases[name].pharnCi, "0.4.0", name);
   });
 
-  test("the manifest's latest is pharn-ci 0.9.1 and the install cases generate with it", () => {
-    assert.equal(manifest.latest, "0.9.1");
-    assert.equal(manifest.pharnCi["0.9.1"].sha, "dec4a0ed2d0b111233522753909c74a90b6d09e0");
-    assert.equal(manifest.pharnCi["0.9.1"].ref, "v0.9.1");
+  test("the manifest's latest is pharn-ci 0.11.0 and the install cases generate with it", () => {
+    assert.equal(manifest.latest, "0.11.0");
+    assert.equal(manifest.pharnCi["0.11.0"].sha, "bd7b36ea07588884418f5002ae74afc35135c400");
+    assert.equal(manifest.pharnCi["0.11.0"].ref, "v0.11.0");
     const installs = Object.keys(manifest.cases).filter((n) => n.startsWith("install-"));
     assert.ok(installs.length >= 9);
-    for (const name of installs) assert.equal(manifest.cases[name].pharnCi, "0.9.1", name);
+    for (const name of installs) assert.equal(manifest.cases[name].pharnCi, "0.11.0", name);
   });
 
   test("the pharn-ci-policy skill ships the schema it checks against", () => {
