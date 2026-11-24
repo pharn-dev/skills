@@ -41,6 +41,10 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
+- `pharn-ci` (next release): `pharn-ci-fix` says the accept label counts only
+  when a reviewer who is not the PR author applies it, so an answer that
+  refuses to apply it names a reviewer instead of handing the author a `gh`
+  command that pharn-ci ignores (`TEST_INTEGRITY_ACCEPT_IGNORED`) (CORE-373).
 - Repository (no plugin version change): the docs say what main does. README's
   Development section runs `npm run check`, the root gates CI requires, and
   says `pharn-ci` is not verified with Codex either; SECURITY routes a pharn-ci
