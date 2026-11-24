@@ -1,0 +1,32 @@
+{
+  "schema": "pharn-grill-triage/1",
+  "round": 1,
+  "findings_sha256": "4c2232fdca55cdbe16b405a4871d5c7493a9a219df2c382e336a1ac1e23b797d",
+  "dispositions": [
+    {
+      "id": "G1-1",
+      "disposition": "proceed",
+      "reason": "The plan states the file-name divergence and its reason itself (Risks, first bullet): an existing mapped test file would be rewritten by /pharn-test and dropped from the regression comparison. The behaviour and the folder stay as the SPEC says, every AC still has a unit or integration test, and no AC names the file, so the plan stands."
+    },
+    {
+      "id": "G1-2",
+      "disposition": "proceed",
+      "reason": "The only overstated sentence is in the plan's own reasoning. The text the build writes (the two knowledge passages in Approach) already says the table is partial when requests.routesFolded is true and never says the (other) row marks it, so the (other)/(other) edge case does not change any planned file."
+    },
+    {
+      "id": "G1-3",
+      "disposition": "proceed",
+      "reason": "AC-5 has planned tests: three fixture files are replayed with routesFolded false asserted. The other test files that summarize stay unchanged and run in npm test, which asserts their counts and routes; their fixtures hold far fewer than 10,000 pairs, so they cannot fold. Wider replay is a minor improvement the build does not need."
+    },
+    {
+      "id": "G1-4",
+      "disposition": "proceed",
+      "reason": "This is an accepted bound, not a plan error: the 64 MB limit is the SPEC's own AC-6 and AC-7 form. The finding's prototype stayed under it, with and without coverage. The build runs the integration tests and stops on a failure, so a headroom problem would surface there."
+    },
+    {
+      "id": "G1-5",
+      "disposition": "proceed",
+      "reason": "A code comment on the two limit constants is a minor improvement the build can add inside summary.mjs without a plan change. The constants and their meaning are already stated in Approach 1 and Approach 4."
+    }
+  ]
+}

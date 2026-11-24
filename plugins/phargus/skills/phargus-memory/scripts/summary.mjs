@@ -7,6 +7,7 @@ import {
   object,
   samplingInterval,
   sampleInterval,
+  shorten,
 } from './records.mjs';
 
 /** @typedef {import('./types.js').Summary} Summary */
@@ -37,21 +38,46 @@ function median(values) {
 
 const ROUTE_LIMIT = 20;
 
-/** @param {{method: string, path: string, durationNs: number, statusCode: number}[]} spans */
-function routeBreakdown(spans) {
-  /** @type {Map<string, {method: string, path: string, durations: number[], errors: number}>} */
-  const groups = new Map();
-  for (const span of spans) {
-    const key = JSON.stringify([span.method, span.path]);
-    let group = groups.get(key);
-    if (!group)
-      groups.set(key, (group = { method: span.method, path: span.path, durations: [], errors: 0 }));
-    group.durations.push(span.durationNs);
-    if (span.statusCode >= 500) group.errors += 1;
-  }
-  /** @type {Route[]} */ const routes = [...groups.values()].map((group) => ({
-    method: group.method,
-    path: group.path,
+// A recording can hold millions of distinct paths. Track the first TRACKED_ROUTE_LIMIT
+// method and path pairs in recording order; later pairs share the reserved (other) id.
+const TRACKED_ROUTE_LIMIT = 10_000;
+const OTHER_ROUTE = '(other)';
+const METHOD_PATTERN = /^[A-Za-z-]{1,32}$/;
+const MEMORY_KEYS = new Set(['heapUsed', 'heapTotal', 'rss', 'external', 'arrayBuffers']);
+
+/**
+ * The only place a method and path become a route id.
+ * @param {(value: string) => string} cut
+ */
+function routeIndex(cut) {
+  /** @type {Map<string, number>} */ const ids = new Map();
+  /** @type {{method: string, path: string}[]} */ const names = [];
+  return {
+    names,
+    /** @param {string} method @param {string} path */
+    id(method, path) {
+      if (!METHOD_PATTERN.test(method)) method = OTHER_ROUTE;
+      path = cut(path);
+      const key = JSON.stringify([method, path]);
+      const known = ids.get(key);
+      if (known !== undefined) return known;
+      if (names.length >= TRACKED_ROUTE_LIMIT) return TRACKED_ROUTE_LIMIT;
+      const id = names.length;
+      names.push({ method, path });
+      ids.set(key, id);
+      return id;
+    },
+  };
+}
+
+/**
+ * @param {Map<number, {durations: number[], errors: number}>} groups
+ * @param {{method: string, path: string}[]} names
+ */
+function routeBreakdown(groups, names) {
+  /** @type {Route[]} */ const routes = [...groups].map(([id, group]) => ({
+    method: id === TRACKED_ROUTE_LIMIT ? OTHER_ROUTE : names[id].method,
+    path: id === TRACKED_ROUTE_LIMIT ? OTHER_ROUTE : names[id].path,
     count: group.durations.length,
     // Groups are never empty, so percentiles are numbers.
     p50Ns: /** @type {number} */ (percentile(group.durations, 0.5)),
@@ -65,7 +91,11 @@ function routeBreakdown(spans) {
     (a, b) =>
       b.count - a.count || b.p99Ns - a.p99Ns || order(a.method, b.method) || order(a.path, b.path),
   );
-  return { routes: routes.slice(0, ROUTE_LIMIT), distinctRoutes: groups.size };
+  return {
+    routes: routes.slice(0, ROUTE_LIMIT),
+    distinctRoutes: groups.size,
+    routesFolded: groups.has(TRACKED_ROUTE_LIMIT),
+  };
 }
 
 /**
@@ -79,8 +109,19 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
   const counts = { samples: 0, windows: 0, spans: 0, alerts: 0 };
   /** @type {Record<string, number>} */ const raw = {};
   /** @type {Record<string, number>} */ const aggregate = {};
-  /** @type {{startMs: number, endMs: number, durationNs: number, statusCode: number, method: string, path: string}[]} */ const spans =
-    [];
+  // Per span only numbers are kept, in parallel arrays: start (ms), duration (ns), status, route id.
+  /** @type {number[]} */ const spanStarts = [];
+  /** @type {number[]} */ const spanDurations = [];
+  /** @type {number[]} */ const spanStatuses = [];
+  /** @type {number[]} */ const spanRoutes = [];
+  let shortenedValues = 0;
+  /** @param {string} value */
+  const cut = (value) => {
+    const result = shorten(value);
+    if (result !== value) shortenedValues += 1;
+    return result;
+  };
+  const routeIds = routeIndex(cut);
   /** @type {number[]} */ const spacing = [];
   /** @type {number | undefined} */ let previousTimestamp;
   /** @type {Map<string, Hotspot>} */ const sites = new Map();
@@ -117,15 +158,18 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
         const interval = sampleInterval(record.data.timestamp, intervalMs);
         start = Math.min(start, interval.startMs);
         end = Math.max(end, interval.endMs);
-        lastRaw = { ...record.data.memory };
+        lastRaw = Object.fromEntries(
+          Object.entries(record.data.memory).filter(([key]) => MEMORY_KEYS.has(key)),
+        );
         firstRaw ??= lastRaw;
-        for (const site of record.data.backpressure.hotspots ?? []) {
-          const previous = sites.get(site.site);
-          sites.set(site.site, {
-            site: site.site,
-            events: (previous?.events ?? 0) + site.events,
-            totalStall: (previous?.totalStall ?? 0) + site.totalStall,
-            maxStall: Math.max(previous?.maxStall ?? 0, site.maxStall),
+        for (const entry of record.data.backpressure.hotspots ?? []) {
+          const site = cut(entry.site);
+          const previous = sites.get(site);
+          sites.set(site, {
+            site,
+            events: (previous?.events ?? 0) + entry.events,
+            totalStall: (previous?.totalStall ?? 0) + entry.totalStall,
+            maxStall: Math.max(previous?.maxStall ?? 0, entry.maxStall),
           });
         }
         fold(metrics, 'heapUsedMaxBytes', record.data.memory.heapUsed);
@@ -158,14 +202,10 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
       counts.spans += 1;
       const startMs = record.data.startTimeMs;
       const endMs = startMs + record.data.durationNs / 1_000_000;
-      spans.push({
-        startMs,
-        endMs,
-        durationNs: record.data.durationNs,
-        statusCode: record.data.statusCode,
-        method: record.data.method,
-        path: record.data.path,
-      });
+      spanStarts.push(startMs);
+      spanDurations.push(record.data.durationNs);
+      spanStatuses.push(record.data.statusCode);
+      spanRoutes.push(routeIds.id(record.data.method, record.data.path));
       spanStart = Math.min(spanStart, startMs);
       spanEnd = Math.max(spanEnd, endMs);
     } else counts.alerts += 1;
@@ -182,12 +222,23 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
   // all records have established the runtime interval, regardless of arrival order.
   // Timestamps are whole milliseconds while durationNs is not: a span drained at the last
   // tick can end a fraction of a millisecond after it, so compare its end in milliseconds.
-  const selectedSpans = spans.filter(
-    (span) => span.startMs >= start && span.startMs <= end && Math.floor(span.endMs) <= end,
-  );
-  const durations = selectedSpans.map((span) => span.durationNs);
-  const errors = selectedSpans.filter((span) => span.statusCode >= 500).length;
-  const { routes, distinctRoutes } = routeBreakdown(selectedSpans);
+  /** @type {number[]} */ const durations = [];
+  let errors = 0;
+  /** @type {Map<number, {durations: number[], errors: number}>} */ const groups = new Map();
+  for (let i = 0; i < spanStarts.length; i++) {
+    const startMs = spanStarts[i];
+    const durationNs = spanDurations[i];
+    const endMs = Math.floor(startMs + durationNs / 1_000_000);
+    if (!(startMs >= start && startMs <= end && endMs <= end)) continue;
+    const failed = spanStatuses[i] >= 500;
+    durations.push(durationNs);
+    if (failed) errors += 1;
+    let group = groups.get(spanRoutes[i]);
+    if (!group) groups.set(spanRoutes[i], (group = { durations: [], errors: 0 }));
+    group.durations.push(durationNs);
+    if (failed) group.errors += 1;
+  }
+  const { routes, distinctRoutes, routesFolded } = routeBreakdown(groups, routeIds.names);
   return {
     schemaVersion: 1,
     command: 'summarize',
@@ -211,13 +262,14 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
         endMs: Number.isFinite(spanEnd) ? spanEnd : null,
         durationMs: Number.isFinite(spanStart) ? Math.max(0, spanEnd - spanStart) : 0,
       },
-      inPeriod: selectedSpans.length,
-      outsidePeriod: counts.spans - selectedSpans.length,
+      inPeriod: durations.length,
+      outsidePeriod: counts.spans - durations.length,
       selection: 'fully-contained-in-runtime-period',
       routes,
       distinctRoutes,
+      routesFolded,
     },
-    quality: status,
+    quality: { ...status, shortenedValues },
     metrics: {
       ...metrics,
       eventLoopMeanNs: mean,
@@ -225,9 +277,8 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
       arrayBuffersMaxBytes: metrics.arrayBuffersMaxBytes ?? null,
       observedRequestP50Ns: percentile(durations, 0.5),
       observedRequestP99Ns: percentile(durations, 0.99),
-      observedRequestRatePerSecond:
-        durationMs > 0 ? (selectedSpans.length * 1000) / durationMs : null,
-      observedServerErrors: selectedSpans.length ? errors : null,
+      observedRequestRatePerSecond: durationMs > 0 ? (durations.length * 1000) / durationMs : null,
+      observedServerErrors: durations.length ? errors : null,
     },
     memory: {
       first: counts.samples ? firstRaw : firstWindow,

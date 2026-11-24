@@ -1,0 +1,106 @@
+{
+  "schema": "ac-tests-lock/6",
+  "feature": "phargus-bounded-recording-text",
+  "mode": "test-first",
+  "spec": {
+    "spec_id": "phargus-bounded-recording-text",
+    "spec_content_hash": "be35cbde0632a42d8941bad28a62aa76c344fae3deaa8b98f0759a822a2733ca"
+  },
+  "mapping": {
+    "path": "pharn/features/phargus-bounded-recording-text/AC-TESTS.md",
+    "sha256": "6b0369b34922ce302ec6b9803b452b6a07f3c063b5d1593d9ee28e59e40b777f"
+  },
+  "files": [
+    {
+      "path": "src/phargus/test/doctor-bounded-config.test.mjs",
+      "sha256": "55e512b68fcd8a7668bdd701db220b3486153ec43200dadf7b404660fb961f9c"
+    },
+    {
+      "path": "src/phargus/test/summary-bounded-text.test.mjs",
+      "sha256": "5d54d3f6dbdb88e3fa7ba1b8244b21c514eef541c1312f3fa939d6f8cc4640b6"
+    }
+  ],
+  "bootstrap": null,
+  "red_run": {
+    "stamp_sha256": "a51168dc6b0f080dcb2124203d1e0647ca2cec245f7c7009dbb29f9dd336d8f7",
+    "files_sha256": "939502e75a9870c6b54b0fe48ed942e6a60b2aa1e13688f1b57b7cf79fea2ba9",
+    "gates": [
+      {
+        "gate": "test",
+        "results_sha256": "ca2831c1f5cd5afb95195f400194275b7c1dedbd6eeae883f82c899c337efa66"
+      }
+    ],
+    "acs": [
+      {
+        "id": "AC-1",
+        "tests": [
+          "src/phargus/test/summary-bounded-text.test.mjs::AC-1: a recording of oversized memory keys, sites, paths and methods summarizes to bounded text"
+        ]
+      },
+      {
+        "id": "AC-2",
+        "tests": [
+          "src/phargus/test/summary-bounded-text.test.mjs::AC-2: the 50-pair route-cap fixture keeps its memory, hotspots and quality",
+          "src/phargus/test/summary-bounded-text.test.mjs::AC-2: the data fixtures keep their metrics, loss and hotspots and shorten nothing",
+          "src/phargus/test/summary-bounded-text.test.mjs::AC-2: the event-limits and sampling-interval file fixtures shorten nothing, compared or not",
+          "src/phargus/test/summary-bounded-text.test.mjs::AC-2: the summary-regressions compare fixtures keep their verdicts with zero counters on both sides",
+          "src/phargus/test/summary-bounded-text.test.mjs::AC-2: the summary-regressions fixtures keep their request metrics and shorten nothing",
+          "src/phargus/test/summary-bounded-text.test.mjs::AC-2: the summary-routes fixtures keep their routes and shorten nothing",
+          "src/phargus/test/summary-bounded-text.test.mjs::AC-2: two GET paths that differ only after character 200 are one route of count 2"
+        ]
+      },
+      {
+        "id": "AC-3",
+        "tests": [
+          "src/phargus/test/doctor-bounded-config.test.mjs::AC-3: doctor reports an unread phargus.config.js when no phargus.config.json exists",
+          "src/phargus/test/doctor-bounded-config.test.mjs::AC-3: doctor reports only a valid type, cut script names and typed config values"
+        ]
+      }
+    ]
+  },
+  "test_infra": {
+    "levels": [
+      "unit"
+    ],
+    "gates": [
+      {
+        "id": "test",
+        "script": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./.github/scripts/pharn-test-reporter.mjs --test-reporter-destination=stdout .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
+        "pre": null,
+        "post": null,
+        "results": "pharn-json"
+      }
+    ],
+    "chained": [],
+    "configs": [],
+    "script_files": [
+      {
+        "path": ".github/scripts/pharn-test-reporter.mjs",
+        "sha256": "0f6e7369360cc8d7621476f349dc5d3fb08ce968906304f8e6ee2f4ad2ea7058"
+      }
+    ],
+    "jest": null,
+    "exclude": [],
+    "other_gates": [
+      {
+        "id": "format:check",
+        "script": "prettier --check .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint",
+        "script": "eslint .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint:md",
+        "script": "markdownlint-cli2",
+        "pre": null,
+        "post": null
+      }
+    ],
+    "other_chained": []
+  }
+}
