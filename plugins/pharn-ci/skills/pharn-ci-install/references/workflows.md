@@ -463,9 +463,21 @@ option this reference does not list.
 ## Upgrading an existing setup
 
 An existing pharn-ci workflow (a `uses: pharn-dev/pharn-ci@` line, a SHA with
-a `# vX.Y.Z` comment or a tag) is updated, not duplicated: change that `uses:`
-line to this reference's pin, and nothing else unless the person asks. Say
-what the move brings, from pharn-ci's CHANGELOG, for the versions it crosses:
+a `# vX.Y.Z` comment or a tag) is updated, not duplicated. Before changing
+anything, compare its version with the version of this reference's pharn-ci
+pin:
+
+- Equal: say the setup is current, and stop.
+- Newer: say the setup is ahead of what this version of the skill describes,
+  change nothing, and say that updating the pharn-ci plugin gets a skill that
+  knows that release. Never move a pin to an older release.
+- Unreadable (a SHA with no `# vX.Y.Z` comment, or a branch): say so, and ask
+  which release it is.
+- Older: change that `uses:` line to this reference's pin, and nothing else
+  unless the person asks.
+
+For an older pin, say what the move brings, from pharn-ci's CHANGELOG, for the
+versions it crosses:
 
 | The pin is older than | Behaviour change the upgrade brings |
 | --------------------- | ----------------------------------- |

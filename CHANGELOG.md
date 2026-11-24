@@ -213,6 +213,20 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   only `.pharn/ci.yml`, the workflow and `.gitignore`".
 - THREAT-MODEL: an extended job runs pharn-ci on `pull_request` and
   `merge_group`, as the skill says; it named only `pull_request`.
+- `pharn-ci-install` never moves a pharn-ci pin backwards. On a repository
+  that already runs pharn-ci, it compares the existing pin's version with its
+  own before changing anything: an equal pin is current and nothing more is
+  done; a newer pin (Dependabot bumps the Action before the skill learns the
+  release) is left as it is, and the skill says the setup is ahead of what it
+  describes and that a pharn-ci plugin update gets a skill that knows that
+  release; an unreadable pin (a SHA with no `# vX.Y.Z` comment, or a branch)
+  gets a question. Only an older pin gets the update offer, as before. Before,
+  "update pharn-ci" on a newer pin proposed rewriting it to the skill's older
+  release (CORE-224).
+- Evals: `install-newer-pin` is the `install-upgrade-0-5` project with its
+  workflow pinned to a made-up v0.99.0. Asked to update pharn-ci, the skill
+  must leave every workflow file unchanged and say the setup is newer than it
+  describes.
 
 ## [pharn-ci 0.2.1] - 2026-11-23
 

@@ -37,11 +37,16 @@ something, and point it out to the person.
   Maven files. Which command runs the tests today, and with which package
   manager and lockfile.
 - `.github/workflows/*`:
-  - pharn-ci already there: say so, offer to update that setup instead of
-    adding a second one, and stop. Read the pin (`# vX.Y.Z` comment, or the
-    tag) and say what the update changes, for the versions it crosses, from
-    [Upgrading an existing setup](references/workflows.md#upgrading-an-existing-setup):
-    the behaviour changes of 0.6.0, 0.7.0 and 0.8.0 (some pull requests that
+  - pharn-ci already there: say so, never add a second one, and stop. Read
+    the pin's version (`# vX.Y.Z` comment, or the tag) and compare it with
+    this skill's pin before offering anything, as
+    [Upgrading an existing setup](references/workflows.md#upgrading-an-existing-setup)
+    says. Equal: say it is current. Newer: say the setup is ahead of what this
+    version of the skill describes, change nothing, and name the pharn-ci
+    plugin update as the way to get a skill that knows that release.
+    Unreadable (a SHA with no `# vX.Y.Z` comment, or a branch): say so and
+    ask. Older: offer to update that setup, and say what the update changes,
+    for the versions it crosses: the behaviour changes of 0.6.0, 0.7.0 and 0.8.0 (some pull requests that
     passed now warn or fail) and the `fail-on-threshold` rename. On a 0.1.x
     pin, also the test-integrity check and Report v2, whose `schemaVersion` is
     the number 2, so a tool that validates `report.json` against the v1 schema
@@ -277,6 +282,7 @@ Your answer names:
 - Use `on: pull_request_target`, check out a PR's head with a write token, or
   put text from an artifact or PR into a `run:` script.
 - Write a tag, branch or short-SHA pin.
+- Move an existing pharn-ci pin to an older release.
 - Run `npx pharn-ci` (the CLI is not on npm in 0.1.x to 0.9.x), or install,
   download, build or upgrade anything without asking.
 - Creating, applying, removing or asking for the accept label through `gh`, the API
