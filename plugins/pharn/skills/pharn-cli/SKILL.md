@@ -1,6 +1,6 @@
 ---
 name: pharn-cli
-description: Operate the PHARN CLI (@pharn-dev/pharn 0.10.0+, best on 0.16.0, with a fallback for 0.9.x) on a project that has PHARN installed. Use when the person asks whether PHARN is up to date, what an update would change, to update it, what is installed, or to add or remove a capability (griller or lens), or when pharn.config.json exists and they mention updating PHARN. When they ask to set up or uninstall PHARN, it tells them how to do it themselves. Read-only checks and a dry-run preview first; never overwrites their edits.
+description: Operate the PHARN CLI (@pharn-dev/pharn 0.10.0+, best on 0.16.0, with a fallback for 0.9.x) on a project that has PHARN installed. Use when the person asks whether PHARN is up to date, what an update would change, to update it, what is installed, to add or remove a capability (griller or lens), or to add or wire a hook that PHARN reports missing in .claude/settings.json, or when pharn.config.json exists and they mention updating PHARN. When they ask to set up or uninstall PHARN, it tells them how to do it themselves; for a missing hook it shows the entry for them to merge. Read-only checks and a dry-run preview first; never overwrites their edits.
 ---
 
 # pharn-cli

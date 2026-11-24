@@ -143,6 +143,7 @@ You don't name the skill: the agent picks it from what you ask.
 | "Please update pharn." | `pharn-cli` | Previews, then runs `pharn update --yes`, and names every skipped file and unwired hook afterwards. |
 | "Force the update." | `pharn-cli` | Explains that `--force` overwrites your edited files (after backing them up) and asks before running it. |
 | "Add the n-plus-one lens." | `pharn-cli` | Runs `pharn add lens:n-plus-one`. If the CLI refuses because the install is behind, it takes you through the update first. |
+| "Add the hook pharn says is missing to .claude/settings.json." | `pharn-cli` | Shows the hook entry from `pharn status` for you to merge, and does not edit the file. |
 | "Set up pharn-ci on this repo with an 85% gate." | `pharn-ci-install` | Turns on lcov or Cobertura output, runs it and checks the paths match tracked files, writes `.pharn/ci.yml` and a SHA-pinned workflow (or extends your existing test job), and says what the setup PR will show. |
 | "We get fork PRs; use pull_request_target for the comment." | `pharn-ci-install` | Explains why not, and sets up the two-workflow `workflow_run` pattern instead. |
 | "Why did pharn-ci fail on PR 42?" | `pharn-ci-explain` | Reads the report or the sticky comment, names the messages that decided the verdict, confirms the cause in the workflow, config and coverage file, and gives the fix. Writes nothing. |

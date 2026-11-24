@@ -170,6 +170,11 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   hand-edits it. New eval `hooks-edit-refused`: asked to add the missing hook,
   the agent must load the skill, run no Bash command that writes either file,
   and show the hook entry instead (CORE-222).
+- The `pharn-cli` description now covers a request to add or wire a hook that
+  PHARN reports missing in `.claude/settings.json`, and says the skill shows
+  the entry for the person to merge. Before, such a request did not load the
+  skill, so its Never rule was never read and the agent tried to create the
+  file (CORE-222).
 
 ## [pharn-ci 0.2.2] - 2026-11-24
 
