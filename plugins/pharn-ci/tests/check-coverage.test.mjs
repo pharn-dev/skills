@@ -207,6 +207,8 @@ describe("parseCli", () => {
     assert.deepEqual(parseCli(["--coverage", " a.info ", "--coverage-root", "./packages/core/"]).coverageRoot, "packages/core");
     assert.throws(() => parseCli(["--coverage", "packages/{a,b}/lcov.info"]), /only \*, \*\* and \? are supported/);
     assert.throws(() => parseCli(["--coverage", "/abs/*.info"]), /must not start with "\/"/);
+    assert.equal(parseCli(["--coverage", `./${"a".repeat(1018)}/*.xml`]).entries.length, 1);
+    assert.throws(() => parseCli(["--coverage", `${"a".repeat(1019)}/*.xml`]), /is 1025 characters long; the limit is 1024 characters/);
     assert.throws(() => parseCli(["--coverage-root", "../x"]), /must not contain a "\.\." segment/);
     assert.throws(() => parseCli(["--format", "clover"]), /--format must be/);
     assert.throws(() => parseCli(["--report", "r"]), UsageError);

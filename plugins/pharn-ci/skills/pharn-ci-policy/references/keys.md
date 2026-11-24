@@ -1,8 +1,8 @@
-# Policy keys, rules and default levels (pharn-ci 0.4.x to 0.9.x)
+# Policy keys, rules and default levels (pharn-ci 0.4.x to 0.11.x)
 
 Source: pharn-ci v0.4.0 at commit `a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` and
-v0.9.1 at `dec4a0ed2d0b111233522753909c74a90b6d09e0`: `schema/policy.v1.json`
-(the bundled `scripts/policy.v1.json` is a byte copy of v0.9.1's), README ("Org
+v0.11.0 at `bd7b36ea07588884418f5002ae74afc35135c400`: `schema/policy.v1.json`
+(the bundled `scripts/policy.v1.json` is a byte copy of v0.11.0's), README ("Org
 policy", "P13", "P14", "Prompt-injection scan", "Dependency safety", "Flaky
 tests and JUnit results", "Config"), CHANGELOG and `docs/LIMITS.md`. pharn-ci
 0.1.x to 0.3.x read no policy. The schema closes every object
@@ -12,8 +12,10 @@ string, and requires only `version`.
 A policy document is JSON. The smallest valid one is `{ "version": 1 }`. A key
 left out sets nothing.
 
-After 0.4.0 the schema gained two keys, `dependencies.lookup` (0.8.0) and the
-`injection` object (0.7.0). Some keys the 0.4.0 schema already accepted are
+After 0.4.0 the schema gained the `injection` object (0.7.0),
+`dependencies.lookup` (0.8.0), `dependencies.allowed_hosts` (0.10.0) and
+`test_integrity.signals.TI17` (0.11.0), and from 0.11.0 a login may also be an
+Enterprise Managed User login. Some keys the 0.4.0 schema already accepted are
 applied from later releases: `policy.rules.P13`, `policy.rules.P14`,
 `agents.max_files` and `agents.max_changed_lines` from 0.6.0, and
 `flaky.quarantine` and the other `dependencies` keys from 0.8.0. A policy
@@ -37,12 +39,12 @@ Each line names a rule, the policy keys that feed it and its default level.
 - P09, the pull request loosens what it is graded by (the policy file, the config, a workflow or an agent settings file): `error`, `warn` or `info` by what changed; no key feeds it.
 - P10, policy unavailable, fed by `policy.required`: `warn` by default, `error` with `policy: required` or `policy.required: true`; its severity cannot be overridden.
 - P11, agent PR changes a protected path, fed by `agents.protected_paths` and `agents.protected_paths_mode`: `error` by default (`block`).
-- P12, meant for `agents.require_human_approval`: not enforced in 0.4.x to 0.9.x; no finding, no level.
+- P12, meant for `agents.require_human_approval`: not enforced in 0.4.x to 0.11.x; no finding, no level.
 - P13, agent self-modification (0.6.0): an agent pull request widens what an agent may do in an agent settings file, an MCP config, a workflow or CODEOWNERS. No key feeds it; it runs under any app or `file:` policy. `error` by default; an app policy can set `policy.rules.P13`, a `file:` policy cannot lower it.
 - P14, agent PR size cap (0.6.0), fed by `agents.max_files` and `agents.max_changed_lines`: `error` by default, and off until the policy sets a cap (there is no default cap).
 
 The prompt-injection signals PI01 to PI05 (`injection.signals`) and the
-test-integrity signals TI01 to TI16 (`test_integrity.signals`) have their own
+test-integrity signals TI01 to TI17 (`test_integrity.signals`) have their own
 severities. The dependency signals D01 to D05 have no policy severity: D01, D04
 and D05 always block and D02 and D03 always warn.
 
@@ -84,12 +86,12 @@ Agent setup rules, P01 to P08.
 
 ### `test_integrity`
 
-Feeds the test-integrity signals TI01 to TI16 (the gate, no P rule).
+Feeds the test-integrity signals TI01 to TI17 (the gate, no P rule).
 
 | Key | Meaning |
 | --- | ------- |
 | `test_integrity.mode` | `block`, `warn` or `off`. The policy can raise the mode above the workflow input and the config (`block > warn > off`). |
-| `test_integrity.signals` | A severity (`block`, `warn`, `info` or `off`) per signal id `TI01` to `TI16`; any other key, `TI17` included, is an error. |
+| `test_integrity.signals` | A severity (`block`, `warn`, `info` or `off`) per signal id `TI01` to `TI17`; any other key, `TI18` included, is an error. `TI17` (an assertion that always passes, `warn` by default) is from 0.11.0: an older release rejects the key. |
 | `test_integrity.accept_label` | The label that signs off test-integrity blocks. Only an app policy may set it; a `file:` policy may not, and `.pharn/ci.yml` never. |
 
 ### `flaky`
@@ -119,12 +121,12 @@ Agent pull request detection and rules.
 | Key | Meaning |
 | --- | ------- |
 | `agents.labels` | Extra PR labels that mark an agent PR (added to `agent` and `ai-generated`). |
-| `agents.extra_logins` | Extra GitHub logins whose PRs are agent PRs (a trailing `[bot]` is allowed). |
+| `agents.extra_logins` | Extra GitHub logins whose PRs are agent PRs (a trailing `[bot]` is allowed; from 0.11.0 also an Enterprise Managed User login such as `dev_acme`). |
 | `agents.protected_paths` | Globs an agent PR must not change (P11). A path that matches is one violation; a rename counts by both its old and new path. |
 | `agents.protected_paths_mode` | `block` (the default) or `warn`; the stricter of it and `policy.rules.P11` applies. |
 | `agents.max_files` | From 0.6.0, P14: most files an agent PR may change, 1 to 100000. A rename counts once; lockfiles, snapshots, `*.generated.*` files and `coverage.exclude` paths do not count (they do when the PR edits the config or a workflow, unless the exclusions are the app policy's). |
 | `agents.max_changed_lines` | From 0.6.0, P14: most changed lines (added plus removed) an agent PR may have, 1 to 10000000, counted the same way. |
-| `agents.require_human_approval` | Accepted by the schema, not enforced: it is meant for rule P12, which 0.4.x to 0.9.x do not apply. |
+| `agents.require_human_approval` | Accepted by the schema, not enforced: it is meant for rule P12, which 0.4.x to 0.11.x do not apply. |
 
 For a cap the smaller limit wins: a `file:` policy the pull request edits applies
 the smaller of its merge-base and head values for each cap, so it can lower a
@@ -140,9 +142,10 @@ Dependency safety (D01 to D05). From 0.8.0, an app policy with a
 | Key | Meaning |
 | --- | ------- |
 | `dependencies.lookup` | From 0.8.0: `true` turns on the registry lookups (D01 to D03) in the Action, whatever the `dependencies` input says. Booleans, `true` wins. |
-| `dependencies.registries` | The ecosystems (`npm`, `pypi`) whose added packages are looked up; a served policy narrows them. Each maps to a fixed host list in the Action, so a policy never names a host. It does not add an allowed host for D05: a private registry stays D05. Not allowed from a `file:` policy. |
+| `dependencies.registries` | The ecosystems (`npm`, `pypi`) whose added packages are looked up; a served policy narrows them. Each maps to a fixed host list in the Action, so this key never names a host and does not allow one for D05 (`dependencies.allowed_hosts` does). Not allowed from a `file:` policy. |
 | `dependencies.min_age_days` | D02: minimum age in days of an added package, 0 to 3650 (default 30). A served policy replaces the default; lower layers can still raise it. |
 | `dependencies.min_weekly_downloads` | D03: minimum weekly npm downloads of an added unscoped package, 0 to 1000000000 (default 100). Same merge as `dependencies.min_age_days`. |
+| `dependencies.allowed_hosts` | From 0.10.0, D05: the private registry hosts the org runs (Artifactory, Nexus, a private PyPI index) whose URLs D05 accepts besides the four public ones. Exact host names, at most 50, each 1 to 253 of the letters A-Z and a-z, digits, `.` and `-`, matched case-insensitively: no scheme, path, port, user name or wildcard (`npm.corp.example`, not `https://npm.corp.example/` or `*.corp.example`). A URL on an allowed host must still be https with no user name, password or port. An app policy's list replaces the workflow's `dependency-allowed-hosts` input (an input host it leaves out is named in `POLICY_OVERRIDE_IGNORED`); a `file:` policy may not set it (recorded, not applied), and `.pharn/ci.yml` refuses it. A key that widens what D05 lets through: draft it only with the hosts the person names. |
 
 ### `injection`
 
@@ -180,8 +183,9 @@ overrules a workflow's `dependencies: never`, and its `min_age_days` and
 A `file:` policy is carried by the pull request too, so it can only raise: a
 higher threshold, `setup.require: true`, a stricter mode, more `setup.expect`
 tools, higher signal severities, more injection phrases and lower P14 caps.
-Exclusions, a root, an accept label, `policy.required`, `injection.exempt` and
-`dependencies.registries` are not allowed from a file.
+Exclusions, a root, an accept label, `policy.required`, `injection.exempt`,
+`dependencies.registries` and `dependencies.allowed_hosts` are not allowed from
+a file.
 
 ## Writing the values
 
@@ -194,8 +198,11 @@ Exclusions, a root, an accept label, `policy.required`, `injection.exempt` and
   `/etc` is `Edit(//etc/**)`.
 - A `root` is a normalized repository-relative directory (`.` is the root), not
   absolute, with no `..` segment.
-- A login is a GitHub login of at most 39 characters, optionally followed by
-  `[bot]`; a label is at most 50 characters.
+- A login is a GitHub login of at most 39 characters (a letter or digit, then
+  letters, digits or `-`), optionally followed by `[bot]`; from 0.11.0 also an
+  Enterprise Managed User login `handle_shortcode` (one `_` and a shortcode of
+  3 to 8 letters or digits, at most 39 characters, never with `[bot]`). A label
+  is at most 50 characters.
 - Rules are compared with rules, never with what a command does:
   P02 to P06 are text guards, not a security boundary. `Bash(curl:*)` denied
   does not stop `/usr/bin/curl` or `sh -c`; sandboxing is the boundary.
@@ -222,7 +229,7 @@ The schema's key paths, each of which the checker accepts (and nothing else):
   `test_integrity.signals.TI11`, `test_integrity.signals.TI12`,
   `test_integrity.signals.TI13`, `test_integrity.signals.TI14`,
   `test_integrity.signals.TI15`, `test_integrity.signals.TI16`,
-  `test_integrity.accept_label`
+  `test_integrity.signals.TI17`, `test_integrity.accept_label`
 - `flaky`: `flaky.quarantine`
 - `policy`: `policy.required`, `policy.rules`, `policy.rules.P01`,
   `policy.rules.P02`, `policy.rules.P03`, `policy.rules.P04`,
@@ -234,7 +241,8 @@ The schema's key paths, each of which the checker accepts (and nothing else):
   `agents.protected_paths_mode`, `agents.require_human_approval`,
   `agents.max_files`, `agents.max_changed_lines`
 - `dependencies`: `dependencies.lookup`, `dependencies.registries`,
-  `dependencies.min_age_days`, `dependencies.min_weekly_downloads`
+  `dependencies.min_age_days`, `dependencies.min_weekly_downloads`,
+  `dependencies.allowed_hosts`
 - `injection`: `injection.exempt`, `injection.phrases`, `injection.signals`,
   `injection.signals.PI01`, `injection.signals.PI02`, `injection.signals.PI03`,
   `injection.signals.PI04`, `injection.signals.PI05`

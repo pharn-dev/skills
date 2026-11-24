@@ -123,6 +123,48 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   that `.phargus/` holds captures only. Before, the setup eval saved the
   summarize result to `.phargus/tool-result.json` (#28).
 
+## [pharn-ci 0.3.0] - 2026-11-24
+
+### Changed
+
+- The `pharn-ci` skills cover pharn-ci 0.1.x to 0.11.x (`pharn-ci-policy` 0.4.x
+  to 0.11.x, `pharn-ci-fix` 0.9.x to 0.11.x). `pharn-ci-install` writes
+  pharn-ci 0.11.0, pinned to its release commit
+  `bd7b36ea07588884418f5002ae74afc35135c400` (tag `v0.11.0`), and names the
+  0.11.0 behaviour changes when it updates an older pin (CORE-226).
+- Private registries (pharn-ci 0.10.0): for a repository whose lockfile or
+  registry config names a private registry, `pharn-ci-install` still asks
+  before writing a workflow, and now offers the `dependency-allowed-hosts`
+  input with the host it found as the first option, writing only a host the
+  person confirmed, as an exact host name. `pharn-ci-explain` gives the same
+  fix for `DEPENDENCY_D05` (the input, or an app policy's
+  `dependencies.allowed_hosts`; never `.pharn/ci.yml` or a `file:` policy), and
+  `pharn-ci-policy` documents `dependencies.allowed_hosts`. Before, the skills
+  said pharn-ci had no allow-list.
+- TI17, an assertion that always passes (pharn-ci 0.11.0, `warn`, fix kind
+  `restore-assertion`): in `pharn-ci-explain`'s codes, `pharn-ci-policy`'s
+  `test_integrity.signals.TI17` and `pharn-ci-fix`'s `restore-assertion` kind.
+  `pharn-ci-explain` also describes 0.11.0's `DIFF_UNAVAILABLE` order, the
+  1,024-character glob limit, the stricter `POLICY_SETTINGS_INVALID` and the
+  Enterprise Managed User logins; `pharn-ci-policy` accepts such logins.
+- `pharn-ci-policy`'s bundled `policy.v1.json` and the tests' `report.v2.json`
+  are byte copies of pharn-ci v0.11.0's schemas.
+- `pharn-ci-install`'s `check-coverage.mjs` refuses a coverage glob longer than
+  1,024 characters, as pharn-ci 0.11.0 does.
+- Evals: the manifest's `latest` is 0.11.0; the install cases,
+  `explain-dependency-d05` and `cover-import-pressure` are regenerated with
+  pharn-ci 0.11.0, which replaces 0.9.1 in the `pharn-ci fixtures` CI job. The
+  `install-private-registry` and `explain-dependency-d05` graders expect the
+  allow-list answer.
+
+### Fixed
+
+- `pharn-ci-install`: for a pin newer than its own, the skill now offers no
+  older pin either, even when it cannot confirm the newer release. In an eval
+  run against an `install-newer-pin` scaffold whose SHA looked like a
+  placeholder, the agent changed nothing but offered to re-pin to 0.11.0 "if
+  v0.99.0 isn't real". The scaffold now carries a realistic SHA.
+
 ## [pharn 0.5.1] - 2026-11-24
 
 ### Changed
@@ -601,6 +643,7 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 [Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.1...HEAD
 [pharn 0.5.1]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.0...pharn-v0.5.1
+[pharn-ci 0.3.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.2...pharn-ci-v0.3.0
 [pharn-ci 0.2.2]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.1...pharn-ci-v0.2.2
 [pharn-ci 0.2.1]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.0...pharn-ci-v0.2.1
 [pharn-ci 0.2.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.1.0...pharn-ci-v0.2.0

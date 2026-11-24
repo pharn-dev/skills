@@ -1,7 +1,7 @@
-# Org policy (pharn-ci 0.4.x to 0.9.x)
+# Org policy (pharn-ci 0.4.x to 0.11.x)
 
 Source: pharn-ci v0.4.0 at commit `a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` and
-v0.9.1 at `dec4a0ed2d0b111233522753909c74a90b6d09e0`: README ("Org policy", "P13",
+v0.11.0 at `bd7b36ea07588884418f5002ae74afc35135c400`: README ("Org policy", "P13",
 "P14", "Policy mode", "Agent PRs", "Prompt-injection scan", "Dependency safety",
 "Flaky tests and JUnit results"), CHANGELOG, `schema/report.v2.json`,
 `schema/policy.v1.json`, `packages/core/src/policy/` and `docs/LIMITS.md`.
@@ -18,8 +18,11 @@ for P07) and test-integrity keys, and `agents.labels`, `agents.extra_logins`,
 `agents.protected_paths` and `agents.protected_paths_mode`. 0.6.0 adds rules
 P13 and P14 (`agents.max_files`, `agents.max_changed_lines`); 0.7.0 the
 `injection` keys of the prompt-injection scan; 0.8.0 the `dependencies` keys
-and `flaky.quarantine`. In 0.9.x `agents.require_human_approval` (meant for
-P12) is still validated and not applied. The pharn.dev app's policy response
+and `flaky.quarantine`; 0.10.0 `dependencies.allowed_hosts`; 0.11.0
+`test_integrity.signals.TI17` and Enterprise Managed User logins
+(`handle_shortcode`) in `agents.extra_logins`. In 0.9.x to 0.11.x
+`agents.require_human_approval` (meant for P12) is still validated and not
+applied. The pharn.dev app's policy response
 also carries settings that are not part of the policy document (for example
 `settings.uploadJunit`, which keeps the JUnit results out of an upload, and
 `settings.messageMaxBytes`) and the quarantine list.
@@ -34,7 +37,7 @@ its owner. A pull request that edits the policy it is graded by raises P09.
 Each finding is in the report's `policy.violations` and in the comment's
 📜 Policy section; the message code carries the rule's level. A policy's
 `policy.rules` sets a rule's severity (`block`, `warn`, `info` or `off`); a `file:`
-policy can only raise it. There is no P12 rule in 0.9.x: `policy.rules.P12` and
+policy can only raise it. There is no P12 rule in 0.9.x to 0.11.x: `policy.rules.P12` and
 `agents.require_human_approval` are accepted by the schema and not enforced.
 
 | Rule | Code | Default level | What it checks |
@@ -246,9 +249,14 @@ Rules P02 to P06 could not fully use an agent settings or MCP file, or did not r
 the files were not read, a file was dropped, unparseable, or has an entry the grammar
 does not know. `warn`, but `error` for a file pharn-ci could not read or a problem a
 required list depends on, because a file pharn-ci could not read counts against the
-policy. The text names up to 20 problems as path, line and reason, never file text.
+policy. Settings that were not read at all (a shallow checkout, `pr-number` mode) are
+an error when the policy requires a deny rule or hook at block, and from 0.11.0 also
+when it sets `forbidden_permissions` (P02), `allowed_mcp_servers` (P04) or
+`forbidden_mcp_servers` (P05) at block. The text names up to 20 problems as path,
+line and reason, never file text.
 
-- Fix: repair the named file (valid JSON, entries the settings grammar knows).
+- Fix: repair the named file (valid JSON, entries the settings grammar knows), or,
+  for settings not read, check out the pull request head with `fetch-depth: 0`.
 
 ## The 📜 Policy comment section and the policy object
 
@@ -298,14 +306,17 @@ unknown author, commits that cannot be listed, more than 250 commits, or an edit
   mode above the input and the config, replaces `coverage.exclude` and
   `coverage.root`, sets per-signal severities and the accept label, adds
   `setup.expect` tools, requires dependency safety when it has a `dependencies`
-  key (a `never` input becomes `auto`, named in `POLICY_OVERRIDE_IGNORED`), and
-  sets the prompt-injection exemptions, phrases and severities. A `file:` policy
+  key (a `never` input becomes `auto`, named in `POLICY_OVERRIDE_IGNORED`),
+  replaces the `dependency-allowed-hosts` input with its
+  `dependencies.allowed_hosts` (0.10.0; an input host it leaves out is named, by
+  setting and layer only, in `POLICY_OVERRIDE_IGNORED`), and sets the
+  prompt-injection exemptions, phrases and severities. A `file:` policy
   can only raise: a higher threshold, `setup.require: true`, a stricter mode,
   more `setup.expect` tools, higher signal severities, more injection phrases,
   and lower agent PR size caps.
 - **What a `file:` policy may not set.** Exclusions, a root, an accept label,
-  `policy.required`, `injection.exempt` and `dependencies.registries` are not
-  allowed from a file, because the pull request carries it; a value lower than
+  `policy.required`, `injection.exempt`, `dependencies.registries` and
+  `dependencies.allowed_hosts` are not allowed from a file, because the pull request carries it; a value lower than
   the workflow inputs give is ignored. Both are named in
   `POLICY_OVERRIDE_IGNORED`. The path is relative, stays inside the repository,
   goes through no symbolic link and names a regular file of at most 1 MiB.

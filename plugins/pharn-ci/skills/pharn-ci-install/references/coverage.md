@@ -1,4 +1,4 @@
-# Coverage output per ecosystem (pharn-ci 0.1.0 to 0.9.1)
+# Coverage output per ecosystem (pharn-ci 0.1.0 to 0.11.0)
 
 pharn-ci reads lcov and Cobertura XML only, decides which by the first 1 KiB
 (`auto`), and matches each file path in the report against the tracked files.
