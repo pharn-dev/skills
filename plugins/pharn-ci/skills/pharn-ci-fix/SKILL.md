@@ -64,11 +64,15 @@ It prints one JSON object:
 
 - `fixes`: every well-formed fix in report order, each with `array` and
   `index` (where it sits), `code` (a message) or `id` (a finding), `kind`,
-  `target` when present and `hint`;
+  `target` when present and `hint`. A `code` that is not upper-case letters,
+  digits and `_`, or an `id` that is not one or two letters and two digits,
+  is `null`;
 - `byKind`: the same entries under each of the eight kinds;
 - `withoutFix`: how many messages and findings carry no `fix`;
 - `problems`: each malformed fix by its JSON Pointer (an unknown kind, a hint
-  over 200 characters, an extra property, a `target` on a message).
+  over 200 characters, an empty `target` or one over 1024 characters, an extra
+  property, a `target` on a message). An extra property's name is cut to 64
+  characters in the pointer.
 
 Exit 0 means every fix is well-formed, 1 that some are not (they are left out
 of `fixes`), 2 that the file is not a Report v2. Branch on `kind` from this

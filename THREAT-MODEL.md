@@ -107,22 +107,41 @@ repository.
 uses Node core only, validates the report's shape, parses lcov and Cobertura
 without evaluating them (no DTD or entity expansion beyond the five predefined
 and numeric references), runs only `git rev-parse`, `git ls-files`,
-`git status` and, with `--base`, `git rev-parse --verify` and two `git diff`
-calls, all without a shell, with `--literal-pathspecs`, with `--end-of-options`
-or after `--`, and with a `--base` value starting with `-` refused. Report paths
-that are absolute, contain `..` or a NUL byte never reach git. When git cannot
-run it finds the repository by walking up to a `.git` entry and checks files on
-disk instead. It writes nothing and prints paths only as JSON.
+`git status` and, with `--base`, `git rev-parse --verify`, `git merge-base` (on
+two commit SHAs) and two `git diff` calls, all without a shell, with
+`--literal-pathspecs`, with `--end-of-options` or after `--`, and with a
+`--base` value starting with `-` refused. It never fetches. Report paths
+that are not tracked files never reach git. When git cannot run it finds the
+repository by walking up to a `.git` entry and checks files on disk instead. It
+writes nothing and prints paths only as JSON.
+No helper prints free text from its input: a string from a report, a coverage
+file or a tracked path name is printed only when it matches a known shape (a
+verdict of `pass`, `warn` or `fail`, a finite percent, a release number, a
+message code or signal id, or a name with no control character or line
+separator, no leading or trailing space and at most 200 characters) or is the
+path of a tracked file, every note is a fixed string that names the field
+holding a value (check-lines' base note also names the two commit SHAs git
+printed, and nothing from the report, the coverage file or the `--base`
+argument), and the one exception, `pharn-ci-fix`'s
+[list-fixes helper](plugins/pharn-ci/skills/pharn-ci-fix/scripts/list-fixes.mjs),
+prints a fix's `hint` and `target` as report text, at most 200 and 1024
+characters.
 The [install helper](plugins/pharn-ci/skills/pharn-ci-install/scripts/check-coverage.mjs)
 shares that parsing code byte for byte, runs only `git rev-parse`,
-`git ls-files` and `git check-ignore`, walks the disk without following links
+`git ls-files` and `git check-ignore` (each path passed as `./<path>`, so no
+name is read as pathspec magic), walks the disk without following links
 and within pharn-ci's limits, and never prints the repository's absolute path.
 Their
 [unit tests](plugins/pharn-ci/tests/) run in CI.
 
 **Limit:** the helper's estimate is only as honest as the coverage file it
-reads. It does not detect a forged or hand-edited coverage report, and it reads
-whole files into memory, so a very large hostile file can exhaust it.
+reads. It does not detect a forged or hand-edited coverage report. The four
+pharn-ci helpers read each input file whole into memory, through one routine:
+only a regular file is read (a FIFO, a directory or a device, behind a symlink
+too, is refused at once instead of blocking or being read without end), and
+only up to a cap: 32 MiB for a report, 256 MiB for a coverage file, and 1 MiB
+for a policy or a `--schema` file. A hostile file under its cap can still cost
+that much memory, and more while it is parsed.
 
 ## Diagnostic input, output, and application availability
 
