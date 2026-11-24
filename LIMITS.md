@@ -66,7 +66,11 @@ correct. The CI run's verdict decides. On macOS the eval sandbox cannot run
 `pharn-ci-install`'s [check-coverage helper](plugins/pharn-ci/skills/pharn-ci-install/scripts/check-coverage.mjs)
 mirrors pharn-ci 0.1.0's coverage rules, unchanged through 0.4.0, (auto-discovery, format detection,
 path mapping, the coverage-root suggestion) with the same ported code, and the
-fixture check compares it with the pinned CLI on the eval trees. It is not
+fixture check compares it with the pinned CLI on the eval trees. Where
+pharn-ci would name a coverage root whose directory name has a control
+character or line break, leading or trailing space or over 200 characters, the
+helper prints `null` and a note instead, so such a name never reaches
+`.pharn/ci.yml`. It is not
 pharn-ci: it does not read `.pharn/ci.yml`, diff the change or apply
 exclusions, and when git cannot run it matches paths against files on disk.
 When the project's coverage command cannot run locally (a missing dependency,

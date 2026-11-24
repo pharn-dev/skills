@@ -60,9 +60,10 @@ lines are not counted at all, and a PR that only adds untested files passes as
   `[tool.coverage.run]` the report is the same on every machine.
 - A runner started in a package directory writes package-relative paths
   (`SF:src/index.ts` from `packages/core`). For one package, set
-  `coverage.root: packages/core`. For several, one root cannot fit them all:
-  run the tests from the repository root, or configure each runner to write
-  repo-relative paths, and list every report in `coverage.file`.
+  `coverage.root: "packages/core"`, a quoted YAML string. For several, one
+  root cannot fit them all: run the tests from the repository root, or
+  configure each runner to write repo-relative paths, and list every report in
+  `coverage.file`.
 - Run `scripts/check-coverage.mjs` after every change here: `paths.matched`
   must be above 0 and `blocking` null.
 

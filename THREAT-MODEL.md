@@ -110,9 +110,19 @@ and numeric references), runs only `git rev-parse`, `git ls-files`,
 `git status` and, with `--base`, `git rev-parse --verify` and two `git diff`
 calls, all without a shell, with `--literal-pathspecs`, with `--end-of-options`
 or after `--`, and with a `--base` value starting with `-` refused. Report paths
-that are absolute, contain `..` or a NUL byte never reach git. When git cannot
-run it finds the repository by walking up to a `.git` entry and checks files on
-disk instead. It writes nothing and prints paths only as JSON.
+that are not tracked files never reach git. When git cannot run it finds the
+repository by walking up to a `.git` entry and checks files on disk instead. It
+writes nothing and prints paths only as JSON.
+No helper prints free text from its input: a string from a report, a coverage
+file or a tracked path name is printed only when it matches a known shape (a
+verdict of `pass`, `warn` or `fail`, a finite percent, a release number, a
+message code or signal id, or a name with no control character or line
+separator, no leading or trailing space and at most 200 characters) or is the
+path of a tracked file, every note is a fixed string that names the field
+holding a value, and the one exception, `pharn-ci-fix`'s
+[list-fixes helper](plugins/pharn-ci/skills/pharn-ci-fix/scripts/list-fixes.mjs),
+prints a fix's `hint` and `target` as report text, at most 200 and 1024
+characters.
 The [install helper](plugins/pharn-ci/skills/pharn-ci-install/scripts/check-coverage.mjs)
 shares that parsing code byte for byte, runs only `git rev-parse`,
 `git ls-files` and `git check-ignore`, walks the disk without following links

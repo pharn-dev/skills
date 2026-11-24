@@ -151,6 +151,11 @@ Follow [references/tests.md](references/tests.md):
       report's (a file a test now loads, a different tool version);
     - `sourcesChanged`: listed files that differ from `HEAD`; should be empty,
       since you changed only tests;
+    - `invalidPaths`: how many report paths were left out because they are
+      not tracked files here; their lines are not checked;
+    - `coverage.unmatchedExample`: one coverage path that matched no tracked
+      file, or `null` when it has a control character or line break, leading
+      or trailing space or over 200 characters;
     - `estimate`: covered, coverable, percent and `meetsThreshold`. With
       `--base` (`basis: "added-lines"`) it is recomputed from the diff the way
       pharn-ci does; without it (`"listed-lines"`) it assumes every line the

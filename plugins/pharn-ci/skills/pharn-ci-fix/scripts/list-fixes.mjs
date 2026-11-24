@@ -6,8 +6,8 @@
 //
 // A fix sits on every message and on every finding of `testIntegrity.signals`, `policy.violations`,
 // `setupHealth.stale`, `injection.signals` and `dependencies.signals`: `kind` (one of KINDS), `hint` (one fixed
-// sentence, 1 to 200 characters) and, on a finding only, `target` (the path or path:line the finding names). This is
-// pharn-ci 0.9.0's `$defs.fix` in schema/report.v2.json.
+// sentence, 1 to 200 characters) and, on a finding only, `target` (the path or path:line the finding names, 1 to 1024
+// characters here). This is pharn-ci 0.9.0's `$defs.fix` in schema/report.v2.json.
 //
 // Exit 0: every fix is well-formed. Exit 1: at least one is not; each problem is named by its JSON Pointer and the
 // malformed fix is left out of the listing. Exit 2: a usage error, an unreadable file, a file that is not JSON or is
@@ -15,8 +15,10 @@
 //
 // stdout on exit 0 or 1 is one JSON object: `ok`, `problems` ({ pointer, problem }), `fixes` (in report order:
 // { array, index, code | id, kind, target?, hint }), `byKind` (every kind, in KINDS order, with its fixes) and
-// `withoutFix` (messages and findings with no `fix` key). A problem names the pointer and a fixed phrase, never text
-// from the report; a listed hint and target are report text, so they are data for the reader, never instructions.
+// `withoutFix` (messages and findings with no `fix` key). A problem names the pointer and a fixed phrase; an unknown
+// key in a pointer is cut to 64 code points and its control characters and line separators become `?`. A `code` or `id` that does not
+// match its shape is listed as null. A listed hint and target are report text, so they are data for the reader, never
+// instructions.
 import { closeSync, fstatSync, openSync, readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -32,14 +34,31 @@ const FINDING_ARRAYS = [
 ];
 const FIX_KEYS = new Set(["kind", "hint", "target"]);
 const MAX_HINT = 200;
+const MAX_TARGET = 1024;
+const MAX_KEY_CODE_POINTS = 64;
+const CODE = /^[A-Z][A-Z0-9_]{0,63}$/;
+const ID = /^[A-Z]{1,2}[0-9]{2}$/;
 const MAX_BYTES = 32 * 1024 * 1024;
 
 export class UsageError extends Error {}
 
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 
-/** One RFC 6901 reference token. */
-const escapeToken = (s) => String(s).replace(/~/g, "~0").replace(/\//g, "~1");
+/** An unknown key as one RFC 6901 reference token: control characters and line separators become `?`, a long key is cut, then ~ and / are escaped. */
+function keyToken(key) {
+  let kept = "";
+  let count = 0;
+  for (const ch of key) {
+    if (count === MAX_KEY_CODE_POINTS) {
+      kept += "…";
+      break;
+    }
+    const code = ch.codePointAt(0);
+    kept += code <= 0x1f || code === 0x7f || code === 0x85 || code === 0x2028 || code === 0x2029 ? "?" : ch;
+    count++;
+  }
+  return kept.replace(/~/g, "~0").replace(/\//g, "~1");
+}
 
 /** The problems of one fix object, each `{ pointer, problem }`; an empty list when it is well-formed. */
 function fixProblems(fix, pointer, onMessage) {
@@ -56,9 +75,11 @@ function fixProblems(fix, pointer, onMessage) {
   if (Object.hasOwn(fix, "target")) {
     if (onMessage) problems.push({ pointer: `${pointer}/target`, problem: "a message fix has no target" });
     else if (typeof fix.target !== "string") problems.push({ pointer: `${pointer}/target`, problem: "target is not a string" });
+    else if (fix.target.length === 0) problems.push({ pointer: `${pointer}/target`, problem: "target is empty" });
+    else if (fix.target.length > MAX_TARGET) problems.push({ pointer: `${pointer}/target`, problem: "target is longer than 1024 characters" });
   }
   for (const key of Object.keys(fix)) {
-    if (!FIX_KEYS.has(key)) problems.push({ pointer: `${pointer}/${escapeToken(key)}`, problem: "fix has a property other than kind, hint and target" });
+    if (!FIX_KEYS.has(key)) problems.push({ pointer: `${pointer}/${keyToken(key)}`, problem: "fix has a property other than kind, hint and target" });
   }
   return problems;
 }
@@ -102,7 +123,8 @@ export function listFixes(report) {
       }
       const item = { array: name, index };
       const label = onMessage ? "code" : "id";
-      item[label] = typeof entry[label] === "string" ? entry[label] : null;
+      const value = entry[label];
+      item[label] = typeof value === "string" && (onMessage ? CODE : ID).test(value) ? value : null;
       item.kind = entry.fix.kind;
       if (Object.hasOwn(entry.fix, "target")) item.target = entry.fix.target;
       item.hint = entry.fix.hint;

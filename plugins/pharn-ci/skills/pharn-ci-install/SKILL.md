@@ -119,7 +119,13 @@ Follow [references/coverage.md](references/coverage.md) for the runner:
   - `paths.suggestedRoot`: the directory package-relative paths start from.
     Use it as `coverage.root` only when there is one package; with several,
     have each runner write repo-relative paths instead, since one root applies
-    to every file.
+    to every file. Write the value as a quoted YAML string
+    (`root: "packages/core"`). It is `null` when there is none, and also when
+    the directory name has a control character or line break, leading or
+    trailing space or over 200 characters; a note then says so. Set no root
+    from such a name.
+  - `paths.unmatchedExample`: one coverage path that matched no tracked file,
+    or `null` under the same name rules.
   - `coverage[].ignored` and `tracked`: fix `.gitignore` when `ignored` is
     `false`.
   - `paths.untrackedOnDisk`: paths of files not committed yet; they match

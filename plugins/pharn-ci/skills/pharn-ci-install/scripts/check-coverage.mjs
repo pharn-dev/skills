@@ -123,6 +123,24 @@ export function isSafeRepoPath(p) {
   return !p.split(/[\\/]/).includes("..");
 }
 
+const MAX_PRINTED_NAME = 200;
+
+/**
+ * A path or directory name from the input, when it is safe to print as data: no control character or line separator
+ * (U+0000-U+001F, U+007F, U+0085, U+2028, U+2029), no leading or trailing space and at most 200 characters. Anything
+ * else is null, so the name cannot carry a second line into a note or a config file.
+ */
+export function printableName(s) {
+  if (typeof s !== "string" || s === "" || s.trim() !== s) return null;
+  let count = 0;
+  for (const ch of s) {
+    const code = ch.codePointAt(0);
+    if (code <= 0x1f || code === 0x7f || code === 0x85 || code === 0x2028 || code === 0x2029) return null;
+    if (++count > MAX_PRINTED_NAME) return null;
+  }
+  return s;
+}
+
 // --- XML scanner (xml.ts): one forward pass, no regular expressions, no element stack ---
 
 const NO_ATTRS = new Map();
@@ -902,6 +920,7 @@ export function checkCoverage({ entries, coverageRoot, format = "auto" }, repo, 
   if (unreadable !== null) blocking ??= unreadable;
 
   let paths = null;
+  let rootWithheld = false;
   if (blocking === null && maps.length > 0) {
     const merged = mergeCoverageMaps(maps);
     const match = matchCoveragePaths([...merged.keys()], repoFiles, coverageRoot);
@@ -910,10 +929,11 @@ export function checkCoverage({ entries, coverageRoot, format = "auto" }, repo, 
       total: match.total,
       matched: match.total - match.unmatched.length,
       unmatched: match.unmatched.length,
-      unmatchedExample: match.unmatched[0] ?? null,
+      unmatchedExample: printableName(match.unmatched[0]),
       untrackedOnDisk: tracked ? onDisk.length : null,
-      suggestedRoot: match.suggestedRoot,
+      suggestedRoot: printableName(match.suggestedRoot),
     };
+    rootWithheld = match.suggestedRoot !== null && paths.suggestedRoot === null;
     if (match.total > 0 && match.unmatched.length === match.total) blocking = "COVERAGE_PATHS_UNMATCHED";
     if (onDisk.length > 0) notes.push("some coverage paths are files on disk that git does not track yet (untrackedOnDisk); they match once committed");
   }
@@ -925,11 +945,16 @@ export function checkCoverage({ entries, coverageRoot, format = "auto" }, repo, 
     if (skipped > 0) codes.push("COVERAGE_LINES_SKIPPED");
   }
   if (trackedFile !== null) codes.push("COVERAGE_FILE_TRACKED");
-  for (const c of coverage) {
-    if (c.tracked === false && c.ignored === false) notes.push(`${c.path} is not git-ignored; ignore it so it is never committed (a committed one raises COVERAGE_FILE_TRACKED)`);
+  // Notes are fixed strings: they name the field that holds a path, never the path itself.
+  if (coverage.some((c) => c.tracked === false && c.ignored === false)) {
+    notes.push("a coverage file is not git-ignored (coverage[].ignored is false); ignore it so it is never committed (a committed one raises COVERAGE_FILE_TRACKED)");
   }
   if (paths?.suggestedRoot) {
-    notes.push(`the coverage paths look relative to ${paths.suggestedRoot}: set coverage.root: ${paths.suggestedRoot} in .pharn/ci.yml, or have the runner write repo-relative paths`);
+    notes.push("the coverage paths look relative to the directory in paths.suggestedRoot: set coverage.root to it, written as a quoted YAML string, in .pharn/ci.yml, or have the runner write repo-relative paths");
+  } else if (rootWithheld) {
+    notes.push(
+      "the coverage paths look relative to a directory whose name has a control character, a line break, leading or trailing space or over 200 characters, so paths.suggestedRoot is null; have the runner write repo-relative paths",
+    );
   }
   return {
     discovery: { kind: discovery.kind, files: discovery.files },

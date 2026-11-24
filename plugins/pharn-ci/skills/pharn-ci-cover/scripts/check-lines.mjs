@@ -127,6 +127,24 @@ export function isSafeRepoPath(p) {
   return !p.split(/[\\/]/).includes("..");
 }
 
+const MAX_PRINTED_NAME = 200;
+
+/**
+ * A path or directory name from the input, when it is safe to print as data: no control character or line separator
+ * (U+0000-U+001F, U+007F, U+0085, U+2028, U+2029), no leading or trailing space and at most 200 characters. Anything
+ * else is null, so the name cannot carry a second line into a note or a config file.
+ */
+export function printableName(s) {
+  if (typeof s !== "string" || s === "" || s.trim() !== s) return null;
+  let count = 0;
+  for (const ch of s) {
+    const code = ch.codePointAt(0);
+    if (code <= 0x1f || code === 0x7f || code === 0x85 || code === 0x2028 || code === 0x2029) return null;
+    if (++count > MAX_PRINTED_NAME) return null;
+  }
+  return s;
+}
+
 // --- XML scanner (xml.ts): one forward pass, no regular expressions, no element stack ---
 
 const NO_ATTRS = new Map();
@@ -622,7 +640,14 @@ export function isKnownSchemaVersion(v) {
   return v === "1" || v === 2;
 }
 
-/** Validate the parts of a Report v1 or v2 this helper reads. Throws UsageError on anything else. */
+const TOOL_VERSION = /^\d+\.\d+\.\d+[\w.-]{0,20}$/;
+const VERDICTS = new Set(["pass", "warn", "fail"]);
+
+/**
+ * Validate the parts of a Report v1 or v2 this helper reads. Throws UsageError on anything else. Report fields that are
+ * printed keep only a known shape: the verdict, percent and tool version are otherwise null or "?", and paths that are
+ * not repo-relative are left out and counted in `invalidPaths`.
+ */
 export function readReport(text) {
   let r;
   try {
@@ -642,13 +667,13 @@ export function readReport(text) {
     throw new UsageError("the report's diffCoverage is malformed");
   }
   const files = [];
-  const invalidPaths = [];
+  let invalidPaths = 0;
   for (const f of dc.files) {
     if (typeof f?.path !== "string" || f.path === "" || !Array.isArray(f.uncoveredLines)) {
       throw new UsageError("the report's diffCoverage.files is malformed");
     }
     if (!isSafeRepoPath(f.path)) {
-      invalidPaths.push(f.path);
+      invalidPaths++;
       continue;
     }
     const lines = f.uncoveredLines.filter((n) => Number.isInteger(n) && n >= 1);
@@ -660,9 +685,9 @@ export function readReport(text) {
   }
   const excluded = Array.isArray(dc.excludedFiles) ? dc.excludedFiles.filter((p) => typeof p === "string") : [];
   return {
-    tool: `${r.tool.name} ${typeof r.tool.version === "string" ? r.tool.version : "?"}`,
-    verdict: r.verdict,
-    percent: dc.percent ?? null,
+    tool: `${r.tool.name} ${typeof r.tool.version === "string" && TOOL_VERSION.test(r.tool.version) ? r.tool.version : "?"}`,
+    verdict: VERDICTS.has(r.verdict) ? r.verdict : null,
+    percent: typeof dc.percent === "number" && Number.isFinite(dc.percent) ? dc.percent : null,
     threshold: typeof dc.threshold === "number" && Number.isFinite(dc.threshold) ? dc.threshold : null,
     coveredLines: dc.coveredLines,
     coverableLines: dc.coverableLines,
@@ -980,7 +1005,7 @@ export function compare(report, coverageFiles, { tracked, diff = null }) {
     coverage: {
       paths: coveragePaths.size,
       unmatchedPaths: unmatched.length,
-      ...(unmatched.length > 0 ? { unmatchedExample: unmatched[0] } : {}),
+      ...(unmatched.length > 0 ? { unmatchedExample: printableName(unmatched[0]) } : {}),
       linesSkipped: skipped,
     },
     lines: {
@@ -1100,6 +1125,10 @@ export function run(argv, { cwd = process.cwd(), git = realGit } = {}) {
     }
   };
   const report = readReport(readText(opts.report, "report"));
+  // A report path that is not a tracked file is never printed or handed to git.
+  const trackedFiles = report.files.filter((f) => tracked.has(f.path));
+  report.invalidPaths += report.files.length - trackedFiles.length;
+  report.files = trackedFiles;
   const coverageFiles = opts.coverage.map((p) => {
     const text = readText(p, "coverage file");
     const format = opts.format === "auto" ? detectCoverageFormat(text) : opts.format;
@@ -1112,7 +1141,7 @@ export function run(argv, { cwd = process.cwd(), git = realGit } = {}) {
 
   const notes = [];
   if (!repo.git) notes.push(`${NO_GIT_NOTE} (${repo.reason})`);
-  if (report.invalidPaths.length > 0) notes.push("some report paths are not repo-relative and were left out (invalidPaths)");
+  if (report.invalidPaths > 0) notes.push("some report paths are not tracked files and were left out (invalidPaths counts them)");
 
   let base = null;
   let diff = null;
