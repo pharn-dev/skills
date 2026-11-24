@@ -1,7 +1,7 @@
 import { open, stat, readFile } from 'node:fs/promises';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { pipeline } from 'node:stream/promises';
-import { fileEvents, lines, classifyLine, quality, object } from './records.mjs';
+import { fileEvents, lines, classifyLine, quality, qualityTracker, object } from './records.mjs';
 import { resolvePhargus } from './upstream.mjs';
 
 /** @typedef {import('./types.js').Event} Event */
@@ -80,7 +80,7 @@ function describeSinks(sinks) {
   }));
 }
 
-/** @param {{project: string, packageName?: string, file: string, follow?: boolean, allowLogs?: boolean, host?: string, port?: number, windowMs?: number, capacity?: number, durationMs?: number, token?: string, alerts?: string, sinks?: string, allowedHosts?: string[], signal?: AbortSignal}} options */
+/** @param {{project: string, packageName?: string, file: string, follow?: boolean, allowLogs?: boolean, host?: string, port?: number, windowMs?: number, intervalMs?: number, capacity?: number, durationMs?: number, token?: string, alerts?: string, sinks?: string, allowedHosts?: string[], signal?: AbortSignal}} options */
 export async function collect(options) {
   // Read and validate inputs before arming the duration timer and abort listener, so a bad
   // --alerts or --sinks file fails fast instead of leaving a pending timer behind.
@@ -124,6 +124,7 @@ export async function collect(options) {
   const timer = options.durationMs ? setTimeout(stop, options.durationMs) : undefined;
   let dashboard;
   const status = quality();
+  const tracker = qualityTracker(status, options.intervalMs ?? 1000);
   try {
     dashboard = await createDashboardServer({
       collector,
@@ -144,6 +145,7 @@ export async function collect(options) {
     async function* samples() {
       for await (const record of input) {
         if (controller.signal.aborted) break;
+        tracker.add(record);
         if (record.event === 'sample') yield record.data;
         else if (record.event === 'span')
           yield { ...record.data, type: /** @type {const} */ ('span') };
@@ -182,19 +184,34 @@ export async function collect(options) {
 
 /**
  * Unlike summarize, replay buffers every record and may run sandboxed code per window, so it
- * keeps a 10,000-event default; --max-events raises it.
- * @param {string} file @param {import('./types.js').CollectorModule} api @param {number} windowMs @param {number} [maxEvents] @returns {Promise<Window[]>}
+ * keeps a 10,000-event default; --max-events raises it. It fills the caller's quality record
+ * through the shared tracker, which judges only the file's records, never the aggregated windows.
+ * @param {string} file @param {import('./types.js').CollectorModule} api @param {number} windowMs @param {number} [maxEvents] @param {number} [intervalMs] @param {import('./types.js').Quality} [status] @returns {Promise<Window[]>}
  */
-export async function readWindows(file, api, windowMs, maxEvents = 10_000) {
+export async function readWindows(
+  file,
+  api,
+  windowMs,
+  maxEvents = 10_000,
+  intervalMs = 1000,
+  status = quality(),
+) {
   /** @type {Window[]} */ const windows = [];
   /** @type {import('./types.js').Sample[]} */ const samples = [];
-  const status = quality();
+  const tracker = qualityTracker(status, intervalMs);
   for await (const record of fileEvents(file, status, { maxEvents })) {
+    tracker.add(record);
     if (record.event === 'window') windows.push(record.data);
     else if (record.event === 'sample') samples.push(record.data);
   }
-  if (status.invalidRecords || status.truncated)
-    throw new Error('rule replay requires valid, untruncated input');
+  if (status.invalidRecords || status.truncated) {
+    const causes = [];
+    if (status.invalidRecords)
+      causes.push(status.invalidRecords + ' invalid lines (rules does not apply --allow-logs)');
+    if (status.truncated)
+      causes.push('the ' + maxEvents + '-event cap was reached (raise it with --max-events)');
+    throw new Error('rule replay requires valid, untruncated input: ' + causes.join('; '));
+  }
   if (windows.length && samples.length)
     throw new Error('rule replay cannot combine raw samples with already aggregated windows');
   if (samples.length) {
@@ -206,7 +223,7 @@ export async function readWindows(file, api, windowMs, maxEvents = 10_000) {
   return windows;
 }
 
-/** @param {{project: string, packageName?: string, file: string, mode: string, rules: string, windowMs?: number, maxEvents?: number}} options */
+/** @param {{project: string, packageName?: string, file: string, mode: string, rules: string, windowMs?: number, intervalMs?: number, maxEvents?: number}} options */
 export async function replayRules(options) {
   if (options.mode !== 'alerts' && options.mode !== 'sandbox')
     throw new Error('--mode must be alerts or sandbox');
@@ -216,7 +233,15 @@ export async function replayRules(options) {
       upstream.load('collector', ['createWindowAggregator', 'createAlertEvaluator'])
     )
   );
-  const windows = await readWindows(options.file, api, options.windowMs ?? 1000, options.maxEvents);
+  const status = quality();
+  const windows = await readWindows(
+    options.file,
+    api,
+    options.windowMs ?? 1000,
+    options.maxEvents,
+    options.intervalMs ?? 1000,
+    status,
+  );
   if (options.mode === 'alerts') {
     /** @type {Rule[]} */ const rules = JSON.parse(await readFile(options.rules, 'utf8'));
     /** @type {import('./types.js').Alert[]} */ const alerts = [];
@@ -230,6 +255,7 @@ export async function replayRules(options) {
       mode: 'alerts',
       ok: true,
       windows: windows.length,
+      quality: status,
       alerts,
     };
   }
@@ -251,6 +277,7 @@ export async function replayRules(options) {
       mode: 'sandbox',
       ok: Object.values(results).every((result) => result.ok),
       windows: windows.length,
+      quality: status,
       results,
     };
   } finally {

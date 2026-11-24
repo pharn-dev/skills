@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { request as httpRequest } from 'node:http';
 import { createServer as createNetServer } from 'node:net';
-import { readFile, writeFile, rename, mkdtemp, rm, cp } from 'node:fs/promises';
+import { readFile, writeFile, rename, mkdtemp, mkdir, rm, cp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -463,4 +463,152 @@ test('collect answers proxy host names only when listed with --allowed-host', as
     const result = await run;
     assert.deepEqual(result.allowedHosts, allowed ? ['phargus.internal'] : []);
   }
+});
+
+// A whole second two minutes ago, so every fixture sample lies in the past.
+const past = () => Math.floor(Date.now() / 1000) * 1000 - 120_000;
+const quietLag = { min: 1, max: 5_000_000, mean: 1_000_000, p50: 1_000_000, p99: 4_000_000 };
+const hotLag = { min: 1, max: 80_000_000, mean: 10_000_000, p50: 5_000_000, p99: 70_000_000 };
+
+test('collect reports the gap and loss of a lossy recording as summarize does', async () => {
+  const start = past() - 60_000;
+  // Ten samples 1000 ms apart, a 58 s hole, ten more. Dropped counters rise by 20/200, reset
+  // to 5/50, then rise by 17/170: 42 samples and 420 spans lost, one reset.
+  const stamps = [];
+  for (let i = 1; i <= 10; i += 1) stamps.push(start + i * 1000);
+  for (let i = 0; i < 10; i += 1) stamps.push(start + 68_000 + i * 1000);
+  const dropped = [10, 12, 15, 20, 24, 27, 30, 30, 30, 30, 5, 5, 8, 10, 12, 15, 18, 20, 22, 22];
+  const file = join(scratch, 'collect-lossy.ndjson');
+  await writeFile(
+    file,
+    ndjson(
+      stamps.map((timestamp, index) =>
+        sample(timestamp, {
+          eventLoop: quietLag,
+          dropped: { samples: dropped[index], spans: dropped[index] * 10 },
+        }),
+      ),
+    ),
+  );
+  const summarized = await summarizeFile(file);
+  assert.equal(summarized.quality.gaps, 1);
+  assert.deepEqual(summarized.quality.loss.delta, { samples: 42, spans: 420 });
+  assert.equal(summarized.quality.loss.resets, 1);
+  for (const follow of [false, true]) {
+    const result = await collect({ project, file, follow, durationMs: 1000, port: 0 });
+    assert.equal(result.quality.gaps, 1, 'follow=' + follow);
+    assert.deepEqual(result.quality.loss, summarized.quality.loss, 'follow=' + follow);
+  }
+});
+
+test('rules reports the hole a forWindows alert spans without changing the alerts', async () => {
+  const file = join(scratch, 'rules-gap.ndjson');
+  await writeFile(
+    file,
+    ndjson([
+      window(1_700_000_000_000, 100_000_000),
+      window(1_700_003_600_000, 100_000_000),
+      window(1_700_003_601_000, 10_000_000),
+    ]),
+  );
+  const rules = join(scratch, 'rules-gap-alerts.json');
+  await writeFile(
+    rules,
+    JSON.stringify([
+      { id: 'lag', metric: 'eventLoop.max', comparison: '>', threshold: 50_000_000, forWindows: 2 },
+    ]),
+  );
+  const alerts = await replayRules({ project, file, mode: 'alerts', rules });
+  assert.deepEqual(
+    alerts.alerts?.map((alert) => [alert.state, alert.windowStart]),
+    [
+      ['firing', 1_700_003_600_000],
+      ['resolved', 1_700_003_601_000],
+    ],
+  );
+  const directory = join(scratch, 'rules-gap-sandbox');
+  await mkdir(directory);
+  await writeFile(
+    join(directory, 'all.js'),
+    "return windows.map(w => ({windowStart:w.start, message:'w'}));",
+  );
+  const sandbox = await replayRules({ project, file, mode: 'sandbox', rules: directory });
+  assert.equal(sandbox.ok, true);
+  for (const result of [alerts, sandbox]) {
+    assert.equal(result.quality.gaps, 1, result.mode);
+    assert.equal(result.quality.invalidRecords, 0, result.mode);
+    assert.equal(result.quality.truncated, false, result.mode);
+    // Window records carry no dropped counters, so loss stays unknown.
+    assert.equal(result.quality.loss.known, false, result.mode);
+  }
+});
+
+test('collect and rules judge a 5000 ms recording at --interval-ms 5000 without gaps', async () => {
+  const start = past() - 60_000;
+  const file = join(scratch, 'interval-5000.ndjson');
+  const samples = Array.from({ length: 12 }, (_, i) =>
+    sample(start + (i + 1) * 5000, { eventLoop: quietLag }),
+  );
+  await writeFile(file, ndjson(samples));
+  const rules = join(scratch, 'interval-5000-alerts.json');
+  await writeFile(rules, '[]');
+  const cli = join(root, 'runtime/phargus.mjs');
+  const common = ['--project', project, '--file', file, '--interval-ms', '5000'];
+  for (const args of [
+    ['collect', ...common, '--duration-ms', '1000', '--port', '0'],
+    ['rules', ...common, '--mode', 'alerts', '--rules', rules],
+  ]) {
+    const run = spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8' });
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(JSON.parse(run.stdout).quality.gaps, 0, args[0]);
+  }
+});
+
+test('a clean recording keeps collect and rules results, and rules adds a clean quality block', async () => {
+  const base = past();
+  const records = [];
+  for (let i = 1; i <= 10; i += 1)
+    records.push(sample(base + i * 1000, { eventLoop: i >= 6 && i <= 8 ? hotLag : quietLag }));
+  for (let i = 0; i < 5; i += 1) records.push(span(base + 1000 + i * 100));
+  const file = join(scratch, 'clean-1000.ndjson');
+  await writeFile(file, ndjson(records));
+  const rules = join(scratch, 'clean-1000-alerts.json');
+  await writeFile(
+    rules,
+    JSON.stringify([
+      { id: 'lag', metric: 'eventLoop.max', comparison: '>', threshold: 50_000_000, forWindows: 2 },
+    ]),
+  );
+  const collected = await collect({ project, file, durationMs: 1000, port: 0, alerts: rules });
+  assert.deepEqual(
+    [collected.windows, collected.spans, collected.alerts, collected.quality.gaps],
+    [10, 5, 2, 0],
+  );
+  const alert = { ruleId: 'lag', metric: 'eventLoop.max', comparison: '>', threshold: 50_000_000 };
+  const replayed = await replayRules({ project, file, mode: 'alerts', rules });
+  assert.equal(replayed.windows, 10);
+  assert.deepEqual(replayed.alerts, [
+    {
+      ...alert,
+      observed: 80_000_000,
+      windowStart: base + 7000,
+      windowEnd: base + 8000,
+      state: 'firing',
+    },
+    {
+      ...alert,
+      observed: 5_000_000,
+      windowStart: base + 9000,
+      windowEnd: base + 10_000,
+      state: 'resolved',
+    },
+  ]);
+  assert.equal(replayed.quality.gaps, 0);
+  assert.equal(replayed.quality.stalledSamples, 0);
+  assert.deepEqual(replayed.quality.loss, {
+    known: true,
+    initial: { samples: 0, spans: 0 },
+    delta: { samples: 0, spans: 0 },
+    resets: 0,
+  });
 });
