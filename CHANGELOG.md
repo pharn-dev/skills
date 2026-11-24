@@ -23,6 +23,11 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Changed
 
+- `pharn-ci` (next release): the `pharn-ci-explain` description also covers
+  a request to run `pharn-ci check` locally and say why it fails. Asked
+  "Run pharn-ci on this branch and tell me why it fails", an agent ran the CLI
+  without loading the skill and missed that a gate that cannot measure fails
+  closed (CORE-374).
 - Repository (no plugin version change): the root `npm test` also runs the
   `src/phargus` unit tests (`src/phargus/test/*.test.mjs`). PHARN discovers its
   gates from the root `package.json`, so before this its verify and regress
