@@ -74,6 +74,11 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   `interrupted` and `quality.truncated` true, as `capture --url` does, instead
   of leaving a 0-byte `manifest.json` when killed. No signal listener stays
   registered after a command returns (CORE-239).
+- `pharn-ci` (next release): `pharn-ci-explain` lists the uncovered lines for
+  `DIFF_COVERAGE_BELOW_THRESHOLD` exactly as the report's
+  `diffCoverage.files[].uncoveredLines` gives them, then explains them from the
+  source, instead of regrouping them by the branches it reads and dropping one
+  (CORE-375).
 - phargus 0.1.1: a raw sample covers the interval that ends at its timestamp, as
   the agent stamps it when the interval closes. `summarize` treated the
   timestamp as the start, so the measured period was one interval late:
