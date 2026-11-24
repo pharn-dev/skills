@@ -9,3 +9,10 @@ useDefault = true
 description = "pharn.records.json holds path-to-SHA-256 pairs, not credentials"
 targetRules = ["generic-api-key"]
 paths = ['''^pharn\.records\.json$''']
+
+# The deleted phargus redaction test (CORE-262) fed made-up tokens through redactJson(). The file is
+# gone from the tree but stays in history, which gitleaks.yml scans in full.
+[[allowlists]]
+description = "phargus redaction test fixtures (in git history only) are fake tokens"
+targetRules = ["aws-access-token", "curl-auth-header", "jwt"]
+paths = ['''^src/phargus/test/redact\.test\.mjs$''']
