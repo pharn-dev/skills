@@ -133,4 +133,5 @@ pause the application and increase memory pressure; see the
 The [skills.sh synchronization workflow](.github/workflows/skills-sh.yml) sends
 install telemetry marked as CI activity. Success confirms installation, not
 telemetry delivery, listing publication, or refresh timing. It does not remove
-old listings. The README describes retries and manual synchronization.
+old listings. [CONTRIBUTING](CONTRIBUTING.md#skillssh-synchronization)
+describes retries and manual synchronization.

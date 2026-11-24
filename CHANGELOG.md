@@ -41,6 +41,16 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
+- `pharn-ci` (next release): `pharn-ci-fix` says the accept label counts only
+  when a reviewer who is not the PR author applies it, so an answer that
+  refuses to apply it names a reviewer instead of handing the author a `gh`
+  command that pharn-ci ignores (`TEST_INTEGRITY_ACCEPT_IGNORED`) (CORE-373).
+- Repository (no plugin version change): the docs say what main does. README's
+  Development section runs `npm run check`, the root gates CI requires, and
+  says `pharn-ci` is not verified with Codex either; SECURITY routes a pharn-ci
+  defect to pharn-ci's policy; LIMITS points to CONTRIBUTING, not README, for
+  skills.sh retries; `src/phargus/evals/README.md` says a client access failure
+  blocks that client's remaining cases (CORE-354).
 - `phargus` 0.1.1: ordinary input problems no longer cost a recording. A
   leading UTF-8 byte order mark no longer makes the first record invalid. A line
   over 1 MiB counts as one invalid record and reading continues, instead of
@@ -63,6 +73,11 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   `interrupted` and `quality.truncated` true, as `capture --url` does, instead
   of leaving a 0-byte `manifest.json` when killed. No signal listener stays
   registered after a command returns (CORE-239).
+- `pharn-ci` (next release): `pharn-ci-explain` lists the uncovered lines for
+  `DIFF_COVERAGE_BELOW_THRESHOLD` exactly as the report's
+  `diffCoverage.files[].uncoveredLines` gives them, then explains them from the
+  source, instead of regrouping them by the branches it reads and dropping one
+  (CORE-375).
 - phargus 0.1.1: a raw sample covers the interval that ends at its timestamp, as
   the agent stamps it when the interval closes. `summarize` treated the
   timestamp as the start, so the measured period was one interval late:
