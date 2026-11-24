@@ -218,9 +218,10 @@ For a flaky-test or JUnit message, say that test results never change the
 verdict, which tests failed and whether they are on the org's quarantine list.
 A failed test is fixed in the test or the code.
 
-When `DIFF_COVERAGE_BELOW_THRESHOLD` decided it, list the files and uncovered
-lines worst first, say how many more covered lines reach the threshold, and
-offer the `pharn-ci-cover` skill to write the tests. Mention what pharn-ci does
+When `DIFF_COVERAGE_BELOW_THRESHOLD` decided it, list the files worst first
+with every line in their `diffCoverage.files[].uncoveredLines`, exactly as the
+report gives them (ranges such as 8-9 are fine), before explaining them from
+the source; say how many more covered lines reach the threshold, and offer the `pharn-ci-cover` skill to write the tests. Mention what pharn-ci does
 not measure when it bears on the question: coverage is not test quality,
 files missing from the coverage report are invisible, and the inventory never
 reads the setup files.
