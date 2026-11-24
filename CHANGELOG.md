@@ -41,6 +41,10 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
+- `pharn-ci` (next release): `pharn-ci-fix` says the accept label counts only
+  when a reviewer who is not the PR author applies it, so an answer that
+  refuses to apply it names a reviewer instead of handing the author a `gh`
+  command that pharn-ci ignores (`TEST_INTEGRITY_ACCEPT_IGNORED`) (CORE-373).
 - `phargus` 0.1.1: ordinary input problems no longer cost a recording. A
   leading UTF-8 byte order mark no longer makes the first record invalid. A line
   over 1 MiB counts as one invalid record and reading continues, instead of
