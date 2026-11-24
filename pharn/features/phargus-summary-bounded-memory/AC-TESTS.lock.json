@@ -1,0 +1,147 @@
+{
+  "schema": "ac-tests-lock/6",
+  "feature": "phargus-summary-bounded-memory",
+  "mode": "test-first",
+  "spec": {
+    "spec_id": "phargus-summary-bounded-memory",
+    "spec_content_hash": "49c3f80494227990032c5e686ebddbda22ad0513534c4b4d4177c8e8d3740ef1"
+  },
+  "mapping": {
+    "path": "pharn/features/phargus-summary-bounded-memory/AC-TESTS.md",
+    "sha256": "228ff1bdea839a4601eea8cbbf5a3f91d479c9bc975a9bda86d415f88999b83c"
+  },
+  "files": [
+    {
+      "path": "src/phargus/test/route-cap-docs.test.mjs",
+      "sha256": "1e2005734b393c821fd881c5b60d2f806bf70d69d7ade07b55b325cb12433fc3"
+    },
+    {
+      "path": "src/phargus/test/summary-bounded-memory.test.mjs",
+      "sha256": "a2135a08dcd8ed2ad5c6ecb128309f8f39fd22f6d913376b522b8f91daa228b1"
+    },
+    {
+      "path": "src/phargus/test/summary-route-cap.test.mjs",
+      "sha256": "7231b62bc61e4bc58f69fb06c31e44d2dd4caa88cb5692fed4d816a3cf7fb515"
+    }
+  ],
+  "bootstrap": null,
+  "red_run": {
+    "stamp_sha256": "4032ef698adbe76ed9d2aab7db7944ff40c3d6b76cef6c906fcd881fb0d8e680",
+    "files_sha256": "48a2442283df7f6ae4255d6c088378301ff3d267465e603ba425164672b88992",
+    "gates": [
+      {
+        "gate": "test",
+        "results_sha256": "d170fac55e8aa603138fc6532d800717cf20a311015c87c35d4bdabbf375abf6"
+      }
+    ],
+    "acs": [
+      {
+        "id": "AC-1",
+        "tests": [
+          "src/phargus/test/summary-route-cap.test.mjs::AC-1: 10,001 distinct pairs fold the last pair into one (other) route and flag the table"
+        ]
+      },
+      {
+        "id": "AC-2",
+        "tests": [
+          "src/phargus/test/summary-route-cap.test.mjs::AC-2: 9,999 or 10,000 distinct pairs are all tracked and nothing is folded"
+        ]
+      },
+      {
+        "id": "AC-3",
+        "tests": [
+          "src/phargus/test/summary-route-cap.test.mjs::AC-3: whole-recording statistics and the (other) row stay exact past the cap"
+        ]
+      },
+      {
+        "id": "AC-4",
+        "tests": [
+          "src/phargus/test/summary-route-cap.test.mjs::AC-4: a 50-pair summary is byte-identical to phargus 0.1.1 apart from routesFolded"
+        ]
+      },
+      {
+        "id": "AC-5",
+        "tests": [
+          "src/phargus/test/summary-route-cap.test.mjs::AC-5: the event-limits file fixture keeps every span and is not folded",
+          "src/phargus/test/summary-route-cap.test.mjs::AC-5: the summary-regressions compare fixture carries routesFolded false on both sides",
+          "src/phargus/test/summary-route-cap.test.mjs::AC-5: the summary-regressions contained-span fixtures keep their request metrics",
+          "src/phargus/test/summary-route-cap.test.mjs::AC-5: the summary-regressions span-only fixture has no aligned requests and is not folded",
+          "src/phargus/test/summary-route-cap.test.mjs::AC-5: the summary-routes 25-route fixture keeps the top-20 cut and is not folded",
+          "src/phargus/test/summary-route-cap.test.mjs::AC-5: the summary-routes containment fixture keeps one route and is not folded",
+          "src/phargus/test/summary-route-cap.test.mjs::AC-5: the summary-routes evidence and empty fixtures are not folded",
+          "src/phargus/test/summary-route-cap.test.mjs::AC-5: the summary-routes ordering fixture keeps its routes and is not folded"
+        ]
+      },
+      {
+        "id": "AC-6",
+        "tests": [
+          "src/phargus/test/summary-bounded-memory.test.mjs::AC-6: summarize --file finishes on 200,000 unique-path spans with a 64 MB heap"
+        ]
+      },
+      {
+        "id": "AC-7",
+        "tests": [
+          "src/phargus/test/summary-bounded-memory.test.mjs::AC-7: compare finishes on two 200,000 unique-path recordings with a 64 MB heap"
+        ]
+      },
+      {
+        "id": "AC-8",
+        "tests": [
+          "src/phargus/test/route-cap-docs.test.mjs::AC-8: data.md and tools.md name the route cap, (other), routesFolded and the lower bound"
+        ]
+      },
+      {
+        "id": "AC-9",
+        "tests": [
+          "src/phargus/test/route-cap-docs.test.mjs::AC-9: the Unreleased Fixed section has a phargus 0.1.1 bullet for the route cap"
+        ]
+      }
+    ]
+  },
+  "test_infra": {
+    "levels": [
+      "integration",
+      "unit"
+    ],
+    "gates": [
+      {
+        "id": "test",
+        "script": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./.github/scripts/pharn-test-reporter.mjs --test-reporter-destination=stdout .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
+        "pre": null,
+        "post": null,
+        "results": "pharn-json"
+      }
+    ],
+    "chained": [],
+    "configs": [],
+    "script_files": [
+      {
+        "path": ".github/scripts/pharn-test-reporter.mjs",
+        "sha256": "0f6e7369360cc8d7621476f349dc5d3fb08ce968906304f8e6ee2f4ad2ea7058"
+      }
+    ],
+    "jest": null,
+    "exclude": [],
+    "other_gates": [
+      {
+        "id": "format:check",
+        "script": "prettier --check .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint",
+        "script": "eslint .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint:md",
+        "script": "markdownlint-cli2",
+        "pre": null,
+        "post": null
+      }
+    ],
+    "other_chained": []
+  }
+}

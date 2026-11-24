@@ -53,7 +53,12 @@ are capture locations, not result destinations.
 An inconclusive comparison is a valid result, not a command failure.
 
 Doctor lists script names and the known agent configuration fields, without echoing
-inline script credentials or arbitrary config values. Inspect the application's own
+inline script credentials or arbitrary config values. application.type is module or
+commonjs; from phargus.config.json it reports output only as a string, intervalMs and
+queueBound only as positive integers and enabled only as a boolean, and leaves out any
+other value. Script names and output are cut to 200 characters followed by …. When only
+phargus.config.js exists, config is { file: phargus.config.js, read: false }: doctor does
+not run it. Inspect the application's own
 package.json locally when selecting its start command.
 
 Raw sample interval precedence: explicit --interval-ms, then the intervalMs a capture
@@ -71,7 +76,9 @@ labels too to explain the intended change. Summaries reject mixed sample/window 
 align request metrics with runtime coverage; requests reports excluded spans and their
 separate overall period. requests.routes lists up to 20 method+path entries (count,
 p50Ns, p99Ns, maxNs, serverErrors) from the same selected spans, ordered by count then
-p99Ns; requests.distinctRoutes counts every selected pair, so truncation is visible.
+p99Ns; requests.distinctRoutes counts the selected pairs, so truncation is visible. Past
+10,000 tracked pairs, later pairs are counted in one (other) route, requests.routesFolded
+is true and requests.distinctRoutes is a lower bound.
 
 collect --project /app --file /app/.phargus/raw.ndjson --follow serves the collector and
 dashboard until SIGINT/SIGTERM. --duration-ms bounds a diagnostic run; --port 0 selects

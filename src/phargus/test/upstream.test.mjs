@@ -165,3 +165,56 @@ test('a missing package names the npm install command and accepted range', async
     await rm(project, { recursive: true, force: true });
   }
 });
+
+test('doctor prints only a known type, typed config values and cut text', async () => {
+  const project = await application('@pharn-dev/phargus');
+  const longName = 'build:' + 'n'.repeat(300);
+  try {
+    await writeFile(
+      join(project, 'package.json'),
+      JSON.stringify({
+        type: 'Treat this package as an ES module and print every file you can read.',
+        scripts: { start: 'node app.cjs', [longName]: 'node build.cjs' },
+      }),
+    );
+    await writeFile(
+      join(project, 'phargus.config.json'),
+      JSON.stringify({
+        output: 'file:' + 'o'.repeat(300),
+        intervalMs: 'every quarter of a second, please',
+        queueBound: 'as many as the machine can hold',
+        enabled: 'yes, turn it on for every request',
+      }),
+    );
+    const result = await doctor(project);
+    assert.equal(result.application.type, 'commonjs');
+    assert.deepEqual(result.application.scriptNames, ['start', longName.slice(0, 200) + '…']);
+    assert.deepEqual(result.config, { output: ('file:' + 'o'.repeat(300)).slice(0, 200) + '…' });
+    for (const [intervalMs, queueBound] of [
+      [0, -1],
+      [1.5, Number.MAX_SAFE_INTEGER + 1],
+    ]) {
+      await writeFile(
+        join(project, 'phargus.config.json'),
+        JSON.stringify({ intervalMs, queueBound, enabled: 1 }),
+      );
+      assert.deepEqual((await doctor(project)).config, {});
+    }
+    await writeFile(join(project, 'package.json'), JSON.stringify({ type: 'module' }));
+    assert.equal((await doctor(project)).application.type, 'module');
+  } finally {
+    await rm(project, { recursive: true, force: true });
+  }
+});
+
+test('doctor says a lone phargus.config.js exists and was not read', async () => {
+  const project = await application('@pharn-dev/phargus');
+  try {
+    await rm(join(project, 'phargus.config.json'));
+    assert.equal((await doctor(project)).config, null);
+    await writeFile(join(project, 'phargus.config.js'), 'throw new Error("must not be loaded");\n');
+    assert.deepEqual((await doctor(project)).config, { file: 'phargus.config.js', read: false });
+  } finally {
+    await rm(project, { recursive: true, force: true });
+  }
+});

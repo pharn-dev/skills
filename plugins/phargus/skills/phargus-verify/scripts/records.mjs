@@ -9,6 +9,14 @@ export function object(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+/** Longest recording or project text a helper prints; a longer value is cut and ends with '…'. */
+export const TEXT_LIMIT = 200;
+
+/** @param {string} value */
+export function shorten(value) {
+  return value.length > TEXT_LIMIT ? value.slice(0, TEXT_LIMIT) + '…' : value;
+}
+
 /** @param {unknown} value @param {string} key @returns {unknown} */
 export function at(value, key) {
   for (const part of key.split('.')) {
@@ -214,8 +222,9 @@ export function classifyLine(line) {
 }
 
 /**
- * Streams a whole file unless maxEvents is given: a file is already bounded and summarizing
- * it is fast, so a default cap would only truncate evidence. Live SSE keeps its own limit.
+ * Streams a whole file unless maxEvents is given: a default cap would truncate evidence, so
+ * the summary keeps bounded per-span state instead (numbers only, with tracked routes capped
+ * in summary.mjs). Live SSE keeps its own limit.
  * An aborted options.signal ends the read quietly; the caller records why it stopped. Each wait
  * for a line is raced against the signal: a read blocked on a pipe whose writer is silent does
  * not settle when the stream is destroyed, only when the writer writes or closes.
@@ -267,7 +276,7 @@ export function sampleInterval(timestamp, intervalMs) {
 }
 
 /** @param {unknown} value @returns {value is number} */
-function positiveInteger(value) {
+export function positiveInteger(value) {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
 }
 

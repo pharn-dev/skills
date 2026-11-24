@@ -25,8 +25,18 @@ compared in whole milliseconds: a span ending a fraction of a millisecond after 
 contained. Spans crossing either boundary are excluded. Without runtime data, those
 request metrics are null. Zero observed requests does not establish complete request tracing coverage.
 requests.routes groups the same selected spans by exact method and path (top 20 by
-count, then p99Ns); requests.distinctRoutes is the untruncated number of groups. A route
-with few spans has unstable percentiles; read count before p99Ns.
+count, then p99Ns); requests.distinctRoutes is the number of groups. The helper tracks
+the first 10,000 distinct method and path pairs in recording order; spans of later pairs
+are counted in one route whose method and path are both (other), and requests.routesFolded
+is true. The route table is then partial and requests.distinctRoutes is a lower bound;
+request counts, percentiles, errors and rate still use every selected span. A route with
+few spans has unstable percentiles; read count before p99Ns.
+A span's path, and a backpressure hotspot's site, longer than the 200-character limit is
+cut to its first 200 characters followed by …, before routes and hotspots are grouped. A
+method that is not 1 to 32 letters or hyphens is reported as (other) and keeps its own
+path. quality.shortenedValues counts every cut value; it is not an evidence problem and
+does not change comparable. From raw samples, memory.first and memory.last keep only
+heapUsed, heapTotal, rss, external and arrayBuffers.
 
 The agent stamps a raw sample when its interval closes, so a sample stamped T measured
 (T - interval, T]. The raw sample period runs from the first timestamp minus one interval to
