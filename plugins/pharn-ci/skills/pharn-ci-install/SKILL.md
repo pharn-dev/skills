@@ -130,13 +130,28 @@ Follow [references/coverage.md](references/coverage.md) for the runner:
   - `paths.suggestedRoot`: the directory package-relative paths start from.
     Use it as `coverage.root` only when there is one package; with several,
     have each runner write repo-relative paths instead, since one root applies
-    to every file.
+    to every file. Write the value as a quoted YAML string
+    (`root: "packages/core"`). It is `null` when there is none, and also when
+    the directory name has a control character or line break, leading or
+    trailing space or over 200 characters; a note then says so. Set no root
+    from such a name.
+  - `paths.unmatchedExample`: one coverage path that matched no tracked file,
+    or `null` under the same name rules.
   - `coverage[].ignored` and `tracked`: fix `.gitignore` when `ignored` is
-    `false`.
+    `false`. `ignored` is `null` when git cannot tell, for example for a file
+    behind a symlinked directory such as Bazel's `bazel-out`; check that path
+    by hand.
+  - `discovery`: `{"kind": "not-run", "files": []}` whenever `--coverage` is
+    given, since pharn-ci does not use auto-discovery while `coverage.file` is
+    set.
   - `paths.untrackedOnDisk`: paths of files not committed yet; they match
     once committed.
   - `"git": false`: git could not run, so paths were matched against files
     on disk and `tracked`/`ignored` are `null`. Say so.
+  - Exit 2 with a message naming the file and the reason: a coverage file
+    exists but cannot be read (not a regular file, over 256 MiB, or an error
+    such as `EACCES`). Fix that and run it again. A missing file is
+    `COVERAGE_FILE_MISSING`, not exit 2.
 - Act on every code, run it again, and quote the final `codes` in your
   answer.
 
