@@ -651,7 +651,7 @@ const VERDICTS = new Set(["pass", "warn", "fail"]);
 export function readReport(text) {
   let r;
   try {
-    r = JSON.parse(text);
+    r = JSON.parse(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text);
   } catch (err) {
     throw new UsageError(`the report is not JSON: ${err.message}`);
   }
@@ -1027,7 +1027,8 @@ function realGit(cwd, args) {
   return execFileSync("git", ["--literal-pathspecs", ...args], {
     cwd,
     encoding: "utf8",
-    env: { ...process.env, LC_ALL: "C" },
+    // GIT_OPTIONAL_LOCKS=0 stops `git status` from refreshing .git/index, so the helper writes nothing.
+    env: { ...process.env, LC_ALL: "C", GIT_OPTIONAL_LOCKS: "0" },
     stdio: ["ignore", "pipe", "pipe"],
     maxBuffer: 256 * 1024 * 1024,
     timeout: 120_000,
