@@ -65,64 +65,11 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   defect to pharn-ci's policy; LIMITS points to CONTRIBUTING, not README, for
   skills.sh retries; `src/phargus/evals/README.md` says a client access failure
   blocks that client's remaining cases (CORE-354).
-- `phargus` 0.1.1: ordinary input problems no longer cost a recording. A
-  leading UTF-8 byte order mark no longer makes the first record invalid. A line
-  over 1 MiB counts as one invalid record and reading continues, instead of
-  failing the whole file; `collect` still fails on it as corrupt data, and SSE
-  capture drops the rest of that message. With `--allow-logs`, a JSON object is
-  a corrupt Phargus record only when it carries a Phargus field of the right
-  type (a numeric `timestamp` or `start`, an object `eventLoop`,
-  `type: "span"`, a string `ruleId` or an event envelope), so winston, pino and
-  `{"type":"http"}` lines count as ignored logs. A capture manifest whose
-  `quality.invalidRecords` or `quality.ignoredLogs` is missing or not a
-  non-negative integer is refused as an unsupported capture manifest, instead
-  of printing a `null` counter. A capture that fails before its first event
-  removes the `events.ndjson` and `manifest.json` it reserved, so a retry into
-  the same `--out` works, and the error names the network cause
-  (`fetch failed: ECONNREFUSED`, `ENOTFOUND` or `unexpected redirect`)
-  (CORE-240).
-- `phargus` 0.1.1: every command stops on the first SIGINT or SIGTERM.
-  `summarize`, `compare`, `heap`, `rules` and `doctor` end with Node's default
-  action. `capture --file` writes its manifest with `termination`
-  `interrupted` and `quality.truncated` true, as `capture --url` does, instead
-  of leaving a 0-byte `manifest.json` when killed. No signal listener stays
-  registered after a command returns (CORE-239).
 - `pharn-ci` (next release): `pharn-ci-explain` lists the uncovered lines for
   `DIFF_COVERAGE_BELOW_THRESHOLD` exactly as the report's
   `diffCoverage.files[].uncoveredLines` gives them, then explains them from the
   source, instead of regrouping them by the branches it reads and dropping one
   (CORE-375).
-- phargus 0.1.1: a raw sample covers the interval that ends at its timestamp, as
-  the agent stamps it when the interval closes. `summarize` treated the
-  timestamp as the start, so the measured period was one interval late:
-  requests in the first second after start counted as `outsidePeriod`, requests
-  after the last sample counted as inside, and `compare` answered
-  `inconclusive` ("request evidence outside runtime interval") for a normal
-  capture. The period now runs from the first timestamp minus one interval to
-  the last timestamp; `period.durationMs` is unchanged and window records keep
-  their own start and end. The period end is inclusive and a span's end is
-  compared in whole milliseconds, so a span drained at the last tick is still
-  contained. `capture` and `summarize` share one definition of a sample's
-  interval, and `knowledge/data.md` states the rule (CORE-235).
-- phargus 0.1.1: a raw sample delayed by a synchronous stall, and explained by
-  its own `eventLoop.max`, now counts in `quality.stalledSamples` and
-  `quality.stalledMs` instead of `quality.gaps`. A sample whose lateness is more
-  than half an interval but at most its own `eventLoop.max` plus half an
-  interval is stalled; a repeated or backwards timestamp, or a late sample its
-  stall does not explain, is still a gap. Sample coverage counts the stalled
-  time, so a recording with a stalled tick is neither short of the declared
-  `durationMs` nor of the other recording. Before, such a recording made
-  `compare` answer `inconclusive` ("measurement gaps"). Window records are
-  unchanged (CORE-236).
-- phargus 0.1.1: `collect` (from `--file` and `--follow`) and `rules` (both
-  modes) now count `quality.gaps`, `quality.stalledSamples`,
-  `quality.stalledMs` and `quality.loss` through the same tracker as
-  `summarize`. `rules` results gain a `quality` block, and `--interval-ms` now
-  reaches both commands, defaulting to 1000. The `rules` refusal names its
-  cause: invalid lines, or the event cap (raise it with `--max-events`). Before,
-  `collect`'s `gaps` and `loss` always stayed at their initial values and
-  `rules` reported no quality, so a `forWindows` alert could span a hole
-  unseen. Alert evaluation is unchanged (CORE-237).
 - `pharn-ci` evals (no plugin version change): three `install-*` judge graders
   no longer fail answers that follow `pharn-ci-install`.
   `install-upgrade-0-5` requires only the dependency safety change and takes
@@ -217,24 +164,84 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   `npx skills add pharn-dev/skills --skill '*'`, the 16
   `source-command-pharn-*` skills are installed and the CLI will not remove
   them; delete them by hand (for example with `npx skills remove`).
-- `phargus` 0.1.1: the helpers accept the published `@pharn-dev/phargus` 0.1.x
+
+## [phargus 0.1.1] - 2026-11-25
+
+### Changed
+
+- The helpers accept the published `@pharn-dev/phargus` 0.1.x
   (`>=0.1.0 <0.2.0`) instead of only the unreleased 0.0.1, and the tested runtime
   is pinned to tag v0.1.0 (819a795875fc547e7daeccc0f0b50846ba642286). The setup
   recipe installs `@pharn-dev/phargus@0.1.0` from npm, with a tag build as the
-  fallback. No reviewed run is recorded for 0.1.1 under the new gate (see
-  Changed), so it is not released yet.
-- `phargus` 0.1.1: file reads by `capture --file`, `summarize` and `compare`
+  fallback.
+- File reads by `capture --file`, `summarize` and `compare`
   have no event-count cap unless `--max-events` is given; live SSE capture and
   `rules` replay keep the 10,000-event default. Before, a 60 s recording at
   200 req/s (12,000 spans) was truncated at 10,000 events and `compare` reported
   it as inconclusive. The skills now say how to raise the live-capture limit
   (#26).
-- `phargus` 0.1.1: `phargus-setup` and the tools reference say that a helper
+- `phargus-setup` and the tools reference say that a helper
   result the person names, such as `tool-result.json`, is written to exactly
   that path, a relative name resolving against the application directory, and
   that `.phargus/` holds captures only. Before, the setup eval saved the
   summarize result to `.phargus/tool-result.json` (#28).
-- `phargus` 0.1.1: `summarize --file` and `compare` no longer run out of memory
+
+### Fixed
+
+- Ordinary input problems no longer cost a recording. A
+  leading UTF-8 byte order mark no longer makes the first record invalid. A line
+  over 1 MiB counts as one invalid record and reading continues, instead of
+  failing the whole file; `collect` still fails on it as corrupt data, and SSE
+  capture drops the rest of that message. With `--allow-logs`, a JSON object is
+  a corrupt Phargus record only when it carries a Phargus field of the right
+  type (a numeric `timestamp` or `start`, an object `eventLoop`,
+  `type: "span"`, a string `ruleId` or an event envelope), so winston, pino and
+  `{"type":"http"}` lines count as ignored logs. A capture manifest whose
+  `quality.invalidRecords` or `quality.ignoredLogs` is missing or not a
+  non-negative integer is refused as an unsupported capture manifest, instead
+  of printing a `null` counter. A capture that fails before its first event
+  removes the `events.ndjson` and `manifest.json` it reserved, so a retry into
+  the same `--out` works, and the error names the network cause
+  (`fetch failed: ECONNREFUSED`, `ENOTFOUND` or `unexpected redirect`)
+  (CORE-240).
+- Every command stops on the first SIGINT or SIGTERM.
+  `summarize`, `compare`, `heap`, `rules` and `doctor` end with Node's default
+  action. `capture --file` writes its manifest with `termination`
+  `interrupted` and `quality.truncated` true, as `capture --url` does, instead
+  of leaving a 0-byte `manifest.json` when killed. No signal listener stays
+  registered after a command returns (CORE-239).
+- A raw sample covers the interval that ends at its timestamp, as
+  the agent stamps it when the interval closes. `summarize` treated the
+  timestamp as the start, so the measured period was one interval late:
+  requests in the first second after start counted as `outsidePeriod`, requests
+  after the last sample counted as inside, and `compare` answered
+  `inconclusive` ("request evidence outside runtime interval") for a normal
+  capture. The period now runs from the first timestamp minus one interval to
+  the last timestamp; `period.durationMs` is unchanged and window records keep
+  their own start and end. The period end is inclusive and a span's end is
+  compared in whole milliseconds, so a span drained at the last tick is still
+  contained. `capture` and `summarize` share one definition of a sample's
+  interval, and `knowledge/data.md` states the rule (CORE-235).
+- A raw sample delayed by a synchronous stall, and explained by
+  its own `eventLoop.max`, now counts in `quality.stalledSamples` and
+  `quality.stalledMs` instead of `quality.gaps`. A sample whose lateness is more
+  than half an interval but at most its own `eventLoop.max` plus half an
+  interval is stalled; a repeated or backwards timestamp, or a late sample its
+  stall does not explain, is still a gap. Sample coverage counts the stalled
+  time, so a recording with a stalled tick is neither short of the declared
+  `durationMs` nor of the other recording. Before, such a recording made
+  `compare` answer `inconclusive` ("measurement gaps"). Window records are
+  unchanged (CORE-236).
+- `collect` (from `--file` and `--follow`) and `rules` (both
+  modes) now count `quality.gaps`, `quality.stalledSamples`,
+  `quality.stalledMs` and `quality.loss` through the same tracker as
+  `summarize`. `rules` results gain a `quality` block, and `--interval-ms` now
+  reaches both commands, defaulting to 1000. The `rules` refusal names its
+  cause: invalid lines, or the event cap (raise it with `--max-events`). Before,
+  `collect`'s `gaps` and `loss` always stayed at their initial values and
+  `rules` reported no quality, so a `forWindows` alert could span a hole
+  unseen. Alert evaluation is unchanged (CORE-237).
+- `summarize --file` and `compare` no longer run out of memory
   on a large recording. A 1.1 GB recording of 5,000,000 spans with unique paths
   aborted with a V8 heap out-of-memory crash (exit 134) and printed no JSON. A
   summary now keeps only numbers per span, and the route table tracks at most
@@ -242,7 +249,7 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   new `requests.routesFolded` is `true`, and `requests.distinctRoutes` is then a
   lower bound. Whole-recording counts and request percentiles stay exact, and
   file reads still have no default event cap (CORE-234).
-- `phargus` 0.1.1: `summarize` and `doctor` print only bounded, validated text
+- `summarize` and `doctor` print only bounded, validated text
   from a recording or project. A crafted recording of six samples and one span
   produced 502,494 bytes of output, with an extra `memory` key, a 200,044-character
   hotspot site, a 300,003-character path and a method holding an escape sequence.
@@ -913,6 +920,7 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 - CI: `claude plugin validate --strict` and markdownlint.
 
 [Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.1...HEAD
+[phargus 0.1.1]: https://github.com/pharn-dev/skills/compare/phargus-v0.1.0...phargus-v0.1.1
 [pharn 0.5.1]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.0...pharn-v0.5.1
 [pharn-ci 0.4.1]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.4.0...pharn-ci-v0.4.1
 [pharn-ci 0.4.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.3.1...pharn-ci-v0.4.0
