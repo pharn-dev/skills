@@ -1,10 +1,10 @@
-# Turning a policy on (pharn-ci 0.4.x to 0.9.x)
+# Turning a policy on (pharn-ci 0.4.x to 0.11.x)
 
 Source: pharn-ci v0.4.0 at commit `a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` and
-v0.9.1 at `dec4a0ed2d0b111233522753909c74a90b6d09e0`: README ("Org policy",
+v0.11.0 at `bd7b36ea07588884418f5002ae74afc35135c400`: README ("Org policy",
 "Policy mode", "Upload to pharn.dev", "Action reference"), CHANGELOG and
 `docs/LIMITS.md`. pharn-ci 0.1.x to 0.3.x have no `policy` input and read no
-policy. The `policy` input and its values are unchanged from 0.4.0 to 0.9.1.
+policy. The `policy` input and its values are unchanged from 0.4.0 to 0.11.0.
 
 A policy reaches a run in one of two ways: the pharn.dev app serves it for the
 repository (an app policy), or the repository carries it in a file
@@ -62,7 +62,8 @@ path. Because the pull request carries the file, it can only tighten:
   0.6.0 lower an agent PR size cap (P14); from 0.7.0 add injection phrases;
 - a `file:` policy may not set exclusions (`coverage.exclude`), a `coverage.root`,
   an accept label (`test_integrity.accept_label`), `policy.required`,
-  `injection.exempt` (0.7.0) or `dependencies.registries` (0.8.0), and a value
+  `injection.exempt` (0.7.0), `dependencies.registries` (0.8.0) or
+  `dependencies.allowed_hosts` (0.10.0), and a value
   lower than the workflow inputs give is ignored; both are named in
   `POLICY_OVERRIDE_IGNORED`;
 - P11 always blocks under a `file:` policy, and the policy file is also read at

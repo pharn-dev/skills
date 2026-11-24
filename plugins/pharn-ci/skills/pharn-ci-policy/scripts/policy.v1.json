@@ -117,7 +117,7 @@
       }
     },
     "test_integrity": {
-      "description": "Test-integrity signal settings (TI01-TI16).",
+      "description": "Test-integrity signal settings (TI01-TI17).",
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -127,7 +127,7 @@
           "enum": ["block", "warn", "off"]
         },
         "signals": {
-          "description": "Per-signal severity overrides, keyed by signal id TI01-TI16; any other key (TI17 included) is an error; feeds the TI signals. Tighten: per-signal severities, block > warn > info > off.",
+          "description": "Per-signal severity overrides, keyed by signal id TI01-TI17; any other key (TI18 included) is an error; feeds the TI signals. Tighten: per-signal severities, block > warn > info > off.",
           "type": "object",
           "additionalProperties": false,
           "properties": {
@@ -193,6 +193,10 @@
             },
             "TI16": {
               "description": "Severity of signal TI16. Tighten: block > warn > info > off.",
+              "$ref": "#/$defs/severity"
+            },
+            "TI17": {
+              "description": "Severity of signal TI17. Tighten: block > warn > info > off.",
               "$ref": "#/$defs/severity"
             }
           }
@@ -344,7 +348,7 @@
           "type": "boolean"
         },
         "registries": {
-          "description": "Package ecosystems whose new dependencies are checked; each maps to a fixed host list in the Action, so a policy never names a host. Tighten: dependencies.registries, intersection.",
+          "description": "Package ecosystems whose new dependencies are checked; each maps to a fixed host list in the Action, so this key never names a host (dependencies.allowed_hosts names the private registries a team runs). Tighten: dependencies.registries, intersection.",
           "type": "array",
           "maxItems": 1000,
           "items": { "type": "string", "enum": ["npm", "pypi"] }
@@ -360,6 +364,12 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 1000000000
+        },
+        "allowed_hosts": {
+          "description": "Registry hosts a team runs (Artifactory, Nexus, a private PyPI index), besides the four public ones, whose URLs D05 accepts: exact host names matched case-insensitively, at most 50, each 1-253 characters of the letters A-Z and a-z, digits, . and -, with no scheme, path, port, user name or wildcard. A URL still has to be https with no user name, password or port. Tighten: an app policy's list replaces the dependency-allowed-hosts workflow input's, so an input host the list leaves out is ignored; a policy file may not set it (it is recorded and not applied), and .pharn/ci.yml may not set it either. The Action never calls an allowed host, and never looks up a package name resolved from one.",
+          "type": "array",
+          "maxItems": 50,
+          "items": { "$ref": "#/$defs/host" }
         }
       }
     },
@@ -463,11 +473,18 @@
       "pattern": "^(?!\\s)(?![\\s\\S]*\\s$)[^\\u0000-\\u001F\\u007F]*$"
     },
     "login": {
-      "description": "LOGIN: a GitHub login (a letter or digit, then up to 38 letters, digits or -), optionally followed by [bot]; at most 44 characters.",
+      "description": "LOGIN: a GitHub login (a letter or digit, then up to 38 letters, digits or -), optionally followed by [bot]; or an Enterprise Managed User login handle_shortcode (a letter or digit, then letters, digits or -, then one _ and a shortcode of 3 to 8 letters or digits; at most 39 characters, never with [bot]); at most 44 characters.",
       "type": "string",
       "minLength": 1,
       "maxLength": 44,
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,38}(\\[bot\\])?$"
+      "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9-]{0,38}(\\[bot\\])?|(?=[A-Za-z0-9_-]{1,39}$)[A-Za-z0-9][A-Za-z0-9-]*_[A-Za-z0-9]{3,8})$"
+    },
+    "host": {
+      "description": "HOST: a registry host name, 1-253 characters of the letters A-Z and a-z, digits, . and -; no scheme, path, port, user name or wildcard.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 253,
+      "pattern": "^[A-Za-z0-9.-]+$"
     },
     "requiredHook": {
       "description": "A hook that must exist: an event and an optional matcher.",

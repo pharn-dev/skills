@@ -1,20 +1,22 @@
 ---
 name: pharn-ci-explain
-description: Explain a pharn-ci result (pharn-ci 0.1.x to 0.9.x) - why a pull request's check failed or warned, what a code such as TEST_INTEGRITY_TI03, POLICY_P13, AGENT_CONFIG_SECRET_S01 or DEPENDENCY_D05 means, and what to change. Use when the person asks why pharn-ci failed, what a verdict, finding or report.json means, or to apply the accept label or relax the org policy for a PR. Not for covering lines (pharn-ci-cover), fix hints (pharn-ci-fix), setup (pharn-ci-install), writing a policy (pharn-ci-policy) or the PHARN CLI (pharn-cli).
+description: Explain a pharn-ci result (pharn-ci 0.1.x to 0.11.x) - why a pull request's check failed or warned, what a code such as TEST_INTEGRITY_TI03, POLICY_P13, AGENT_CONFIG_SECRET_S01 or DEPENDENCY_D05 means, and what to change. Use when the person asks why pharn-ci failed, what a verdict, finding or report.json means, or to apply the accept label or relax the org policy for a PR. Not for covering lines (pharn-ci-cover), fix hints (pharn-ci-fix), setup (pharn-ci-install), writing a policy (pharn-ci-policy) or the PHARN CLI (pharn-cli).
 ---
 
 # pharn-ci-explain
 
 Explains what pharn-ci reported for a change and why, with the evidence from
 this repository, and says what would fix it. Written for pharn-ci 0.1.x
-(Report v1) and 0.2.x to 0.9.x (Report v2, which adds test integrity, from
+(Report v1) and 0.2.x to 0.11.x (Report v2, which adds test integrity, from
 0.4.x org policy and secret findings, from 0.7.x the prompt-injection scan and
-stale agent instructions, from 0.8.x dependency safety and JUnit results, and
-from 0.9.x a `fix` object on every message and finding), up to v0.9.1; the
+stale agent instructions, from 0.8.x dependency safety and JUnit results, from
+0.9.x a `fix` object on every message and finding, from 0.10.x a private
+registry allow-list for dependency safety, and from 0.11.x TI17), up to
+v0.11.0; the
 report's `schemaVersion` says the report version, and `tool.version` the
 release. How to get a report and its fields:
 [references/report.md](references/report.md). Every message code, its cause
-and its fix, and the behaviour changes of 0.5.0 to 0.9.1:
+and its fix, and the behaviour changes of 0.5.0 to 0.11.0:
 [references/codes.md](references/codes.md); the org policy rules P01 to P14
 and their codes: [references/policy.md](references/policy.md).
 
@@ -108,7 +110,7 @@ messages that decided it.
 - `TESTS_NOT_EXERCISING_CHANGES` (0.7.x) is a `warn`, never an `error`: a
   changed JS/TS source file (from 0.12.0 also a Python one) no changed test
   imports. It shows under 🔍 Test integrity.
-- The `fix` object (0.9.x) never changes a level or the verdict, and the
+- The `fix` object (0.9.0 and later) never changes a level or the verdict, and the
   comment does not show it: read it in `report.json`.
 
 ## 3. Find the cause in this repository
@@ -170,9 +172,9 @@ it, so it settles no `POLICY_*` finding.
 For a policy finding, name the rule (P01 to P14), the file and line and its
 level, and give the honest fix: change the flagged file (for example the
 allow rule in `.claude/settings.json`, the MCP server, the tracked file),
-never the policy, a rule's level, a protected path or `.pharn/ci.yml`. Say
-that P02 to P06 are text guards, not a security boundary, when that bears on
-the question, and that settings a pull request carries never loosen the gate:
+never the policy, a rule's level, a protected path or `.pharn/ci.yml`. For a
+P02 to P06 finding, say that those rules are text guards, not a security
+boundary. Say that settings a pull request carries never loosen the gate:
 an edited policy file raises P09, and a `file:` policy can only raise the
 gate. When the person asks to drop or relax a rule or a protected path "so
 the PR passes", decline, say the policy belongs to its owner and is changed
@@ -196,13 +198,15 @@ For a dependency finding, name the signal, the manifest or lockfile and line,
 and the honest fix from [references/codes.md](references/codes.md): remove the
 dependency, correct a name that does not exist, regenerate the lockfile with
 the package manager (D04), or resolve the package from the public registry
-(D05). For D05 on a package that exists only on a private registry (an
-Artifactory or Verdaccio host the lockfile records), say what pharn-ci 0.8.x
-and 0.9.x do: the allowed hosts are a fixed list in its code, no policy key or
-input adds a host, and `dependencies.registries` only names the ecosystems that
-are looked up. No change in the pull request clears it; how the workflow
-treats dependency safety is the workflow owner's decision, outside the pull
-request, and this skill does not propose switching the check off.
+(D05). For D05 on a package from a registry the team runs (an Artifactory,
+Nexus or Verdaccio host the lockfile records), from 0.10.0 the fix is that
+registry's exact host name in the workflow's `dependency-allowed-hosts` input
+or the org app policy's `dependencies.allowed_hosts`; `.pharn/ci.yml` refuses
+it and a `file:` policy may not set it. A URL on the host must still be https
+with no user name, password or port. Allowing a host is a workflow or policy
+change its owner decides. On 0.8.x and 0.9.x there is no allow-list, so no
+change in the pull request clears it. Either way this skill does not propose
+switching the check off.
 
 For a flaky-test or JUnit message, say that test results never change the
 verdict, which tests failed and whether they are on the org's quarantine list.

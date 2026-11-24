@@ -12,16 +12,16 @@ import { missingCodes, missingKeys, policyKeyPaths, reportCodes } from "./lib/sc
 const PLUGIN = fileURLToPath(new URL("../", import.meta.url));
 const read = (rel) => readFileSync(PLUGIN + rel, "utf8");
 
-// Byte copies of pharn-ci v0.9.1's schema/report.v2.json and schema/policy.v1.json.
+// Byte copies of pharn-ci v0.11.0's schema/report.v2.json and schema/policy.v1.json.
 const REPORT_SCHEMA = "tests/fixtures/report.v2.json";
 const POLICY_SCHEMA = "skills/pharn-ci-policy/scripts/policy.v1.json";
 const PINS = {
-  [REPORT_SCHEMA]: "8f986f831fc659715d1fd7112aba7fe33734b63779e95cea6825074857a9d665",
-  [POLICY_SCHEMA]: "8dcd0f6971d89808deea68d3e5d24ced01ecd9a37b962eb63b04bbd0a9deb4c1",
+  [REPORT_SCHEMA]: "d32e422f1190c2f40e7a757b3948ccd9c0417f1fde3c514ba83c8e54d6a6bc4d",
+  [POLICY_SCHEMA]: "f247accd493adfa2c9f89668e8b28358b7a6c1343b631b32ecb903e0fce7b61d",
 };
 
-describe("pharn-ci skills against pharn-ci v0.9.1's schemas", () => {
-  test("the schema copies are pharn-ci v0.9.1's", () => {
+describe("pharn-ci skills against pharn-ci v0.11.0's schemas", () => {
+  test("the schema copies are pharn-ci v0.11.0's", () => {
     for (const [rel, sha] of Object.entries(PINS)) {
       const digest = createHash("sha256")
         .update(readFileSync(PLUGIN + rel))

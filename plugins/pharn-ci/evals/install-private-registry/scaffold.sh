@@ -4,8 +4,9 @@
 # main, no CI, no .github and no .pharn yet, and a private npm registry: .npmrc
 # sets registry=https://npm.example.internal/ and package-lock.json records one
 # dependency (left-pad) as resolved from that host. pharn-ci's dependency safety
-# (D05) reports a lockfile entry from outside the npm and PyPI registries. No
-# network: the dependency is only recorded in the lockfile, nothing imports it.
+# (D05) reports a lockfile entry from outside the npm and PyPI registries until its
+# host is allowed (dependency-allowed-hosts). No network: the dependency is only recorded
+# in the lockfile, nothing imports it.
 set -eu
 git init -q -b main .
 commit() { git add -A && git -c user.name=dev -c user.email=dev@example.com commit -qm "$1"; }

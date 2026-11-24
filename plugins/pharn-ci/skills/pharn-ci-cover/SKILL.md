@@ -1,6 +1,6 @@
 ---
 name: pharn-ci-cover
-description: Write tests for the added lines a pharn-ci report (pharn-ci 0.1.x to 0.9.x) lists as uncovered, so diff coverage meets its threshold and the gate stays put. Use when diff coverage is below the threshold (DIFF_COVERAGE_BELOW_THRESHOLD), to cover uncovered lines, for a TESTS_NOT_EXERCISING_CHANGES warning, or when asked to exclude a file or lower the gate (it explains and asks first). Not for acting on fix hints (pharn-ci-fix), explaining a result (pharn-ci-explain) or setup (pharn-ci-install).
+description: Write tests for the added lines a pharn-ci report (pharn-ci 0.1.x to 0.11.x) lists as uncovered, so diff coverage meets its threshold and the gate stays put. Use when diff coverage is below the threshold (DIFF_COVERAGE_BELOW_THRESHOLD), to cover uncovered lines, for a TESTS_NOT_EXERCISING_CHANGES warning, or when asked to exclude a file or lower the gate (it explains and asks first). Not for acting on fix hints (pharn-ci-fix), explaining a result (pharn-ci-explain) or setup (pharn-ci-install).
 compatibility: Node.js >=22 for scripts/check-lines.mjs; git; the project's own test runner.
 ---
 
@@ -8,7 +8,7 @@ compatibility: Node.js >=22 for scripts/check-lines.mjs; git; the project's own 
 
 Closes a diff coverage gap the honest way: tests that run the added lines
 pharn-ci reported as uncovered and check what those lines do. The gate stays
-where it is. Written for pharn-ci 0.1.x (Report v1) and 0.2.x to 0.9.x
+where it is. Written for pharn-ci 0.1.x (Report v1) and 0.2.x to 0.11.x
 (Report v2); both carry `diffCoverage` the same way. From 0.2.x the check also
 reports test-integrity findings (a skipped, deleted or focused test, a
 weakened test script). 0.3.0's new signals add the tests themselves: a test
@@ -74,7 +74,7 @@ uncovered lines: the JSON, or a comment whose table is not cut (`…and N more`)
     <files>` to run, and carry on.
 - See the added lines with `git diff --unified=0 <base>...HEAD -- <file>`.
 
-### Fix hints (0.9.x reports)
+### Fix hints (0.9.0 and later reports)
 
 From 0.9.0 each message and each finding of the JSON report may carry a `fix`
 object: `kind` (one of `add-test`, `restore-test`, `restore-assertion`,

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Check a repository's coverage output the way pharn-ci (0.1.x to 0.4.x) will read it, before pharn-ci runs in CI:
+// Check a repository's coverage output the way pharn-ci (0.1.x to 0.11.x) will read it, before pharn-ci runs in CI:
 // which report auto-discovery would pick, the format of each file, whether its paths match tracked files,
 // and the coverage root they look relative to. Node core only; reads files and runs read-only git commands,
 // writes nothing.
@@ -34,7 +34,8 @@ export class UsageError extends Error {}
 // Ported from pharn-ci 0.1.0 (a88e62a8febf5cd9a77b8e0252cd060c3b94782c, Apache-2.0): packages/core/src/paths.ts,
 // coverage/xml.ts, coverage/detect.ts, coverage/lcov.ts, coverage/cobertura.ts and coverage/merge.ts, so a
 // coverage file is detected, read and mapped to repository paths the way pharn-ci does it. These files are
-// unchanged in pharn-ci 0.4.0 (a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756).
+// unchanged in pharn-ci 0.11.0 (bd7b36ea07588884418f5002ae74afc35135c400), apart from opt-in scanXml options
+// in coverage/xml.ts that the coverage readers do not use.
 
 // --- paths (paths.ts) ---
 
@@ -648,12 +649,18 @@ export function hasGlobSyntax(entry) {
   return /[*?[\]{}]/.test(entry);
 }
 
+/** The most characters a glob may have after trimming (pharn-ci 0.11.0, config.ts MAX_EXCLUDE_PATTERN_CHARS). */
+export const MAX_GLOB_CHARS = 1024;
+
 /** pharn-ci's glob rules (config.ts parseExcludePattern); returns the pattern without leading "./". */
 export function parseGlob(pattern) {
   let start = 0;
   const trimmed = pattern.trim();
   while (trimmed.startsWith("./", start)) start += 2;
   const p = trimmed.slice(start);
+  if (p.length > MAX_GLOB_CHARS) {
+    throw new UsageError(`--coverage "${p.slice(0, 40)}..." is ${p.length} characters long; the limit is ${MAX_GLOB_CHARS} characters`);
+  }
   const reject = (reason) => {
     throw new UsageError(`--coverage "${pattern}" ${reason}`);
   };
