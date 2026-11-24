@@ -362,6 +362,13 @@
       "helperParity": { "coverage": ["coverage/lcov.info"] },
       "wholeFileGraders": [".github/workflows/pharn-ci.yml", ".pharn/ci.yml", "package.json", "src/cart.mjs", "test/cart.test.mjs"]
     },
+    "install-newer-pin": {
+      "pharnCi": "0.9.1",
+      "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
+      "artifacts": [],
+      "helperParity": { "coverage": ["coverage/lcov.info"] },
+      "wholeFileGraders": [".github/workflows/pharn-ci.yml"]
+    },
     "explain-policy-p02": {
       "pharnCi": "0.4.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },
