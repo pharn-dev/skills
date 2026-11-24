@@ -43,6 +43,28 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
+- `phargus` 0.1.1: ordinary input problems no longer cost a recording. A
+  leading UTF-8 byte order mark no longer makes the first record invalid. A line
+  over 1 MiB counts as one invalid record and reading continues, instead of
+  failing the whole file; `collect` still fails on it as corrupt data, and SSE
+  capture drops the rest of that message. With `--allow-logs`, a JSON object is
+  a corrupt Phargus record only when it carries a Phargus field of the right
+  type (a numeric `timestamp` or `start`, an object `eventLoop`,
+  `type: "span"`, a string `ruleId` or an event envelope), so winston, pino and
+  `{"type":"http"}` lines count as ignored logs. A capture manifest whose
+  `quality.invalidRecords` or `quality.ignoredLogs` is missing or not a
+  non-negative integer is refused as an unsupported capture manifest, instead
+  of printing a `null` counter. A capture that fails before its first event
+  removes the `events.ndjson` and `manifest.json` it reserved, so a retry into
+  the same `--out` works, and the error names the network cause
+  (`fetch failed: ECONNREFUSED`, `ENOTFOUND` or `unexpected redirect`)
+  (CORE-240).
+- `phargus` 0.1.1: every command stops on the first SIGINT or SIGTERM.
+  `summarize`, `compare`, `heap`, `rules` and `doctor` end with Node's default
+  action. `capture --file` writes its manifest with `termination`
+  `interrupted` and `quality.truncated` true, as `capture --url` does, instead
+  of leaving a 0-byte `manifest.json` when killed. No signal listener stays
+  registered after a command returns (CORE-239).
 - phargus 0.1.1: a raw sample covers the interval that ends at its timestamp, as
   the agent stamps it when the interval closes. `summarize` treated the
   timestamp as the start, so the measured period was one interval late:

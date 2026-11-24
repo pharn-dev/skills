@@ -5,6 +5,7 @@ import {
   quality,
   qualityTracker,
   object,
+  integer,
   samplingInterval,
   sampleInterval,
   shorten,
@@ -294,7 +295,13 @@ export async function summarizeFile(file, options = {}) {
   /** @type {Record<string, unknown> | undefined} */ let manifest;
   if (options.manifest) {
     /** @type {unknown} */ const input = JSON.parse(await readFile(options.manifest, 'utf8'));
-    if (!object(input) || input.schemaVersion !== 1 || !object(input.quality))
+    if (
+      !object(input) ||
+      input.schemaVersion !== 1 ||
+      !object(input.quality) ||
+      !integer(input.quality.invalidRecords) ||
+      !integer(input.quality.ignoredLogs)
+    )
       throw new Error('unsupported capture manifest');
     manifest = input;
   }
@@ -309,8 +316,8 @@ export async function summarizeFile(file, options = {}) {
   );
   if (manifest && object(manifest.quality)) {
     const previous = manifest.quality;
-    result.quality.invalidRecords += Number(previous.invalidRecords ?? 0);
-    result.quality.ignoredLogs += Number(previous.ignoredLogs ?? 0);
+    result.quality.invalidRecords += Number(previous.invalidRecords);
+    result.quality.ignoredLogs += Number(previous.ignoredLogs);
     result.quality.truncated ||= previous.truncated === true;
     if (object(manifest.source) && manifest.source.kind === 'sse')
       result.quality.loss.known = false;

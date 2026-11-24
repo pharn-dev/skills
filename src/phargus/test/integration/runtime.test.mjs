@@ -154,6 +154,37 @@ test('collect closes the server and follows raw input for a bounded diagnostic r
   await assert.rejects(fetch(result.url));
 });
 
+test(
+  'collect --follow stops on the first SIGTERM and prints its result',
+  { skip: process.platform === 'win32' && 'POSIX signals only' },
+  async () => {
+    const file = join(scratch, 'collect-signal.ndjson');
+    await writeFile(file, ndjson([sample(Date.now())]));
+    const args = ['collect', '--project', project, '--file', file, '--follow', '--port', '0'];
+    const child = spawn(process.execPath, [join(root, 'runtime/phargus.mjs'), ...args]);
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => (stdout += chunk));
+    const ended = new Promise((resolve) => child.once('close', (code) => resolve(code)));
+    // The ready event is written after the handlers are armed and the dashboard listens.
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('collect readiness timed out')), 10_000);
+      child.stderr.on('data', (chunk) => {
+        stderr += chunk;
+        if (stderr.includes('"event":"ready"')) {
+          clearTimeout(timer);
+          resolve(undefined);
+        }
+      });
+    });
+    child.kill('SIGTERM');
+    assert.equal(await ended, 0, stderr);
+    const result = JSON.parse(stdout);
+    assert.equal(result.command, 'collect');
+    assert.equal(result.quality.invalidRecords, 0);
+  },
+);
+
 test('file and live collection distinguish unrelated logs from valid samples', async () => {
   const file = join(scratch, 'collect-logs.ndjson');
   await writeFile(

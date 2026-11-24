@@ -91,10 +91,14 @@ export async function main(args) {
     // rules read no conditions, so they default to 1000.
     intervalMs: number('interval-ms', undefined),
   };
+  // Only collect and capture stop cleanly on a signal: collect prints its result and capture keeps
+  // what it recorded. Every other command keeps Node's default action, so a signal ends it at once.
   const controller = new AbortController();
   const stop = () => controller.abort();
-  process.once('SIGINT', stop);
-  process.once('SIGTERM', stop);
+  if (command === 'collect' || command === 'capture') {
+    process.once('SIGINT', stop);
+    process.once('SIGTERM', stop);
+  }
   try {
     switch (command) {
       case 'doctor':
@@ -168,6 +172,18 @@ export async function main(args) {
   }
 }
 
+/**
+ * fetch reports every network failure as "fetch failed"; its cause tells a refused connection
+ * (code ECONNREFUSED), an unknown host (ENOTFOUND) and a refused redirect (message) apart.
+ * @param {unknown} error
+ */
+function errorMessage(error) {
+  if (!(error instanceof Error)) return String(error);
+  const cause = /** @type {{code?: unknown, message?: unknown} | undefined} */ (error.cause);
+  const detail = cause?.code || cause?.message;
+  return typeof detail === 'string' && detail ? error.message + ': ' + detail : error.message;
+}
+
 // This file is the executable entry point; module helpers are imported separately in tests.
 main(process.argv.slice(2))
   .then((result) => {
@@ -176,10 +192,7 @@ main(process.argv.slice(2))
   })
   .catch((error) => {
     process.stderr.write(
-      JSON.stringify({
-        schemaVersion: 1,
-        error: { message: error instanceof Error ? error.message : String(error) },
-      }) + '\n',
+      JSON.stringify({ schemaVersion: 1, error: { message: errorMessage(error) } }) + '\n',
     );
     process.exitCode = 1;
   });

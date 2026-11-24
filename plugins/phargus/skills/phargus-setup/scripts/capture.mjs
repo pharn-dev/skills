@@ -72,15 +72,31 @@ export async function* sseEvents(source, manifest, options) {
     const connectedAt = Date.now();
     let event = '';
     /** @type {string[]} */ let data = [];
+    // After a line over 1 MiB, the rest of its message is dropped: it was counted once already.
+    let discarding = false;
+    // Cancel the body ourselves when the capture stops: with redirect 'error', fetch can lose
+    // its abort listener to garbage collection, and a pending read would then never settle.
+    const reader = response.body.getReader();
+    controller.signal.addEventListener('abort', () => reader.cancel().catch(() => {}), {
+      once: true,
+    });
     async function* chunks() {
-      for await (const chunk of /** @type {AsyncIterable<Uint8Array>} */ (response.body)) {
-        bytes += chunk.byteLength;
+      for (let next = await reader.read(); !next.done; next = await reader.read()) {
+        bytes += next.value.byteLength;
         if (bytes > 64 * 1024 * 1024) throw new Error('SSE capture exceeds 64 MiB');
-        yield Buffer.from(chunk);
+        yield Buffer.from(next.value);
       }
+      // A cancelled read ends like a disconnect; report why the capture stopped instead.
+      controller.signal.throwIfAborted();
     }
     for await (const line of lines(chunks())) {
-      if (line === '') {
+      if (line === null) {
+        manifest.quality.invalidRecords += 1;
+        event = '';
+        data = [];
+        discarding = true;
+      } else if (discarding) discarding = line !== '';
+      else if (line === '') {
         if (!data.length) {
           event = '';
           continue;
@@ -197,6 +213,11 @@ export async function capture(options) {
       if (!options.url) manifest.historyEvents += 1;
       await output.write(JSON.stringify(record) + '\n');
     }
+    // A file read stops quietly on the signal; record why, as sseEvents does for --url.
+    if (!options.url && options.signal?.aborted) {
+      manifest.termination = 'interrupted';
+      manifest.quality.truncated = true;
+    }
     if (!manifest.events) throw new Error('capture contains no valid Phargus events');
     if (manifest.quality.truncated && manifest.termination === 'eof')
       manifest.termination = 'limit';
@@ -205,22 +226,27 @@ export async function capture(options) {
   } catch (error) {
     failure = error;
     if (manifest.termination === 'eof') manifest.termination = 'error';
-  } finally {
-    manifest.endedAt = new Date().toISOString();
-    await output.close();
-    await manifestHandle.writeFile(
-      JSON.stringify(
-        {
-          ...manifest,
-          historyClassification:
-            'event-time-before-connection; estimate, SSE has no history marker',
-        },
-        null,
-        2,
-      ) + '\n',
-    );
-    await manifestHandle.close();
   }
+  manifest.endedAt = new Date().toISOString();
+  await output.close();
+  if (!manifest.events) {
+    // Nothing was measured (a capture without events always fails): remove both files reserved
+    // above so a retry into --out is not refused. A failed removal never hides the cause.
+    await manifestHandle.close();
+    await Promise.allSettled([unlink(eventsPath), unlink(manifestPath)]);
+    throw failure;
+  }
+  await manifestHandle.writeFile(
+    JSON.stringify(
+      {
+        ...manifest,
+        historyClassification: 'event-time-before-connection; estimate, SSE has no history marker',
+      },
+      null,
+      2,
+    ) + '\n',
+  );
+  await manifestHandle.close();
   if (failure) throw failure;
   return { schemaVersion: 1, command: 'capture', eventsPath, manifestPath, manifest };
 }
