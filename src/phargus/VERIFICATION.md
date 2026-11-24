@@ -6,10 +6,11 @@ record of behavioral review.
 
 ## Reviewed runs
 
-| Date | Commit | Clients | Cases passed | Reviewer | Note |
-| ---- | ------ | ------- | ------------ | -------- | ---- |
+| Date       | Commit  | Clients     | Cases passed | Reviewer          | Note                                                                                                       |
+| ---------- | ------- | ----------- | ------------ | ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| 2026-11-24 | 6e29a17 | Claude Code | 8/8          | PrzemekGalarowicz | Codex was blocked by its usage limit, so it did not run; setup passed on a rerun with a 600 s trial limit. |
 
-No reviewed run is recorded for the current content (0.1.1). The earlier 0.1.0
+The earlier 0.1.0
 and pre-rename (argus) reviews were self-attested by an AI assistant and their
 evidence was never committed; they are in git history under
 `src/phargus/verification/` at commit b859dc2.
