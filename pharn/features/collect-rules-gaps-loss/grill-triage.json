@@ -1,0 +1,27 @@
+{
+  "schema": "pharn-grill-triage/1",
+  "round": 1,
+  "findings_sha256": "a4ec349fe867d889cb983af0531df84119f107f0cb8072a6803e36452d3a5228",
+  "dispositions": [
+    {
+      "id": "G1-1",
+      "disposition": "proceed",
+      "reason": "The plan's Risks section already states the departure and why: AC-TESTS.md may map only new files, so two new test files in the same unit and integration suites keep the intent and leave existing tests untouched; no plan change is needed."
+    },
+    {
+      "id": "G1-2",
+      "disposition": "proceed",
+      "reason": "The refusal names each cause the reader actually observed; an invalid line after the cap is never read, so only the cap is named, which is still a correct and actionable message, and the build does not need a change."
+    },
+    {
+      "id": "G1-3",
+      "disposition": "proceed",
+      "reason": "Stopping at the abort check is how collect already behaves with --duration-ms or SIGINT; quality covers what was read, which the plan keeps unchanged, so this is an accepted bound and at most a wording nicety for tools.md."
+    },
+    {
+      "id": "G1-4",
+      "disposition": "proceed",
+      "reason": "This concerns how the test stage writes AC-5 (pin absolute expected counts from the clean recording rather than compare with old code), not the plan; the plan's acceptance mapping names the unchanged inputs and the test stage owns the baseline values."
+    }
+  ]
+}

@@ -20,14 +20,19 @@ Summary period describes the runtime samples/windows only. Dashboard windows and
 have independent ring-buffer retention, so requests.period reports the separate bounds
 of all observed spans. counts.spans includes every observed span; requests.inPeriod and
 outsidePeriod explain which spans are selected. Request percentiles, observed errors and
-request rate use only spans fully contained within the runtime period [startMs, endMs).
-Spans crossing either boundary are excluded. Without runtime data, those request metrics
-are null. Zero observed requests does not establish complete request tracing coverage.
+request rate use only spans fully contained within the runtime period [startMs, endMs],
+compared in whole milliseconds: a span ending a fraction of a millisecond after endMs is
+contained. Spans crossing either boundary are excluded. Without runtime data, those
+request metrics are null. Zero observed requests does not establish complete request tracing coverage.
 requests.routes groups the same selected spans by exact method and path (top 20 by
 count, then p99Ns); requests.distinctRoutes is the untruncated number of groups. A route
 with few spans has unstable percentiles; read count before p99Ns.
 
-Raw sample period end, gap detection and coverage use the sampling interval: explicit
+The agent stamps a raw sample when its interval closes, so a sample stamped T measured
+(T - interval, T]. The raw sample period runs from the first timestamp minus one interval to
+the last timestamp. Window records keep their own start and end; they can lag by up to one
+interval, because the aggregator files a sample stamped T under floor(T / windowMs).
+The raw sample period, gap detection and coverage use the sampling interval: explicit
 flag, else the capture manifest's recorded intervalMs, else declared conditions.intervalMs,
 else 1000 (coverage.samplingIntervalSource).
 coverage.observedIntervalMs is the median positive spacing between consecutive samples.
@@ -46,9 +51,14 @@ is historical, not a loss rate. A counter decrease starts a new segment; never s
 it into a negative rate. Unknown counters are unknown, not zero. Separate files/processes
 are separate measurements; the wire format has no reliable process identity.
 
-The helper reports invalid records, ignored logs, truncation, schedule gaps and counter
-resets. A schedule gap can also result from a blocked loop; it is not proof of dropped
-records. Empty histograms can report zero. An absent span is not proof that no request ran.
+The helper reports invalid records, ignored logs, truncation, schedule gaps, stalled
+samples and counter resets. A late raw sample whose lateness (spacing minus the interval)
+is more than half an interval, but at most its own eventLoop.max (in ms) plus half an
+interval, is a stalled sample: it is counted in quality.stalledSamples and its lateness
+is added to quality.stalledMs. A repeated or backwards timestamp, or a late sample its
+stall does not explain, is a gap, and a gap is not proof of dropped records. Sample
+coverage counts stalledMs as covered time. Window records keep the contiguity rule.
+Empty histograms can report zero. An absent span is not proof that no request ran.
 Counters do not expose every source of missing traces, and the collector's ring buffers
 can have evicted earlier records. A zero loss delta is not a guarantee of tracing coverage.
 

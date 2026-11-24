@@ -55,6 +55,8 @@ export type Quality = {
   ignoredLogs: number;
   truncated: boolean;
   gaps: number;
+  stalledSamples: number;
+  stalledMs: number;
   loss: {
     known: boolean;
     initial: { samples: number; spans: number } | null;

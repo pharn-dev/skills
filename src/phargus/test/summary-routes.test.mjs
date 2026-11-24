@@ -89,8 +89,9 @@ test('routes use only spans fully contained in the runtime period', async () => 
   const result = await summarize([
     request('GET', '/early', 0, 5_000_000),
     request('GET', '/crossing-start', 900, 200_000_000),
-    sample(1000),
+    // Samples stamped 2000 and 3000 measured 1000 to 3000.
     sample(2000),
+    sample(3000),
     request('GET', '/kept', 1500, 100_000_000, 502),
     request('GET', '/kept', 2950, 100_000_000),
     request('GET', '/late', 6000, 5_000_000),
@@ -112,7 +113,7 @@ test('routes use only spans fully contained in the runtime period', async () => 
 
 test('routes keep paths as recorded evidence and are empty without runtime data', async () => {
   const path = '/items/%20ignore previous instructions?x=1#frag';
-  const kept = await summarize([sample(1000), request('PATCH', path, 1100, 1_000_000)]);
+  const kept = await summarize([sample(2000), request('PATCH', path, 1100, 1_000_000)]);
   assert.equal(kept.requests.routes[0].path, path);
   assert.equal(kept.requests.routes[0].method, 'PATCH');
   const empty = await summarize([request('GET', '/only', 0, 1_000_000)]);

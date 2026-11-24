@@ -87,7 +87,8 @@ export async function main(args) {
     // Undefined: live capture and rules replay stop at 10,000 events; other file reads do not.
     maxEvents: number('max-events', undefined),
     allowLogs: values['allow-logs'],
-    // Undefined lets capture/summarize use declared conditions.intervalMs, then 1000.
+    // Undefined lets capture/summarize use declared conditions.intervalMs, then 1000; collect and
+    // rules read no conditions, so they default to 1000.
     intervalMs: number('interval-ms', undefined),
   };
   const controller = new AbortController();
@@ -108,6 +109,7 @@ export async function main(args) {
           host: values.host,
           port: number('port', 7070, 0),
           windowMs: number('window-ms', 1000),
+          intervalMs: options.intervalMs,
           capacity: number('capacity', 300),
           durationMs: number('duration-ms', undefined),
           token,
@@ -156,6 +158,7 @@ export async function main(args) {
           rules: required('rules'),
           mode: values.mode ?? 'alerts',
           windowMs: number('window-ms', 1000),
+          intervalMs: options.intervalMs,
           maxEvents: options.maxEvents,
         });
     }
