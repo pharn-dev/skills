@@ -153,6 +153,10 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   that `.phargus/` holds captures only. Before, the setup eval saved the
   summarize result to `.phargus/tool-result.json` (#28).
 
+## [pharn-ci 0.2.2] - 2026-11-24
+
+### Fixed
+
 ## [pharn-ci 0.2.1] - 2026-11-23
 
 ### Changed
@@ -525,6 +529,7 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 - CI: `claude plugin validate --strict` and markdownlint.
 
 [Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.0...HEAD
+[pharn-ci 0.2.2]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.1...pharn-ci-v0.2.2
 [pharn-ci 0.2.1]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.0...pharn-ci-v0.2.1
 [pharn-ci 0.2.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.1.0...pharn-ci-v0.2.0
 [pharn 0.5.0]: https://github.com/pharn-dev/skills/compare/pharn-v0.4.0...pharn-v0.5.0
