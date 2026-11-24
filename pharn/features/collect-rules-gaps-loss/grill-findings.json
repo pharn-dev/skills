@@ -1,0 +1,42 @@
+{
+  "schema": "pharn-grill-findings/1",
+  "round": 1,
+  "findings": [
+    {
+      "id": "G1-1",
+      "type": "FINDING",
+      "rule_id": "P6",
+      "severity": "important",
+      "file": "pharn/features/collect-rules-gaps-loss/PLAN.md:202",
+      "problem": "The plan departs from a SPEC Constraint (unit tests in test/operations.test.mjs, integration tests in test/integration/runtime.test.mjs) by mapping two new test files instead; the reason is sound, but in an unattended loop no human confirms it, so the human should accept the deviation or amend the SPEC.",
+      "evidence": "The AC test file location differs from the SPEC (flag for the grill and the human). ... So AC-TESTS.md maps two new files in the same suites"
+    },
+    {
+      "id": "G1-2",
+      "type": "FINDING",
+      "rule_id": "P7",
+      "severity": "minor",
+      "file": "pharn/features/collect-rules-gaps-loss/PLAN.md:41",
+      "problem": "The SPEC assumes a recording that is both invalid and over the cap gets a refusal naming both causes, but fileEvents stops reading at the cap (records.mjs:194-196), so an invalid line after the cap is never seen and the refusal names only the cap; the plan does not state this limit.",
+      "evidence": "The message keeps the prefix and names each cause found (SPEC Assumptions: both when both apply)"
+    },
+    {
+      "id": "G1-3",
+      "type": "FINDING",
+      "rule_id": "P7",
+      "severity": "minor",
+      "file": "pharn/features/collect-rules-gaps-loss/PLAN.md:85",
+      "problem": "collect's samples() stops at the abort check, so when --duration-ms or SIGINT ends a run before the input is fully read, quality covers only a prefix while truncated stays false; the planned tools.md sentence says collect reports quality as summarize does (which reads the whole file) without stating this bound.",
+      "evidence": "add that the collect result's `quality` reports gaps, stalled samples and loss as summarize does."
+    },
+    {
+      "id": "G1-4",
+      "type": "FINDING",
+      "rule_id": "P1",
+      "severity": "minor",
+      "file": "pharn/features/collect-rules-gaps-loss/PLAN.md:186",
+      "problem": "AC-5's 'same as before this change' cannot be compared with the old code in a post-change test, and the plan names no baseline values, so the test stage must pin absolute expected windows, spans, alerts, ok and results values derived independently of the new code.",
+      "evidence": "AC-5 (integration): `collect` and `rules` give the collector, evaluator and runner the same input as before."
+    }
+  ]
+}

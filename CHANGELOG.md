@@ -90,6 +90,15 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   `durationMs` nor of the other recording. Before, such a recording made
   `compare` answer `inconclusive` ("measurement gaps"). Window records are
   unchanged (CORE-236).
+- phargus 0.1.1: `collect` (from `--file` and `--follow`) and `rules` (both
+  modes) now count `quality.gaps`, `quality.stalledSamples`,
+  `quality.stalledMs` and `quality.loss` through the same tracker as
+  `summarize`. `rules` results gain a `quality` block, and `--interval-ms` now
+  reaches both commands, defaulting to 1000. The `rules` refusal names its
+  cause: invalid lines, or the event cap (raise it with `--max-events`). Before,
+  `collect`'s `gaps` and `loss` always stayed at their initial values and
+  `rules` reported no quality, so a `forWindows` alert could span a hole
+  unseen. Alert evaluation is unchanged (CORE-237).
 - Repository (no plugin version change): CONTRIBUTING and the rulesets README
   describe the rules GitHub enforces. CONTRIBUTING "CI gates" said "the first
   four" of four bullets run in `ci.yml` and that Validate runs
