@@ -73,7 +73,7 @@ jobs:
       - run: npm ci
       - run: npm run test:coverage
       - id: pharn-ci
-        uses: pharn-dev/pharn-ci@0123456789abcdef0123456789abcdef01234567 # v0.99.0
+        uses: pharn-dev/pharn-ci@c7e535f748cff43bce8c50804fc966abcd57a22c # v0.99.0
         timeout-minutes: 5
         with:
           test-integrity: warn

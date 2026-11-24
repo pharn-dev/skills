@@ -493,7 +493,8 @@ pin:
 - Equal: say the setup is current, and stop.
 - Newer: say the setup is ahead of what this version of the skill describes,
   change nothing, and say that updating the pharn-ci plugin gets a skill that
-  knows that release. Never move a pin to an older release.
+  knows that release. Never move a pin to an older release or offer to, even
+  when the newer release is one you cannot confirm.
 - Unreadable (a SHA with no `# vX.Y.Z` comment, or a branch): say so, and ask
   which release it is.
 - Older: change that `uses:` line to this reference's pin, and nothing else

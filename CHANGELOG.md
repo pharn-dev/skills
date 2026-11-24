@@ -157,6 +157,14 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   `install-private-registry` and `explain-dependency-d05` graders expect the
   allow-list answer.
 
+### Fixed
+
+- `pharn-ci-install`: for a pin newer than its own, the skill now offers no
+  older pin either, even when it cannot confirm the newer release. In an eval
+  run against an `install-newer-pin` scaffold whose SHA looked like a
+  placeholder, the agent changed nothing but offered to re-pin to 0.11.0 "if
+  v0.99.0 isn't real". The scaffold now carries a realistic SHA.
+
 ## [pharn 0.5.1] - 2026-11-24
 
 ### Changed

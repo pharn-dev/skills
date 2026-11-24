@@ -44,8 +44,9 @@ something, and point it out to the person.
     this skill's pin before offering anything, as
     [Upgrading an existing setup](references/workflows.md#upgrading-an-existing-setup)
     says. Equal: say it is current. Newer: say the setup is ahead of what this
-    version of the skill describes, change nothing, and name the pharn-ci
-    plugin update as the way to get a skill that knows that release.
+    version of the skill describes, change nothing, offer no older pin, and
+    name the pharn-ci plugin update as the way to get a skill that knows that
+    release.
     Unreadable (a SHA with no `# vX.Y.Z` comment, or a branch): say so and
     ask. Older: offer to update that setup, and say what the update changes,
     for the versions it crosses: the behaviour changes of 0.6.0, 0.7.0, 0.8.0
