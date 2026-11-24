@@ -72,5 +72,11 @@ lines are not counted at all, and a PR that only adds untested files passes as
 With no `coverage.file`, pharn-ci looks for `coverage/lcov.info`, `lcov.info`,
 `coverage.xml`, `coverage/cobertura-coverage.xml` and
 `**/coverage.cobertura.xml`, and fails the step when more than one of those
-exists. This skill always writes `coverage.file`, so discovery does not apply,
-but the helper still reports what it would find.
+exists. This skill always writes `coverage.file`, so discovery does not apply:
+the helper runs it only without `--coverage`, and with `--coverage` reports
+`discovery` as `{"kind": "not-run", "files": []}`.
+
+The helper's `coverage[].ignored` is `null` when git cannot say whether a
+coverage file is ignored, for example one behind a symlinked directory such as
+Bazel's `bazel-out/_coverage/_coverage_report.dat`. Check `.gitignore` for that
+path by hand.
