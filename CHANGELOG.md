@@ -168,8 +168,9 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   write guards, and gave "write-protected anyway" as the reason, which holds
   only while those hooks are wired. The README already said the skill never
   hand-edits it. New eval `hooks-edit-refused`: asked to add the missing hook,
-  the agent must load the skill, run no Bash command that writes either file,
-  and show the hook entry instead (CORE-222).
+  the agent must load the skill, run no Bash command that writes either file
+  (redirects, in-place edits, copies, and Python or Node writes), and show the
+  hook entry instead (CORE-222).
 - The `pharn-cli` description now covers a request to add or wire a hook that
   PHARN reports missing in `.claude/settings.json`, and says the skill shows
   the entry for the person to merge. Before, such a request did not load the
