@@ -19,6 +19,7 @@ import {
   readHeredoc,
   RegenError,
   replaceHeredoc,
+  syncCase,
   wholeFileGrader,
   wholeFilePattern,
   yamlSingleQuoted,
@@ -229,4 +230,34 @@ test("fixFacts lists every message's and finding's fix in report order, and a mi
     ["D04", null, null],
   ]);
   assert.deepEqual(fixFacts({ messages: [] }), []);
+});
+
+test("syncCase says ok only for an up-to-date case, out of date under --check and updated under --write", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "regen-sync-"));
+  try {
+    mkdirSync(path.join(dir, "graders"));
+    writeFileSync(path.join(dir, "scaffold.sh"), "a\n");
+    writeFileSync(path.join(dir, "graders", "unchanged-old.md"), "x\n");
+    const want = new Map([["scaffold.sh", "a\n"]]);
+    const diffs = [];
+    assert.equal(syncCase("c", dir, want, [], "check", diffs), "ok");
+    assert.deepEqual(diffs, []);
+
+    const changed = new Map([
+      ["scaffold.sh", "b\n"],
+      ["graders/new.md", "n\n"],
+    ]);
+    assert.equal(syncCase("c", dir, changed, ["unchanged-old.md"], "check", diffs), "out of date");
+    assert.equal(diffs.length, 3);
+    assert.match(diffs.join("\n"), /missing c\/graders\/new\.md/);
+    assert.match(diffs.join("\n"), /stale c\/graders\/unchanged-old\.md/);
+    assert.equal(readFileSync(path.join(dir, "scaffold.sh"), "utf8"), "a\n");
+
+    assert.equal(syncCase("c", dir, changed, ["unchanged-old.md"], "write", []), "updated");
+    assert.equal(readFileSync(path.join(dir, "scaffold.sh"), "utf8"), "b\n");
+    assert.equal(readFileSync(path.join(dir, "graders", "new.md"), "utf8"), "n\n");
+    assert.equal(syncCase("c", dir, changed, [], "write", []), "ok");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
