@@ -165,6 +165,18 @@ export async function main(args) {
   }
 }
 
+/**
+ * fetch reports every network failure as "fetch failed"; its cause tells a refused connection
+ * (code ECONNREFUSED), an unknown host (ENOTFOUND) and a refused redirect (message) apart.
+ * @param {unknown} error
+ */
+function errorMessage(error) {
+  if (!(error instanceof Error)) return String(error);
+  const cause = /** @type {{code?: unknown, message?: unknown} | undefined} */ (error.cause);
+  const detail = cause?.code || cause?.message;
+  return typeof detail === 'string' && detail ? error.message + ': ' + detail : error.message;
+}
+
 // This file is the executable entry point; module helpers are imported separately in tests.
 main(process.argv.slice(2))
   .then((result) => {
@@ -173,10 +185,7 @@ main(process.argv.slice(2))
   })
   .catch((error) => {
     process.stderr.write(
-      JSON.stringify({
-        schemaVersion: 1,
-        error: { message: error instanceof Error ? error.message : String(error) },
-      }) + '\n',
+      JSON.stringify({ schemaVersion: 1, error: { message: errorMessage(error) } }) + '\n',
     );
     process.exitCode = 1;
   });

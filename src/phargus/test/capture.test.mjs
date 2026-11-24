@@ -1,12 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { mkdtemp, rm, readFile, writeFile, access } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { mkdtemp, rm, readFile, writeFile, access, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { capture } from '../runtime/capture.mjs';
 import { summarizeFile } from '../runtime/summary.mjs';
 import { window, sample, span } from './fixtures.mjs';
+
+const cli = fileURLToPath(new URL('../runtime/phargus.mjs', import.meta.url));
+const execFileAsync = promisify(execFile);
 
 /** @param {(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void} handler @param {(url: string, dir: string) => Promise<void>} run */
 async function withServer(handler, run) {
@@ -76,16 +82,25 @@ test('marks limits and malformed payloads explicitly', async () => {
   );
 });
 
-test('fails on authentication errors and preserves an error manifest', async () => {
+test('fails on authentication errors and leaves --out free for a retry', async () => {
+  let authorized = false;
   await withServer(
     (_req, res) => {
-      res.writeHead(401);
-      res.end();
+      if (!authorized) {
+        res.writeHead(401);
+        res.end();
+        return;
+      }
+      res.writeHead(200, { 'content-type': 'text/event-stream' });
+      res.write('event: window\ndata: ' + JSON.stringify(window(Date.now())) + '\n\n');
     },
     async (url, directory) => {
       await assert.rejects(capture({ url, out: directory, durationMs: 100 }), /HTTP 401/);
-      const manifest = JSON.parse(await readFile(join(directory, 'manifest.json'), 'utf8'));
-      assert.equal(manifest.termination, 'error');
+      assert.deepEqual(await readdir(directory), []);
+      authorized = true;
+      const result = await capture({ url, out: directory, durationMs: 300 });
+      assert.equal(result.manifest.events, 1);
+      assert.equal(result.manifest.termination, 'duration');
     },
   );
 });
@@ -177,6 +192,68 @@ test('an existing events file does not leave an empty manifest behind', async ()
     await writeFile(join(out, 'manifest.json'), 'previous');
     await assert.rejects(capture({ file: input, out }), /EEXIST/);
     assert.equal(await readFile(join(out, 'manifest.json'), 'utf8'), 'previous');
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('an SSE line over 1 MiB counts as one invalid record and capture continues', async () => {
+  await withServer(
+    (_req, res) => {
+      res.writeHead(200, { 'content-type': 'text/event-stream' });
+      const message = (/** @type {unknown} */ data) =>
+        'event: window\ndata: ' + JSON.stringify(data) + '\n\n';
+      res.write(message(window(Date.now())));
+      res.write('event: window\ndata: ' + 'x'.repeat(2 * 1024 * 1024) + '\ndata: more\n\n');
+      res.write(message(window(Date.now() + 1000)));
+    },
+    async (url, directory) => {
+      const result = await capture({ url, out: directory, durationMs: 1000 });
+      assert.equal(result.manifest.events, 2);
+      assert.equal(result.manifest.quality.invalidRecords, 1);
+    },
+  );
+});
+
+/** Runs the CLI capture asynchronously, so a server in this process can still answer. @param {string} url @param {string} out */
+async function failedCliCapture(url, out) {
+  const args = [cli, 'capture', '--url', url, '--out', out, '--duration-ms', '1500'];
+  const error = await execFileAsync(process.execPath, args).then(
+    () => assert.fail('capture should fail'),
+    (/** @type {{code: number, stderr: string}} */ failure) => failure,
+  );
+  assert.equal(error.code, 1);
+  assert.deepEqual(await readdir(out), []);
+  return String(JSON.parse(error.stderr).error.message);
+}
+
+test('a failed capture names the network cause and leaves --out empty', async () => {
+  await withServer(
+    (_req, res) => {
+      res.writeHead(302, { location: '/other' });
+      res.end();
+    },
+    async (url, directory) => {
+      assert.equal(await failedCliCapture(url, directory), 'fetch failed: unexpected redirect');
+      // A port that was just listening and is now closed refuses the connection.
+      const closed = createServer();
+      await new Promise((resolve) => closed.listen(0, '127.0.0.1', () => resolve(undefined)));
+      const { port } = /** @type {import('node:net').AddressInfo} */ (closed.address());
+      await new Promise((resolve) => closed.close(() => resolve(undefined)));
+      const refused = 'http://127.0.0.1:' + port + '/events';
+      assert.equal(await failedCliCapture(refused, directory), 'fetch failed: ECONNREFUSED');
+    },
+  );
+});
+
+test('a file capture without valid events leaves --out empty', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'phargus-capture-'));
+  try {
+    const input = join(directory, 'input.ndjson');
+    const out = join(directory, 'out');
+    await writeFile(input, 'application started\n');
+    await assert.rejects(capture({ file: input, out }), /no valid Phargus events/);
+    assert.deepEqual(await readdir(out), []);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

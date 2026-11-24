@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { parseRecord, quality, fileEvents } from '../runtime/records.mjs';
+import { fileURLToPath } from 'node:url';
+import { parseRecord, quality, fileEvents, lines, classifyLine } from '../runtime/records.mjs';
 import {
   summarizeEvents,
   summarizeFile,
@@ -11,6 +13,8 @@ import {
   percentage,
 } from '../runtime/summary.mjs';
 import { sample, span, window, ndjson, conditions } from './fixtures.mjs';
+
+const cli = fileURLToPath(new URL('../runtime/phargus.mjs', import.meta.url));
 
 test('validates every supported record and retains cumulative loss counters', () => {
   assert.equal(parseRecord(sample(0))?.event, 'sample');
@@ -108,6 +112,101 @@ test('reports corrupt data, allows explicit unrelated logs, and marks event limi
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+/** @param {(dir: string) => Promise<void>} run */
+async function withDirectory(run) {
+  const directory = await mkdtemp(join(tmpdir(), 'phargus-data-'));
+  try {
+    await run(directory);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
+const sixSamples = [0, 1000, 2000, 3000, 4000, 5000].map((timestamp) => sample(timestamp));
+const bom = String.fromCharCode(0xfeff);
+
+/** @param {(string | Buffer)[]} chunks */
+async function* stream(chunks) {
+  yield* chunks;
+}
+
+test('a byte order mark does not cost the first record', async () => {
+  await withDirectory(async (directory) => {
+    const path = join(directory, 'bom.ndjson');
+    await writeFile(path, bom + ndjson(sixSamples));
+    const result = await summarizeFile(path);
+    assert.equal(result.counts.samples, 6);
+    assert.equal(result.quality.invalidRecords, 0);
+    assert.equal(result.period.startMs, 0);
+    // The mark is dropped even when it arrives split across chunks.
+    const bytes = [...Buffer.from(bom + '{"a":1}\n')].map((byte) => Buffer.from([byte]));
+    const received = [];
+    for await (const line of lines(stream(bytes))) received.push(line);
+    assert.deepEqual(received, ['{"a":1}']);
+  });
+});
+
+test('a line over 1 MiB counts as one invalid record and reading continues', async () => {
+  await withDirectory(async (directory) => {
+    const path = join(directory, 'hugeline.ndjson');
+    const huge = JSON.stringify({ timestamp: 3, note: 'x'.repeat(1024 * 1024 + 10) });
+    await writeFile(
+      path,
+      ndjson(sixSamples.slice(0, 3)) + huge + '\n' + ndjson(sixSamples.slice(3)),
+    );
+    const result = await summarizeFile(path);
+    assert.equal(result.counts.samples, 6);
+    assert.equal(result.quality.invalidRecords, 1);
+    const output = execFileSync(process.execPath, [cli, 'summarize', '--file', path], {
+      encoding: 'utf8',
+    });
+    assert.equal(JSON.parse(output).quality.invalidRecords, 1);
+    // A final oversized line without a newline is reported too.
+    const received = [];
+    const tail = ['{"a":1}\n', 'y'.repeat(700_000), 'y'.repeat(700_000)];
+    for await (const line of lines(stream(tail))) received.push(line);
+    assert.deepEqual(received, ['{"a":1}', null]);
+  });
+});
+
+test('allowed structured logs are logs; malformed Phargus records stay invalid', async () => {
+  await withDirectory(async (directory) => {
+    const path = join(directory, 'logs.ndjson');
+    const logs = [
+      { level: 'info', message: 'listening', timestamp: '2026-11-24T10:00:00.000Z' },
+      { level: 30, time: 1764000000000, pid: 1, hostname: 'app', msg: 'request completed' },
+      { type: 'http', msg: 'GET /' },
+    ];
+    await writeFile(
+      path,
+      ndjson([sixSamples[0], ...logs, sixSamples[1]]) +
+        JSON.stringify(sixSamples[2]).slice(0, 40) +
+        '\n' +
+        JSON.stringify({ timestamp: 10 }) +
+        '\n' +
+        ndjson([sixSamples[3]]),
+    );
+    const allowed = await summarizeFile(path, { allowLogs: true });
+    assert.equal(allowed.counts.samples, 3);
+    assert.equal(allowed.quality.ignoredLogs, 3);
+    assert.equal(allowed.quality.invalidRecords, 2);
+    // Without --allow-logs every non-record line is invalid, as before.
+    const strict = await summarizeFile(path);
+    assert.equal(strict.quality.ignoredLogs, 0);
+    assert.equal(strict.quality.invalidRecords, 5);
+    for (const shaped of [
+      { eventLoop: {} },
+      { type: 'span' },
+      { start: 1 },
+      { ruleId: 'r' },
+      { event: 'window', data: {} },
+    ])
+      assert.equal(classifyLine(JSON.stringify(shaped)).kind, 'invalid');
+    for (const log of [{ event: 'login', data: {} }, { start: 'now' }, [1]])
+      assert.equal(classifyLine(JSON.stringify(log)).kind, 'log');
+  });
 });
 
 test('comparison requires matching recorded conditions; zero baseline has no percentage', async () => {

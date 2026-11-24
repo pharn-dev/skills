@@ -132,29 +132,69 @@ export function quality() {
   };
 }
 
-/** @param {AsyncIterable<Buffer | string>} input */
+const LINE_LIMIT = 1024 * 1024;
+const BOM = 0xfeff;
+
+/**
+ * Splits input into lines and drops a leading byte order mark. A line over 1 MiB is skipped
+ * with bounded memory and yielded as null, so each caller counts it as its evidence demands.
+ * @param {AsyncIterable<Buffer | string>} input @returns {AsyncGenerator<string | null>}
+ */
 export async function* lines(input) {
   const decoder = new StringDecoder('utf8');
   let pending = '';
+  let started = false;
+  let skipping = false;
   for await (const chunk of input) {
     pending += typeof chunk === 'string' ? chunk : decoder.write(chunk);
+    if (!started && pending) {
+      started = true;
+      if (pending.charCodeAt(0) === BOM) pending = pending.slice(1);
+    }
     let end;
     while ((end = pending.indexOf('\n')) !== -1) {
       const line = pending.slice(0, end).replace(/\r$/, '');
-      if (Buffer.byteLength(line) > 1024 * 1024) throw new Error('input line exceeds 1 MiB');
-      yield line;
       pending = pending.slice(end + 1);
+      if (skipping) {
+        skipping = false;
+        yield null;
+      } else yield Buffer.byteLength(line) > LINE_LIMIT ? null : line;
     }
-    if (Buffer.byteLength(pending) > 1024 * 1024) throw new Error('input line exceeds 1 MiB');
+    if (Buffer.byteLength(pending) > LINE_LIMIT) {
+      skipping = true;
+      pending = '';
+    }
   }
   pending += decoder.end();
-  if (pending.trim()) yield pending.replace(/\r$/, '');
+  if (skipping) yield null;
+  else if (pending.trim()) yield pending.replace(/\r$/, '');
 }
 
-const phargusKeys = ['timestamp', 'event', 'type', 'eventLoop', 'ruleId', 'start'];
+const recordKinds = ['sample', 'window', 'span', 'alert'];
 
-/** @param {string} line @returns {{kind: 'record', record: Event} | {kind: 'empty' | 'log' | 'invalid'}} */
+/**
+ * True when a JSON object carries a Phargus field with the type Phargus writes. A string
+ * timestamp or an unrelated "type" belongs to an ordinary structured log.
+ * @param {unknown} raw
+ */
+function phargusShaped(raw) {
+  return (
+    object(raw) &&
+    (typeof raw.timestamp === 'number' ||
+      object(raw.eventLoop) ||
+      raw.type === 'span' ||
+      typeof raw.start === 'number' ||
+      typeof raw.ruleId === 'string' ||
+      (recordKinds.includes(String(raw.event)) && object(raw.data)))
+  );
+}
+
+/**
+ * A null line is one the reader skipped for exceeding 1 MiB: corrupt data, never a log.
+ * @param {string | null} line @returns {{kind: 'record', record: Event} | {kind: 'empty' | 'log' | 'invalid'}}
+ */
 export function classifyLine(line) {
+  if (line === null) return { kind: 'invalid' };
   if (!line.trim()) return { kind: 'empty' };
   /** @type {unknown} */ let raw;
   try {
@@ -168,8 +208,7 @@ export function classifyLine(line) {
   }
   const record = parseRecord(raw);
   if (record) return { kind: 'record', record };
-  const looksLikePhargus = object(raw) && phargusKeys.some((key) => Object.hasOwn(raw, key));
-  return { kind: looksLikePhargus ? 'invalid' : 'log' };
+  return { kind: phargusShaped(raw) ? 'invalid' : 'log' };
 }
 
 /**

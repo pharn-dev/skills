@@ -1,0 +1,42 @@
+{
+  "schema": "pharn-grill-findings/1",
+  "round": 1,
+  "findings": [
+    {
+      "id": "G1-1",
+      "type": "FINDING",
+      "rule_id": "P1",
+      "severity": "important",
+      "file": "pharn/features/phargus-ordinary-input-problems/PLAN.md:33",
+      "problem": "The sketch strips the BOM with a regex holding a literal U+FEFF character; the repo's eslint (js.configs.recommended, no-irregular-whitespace, which checks regexes by default) rejects it (probed this run on stdin: 'Irregular whitespace not allowed'), so copying the sketch verbatim fails AC-13's npm run lint, and the character is invisible to a reader; the escape /^\\uFEFF/ lints clean.",
+      "evidence": "pending = pending.replace(/^<literal U+FEFF>/, ''); (PLAN.md:33, and the same literal in the prose at PLAN.md:18)"
+    },
+    {
+      "id": "G1-2",
+      "type": "FINDING",
+      "rule_id": "P1",
+      "severity": "important",
+      "file": "pharn/features/phargus-ordinary-input-problems/PLAN.md:284",
+      "problem": "The approved SPEC's Constraint says each acceptance criterion has a unit test in test/data.test.mjs, test/summary-regressions.test.mjs or test/capture.test.mjs, but the plan covers AC-11, AC-12 and AC-13 only with ac-* files that CONTRIBUTING requires to be dropped or folded before merge, so after the fold those three criteria have no permanent test; the plan defers this to the grill or a human, and only a human can accept the deviation or amend the SPEC.",
+      "evidence": "So the plan covers AC-11 to AC-13 only with the `ac-*` files and the existing `check:generated`. The grill or a human should confirm this reading."
+    },
+    {
+      "id": "G1-3",
+      "type": "FINDING",
+      "rule_id": "P7",
+      "severity": "important",
+      "file": "pharn/features/phargus-ordinary-input-problems/PLAN.md:290",
+      "problem": "The plan says the ac-* files must not reach CI but names no step or owner that folds or removes the six .github/scripts/ac-phargus-input-*.test.mjs files before the branch is pushed; the root CI job (Node 22.18.0) runs root npm test over .github/scripts/*.test.mjs after a root-only npm ci, so the docs and checks tests that spawn npm scripts in src/phargus would fail there.",
+      "evidence": "Both are present in this worktree, but not in the root CI job, so the `ac-*` files must not reach CI."
+    },
+    {
+      "id": "G1-4",
+      "type": "FINDING",
+      "rule_id": "P7",
+      "severity": "minor",
+      "file": "pharn/features/phargus-ordinary-input-problems/PLAN.md:79",
+      "problem": "The zero-event cleanup unlinks both files inside capture's finally block, and the plan does not say what happens if a close or unlink rejects (for example a file already removed from --out): that rejection would replace the captured failure, so the printed error would lose the HTTP 401 / ECONNREFUSED cause the SPEC wants named; rm with force: true, or not letting a cleanup error replace failure, keeps the cause.",
+      "evidence": "If `failure` is set and `manifest.events === 0`, it closes both handles and unlinks `eventsPath` and `manifestPath`, the two files this call reserved with `wx`."
+    }
+  ]
+}

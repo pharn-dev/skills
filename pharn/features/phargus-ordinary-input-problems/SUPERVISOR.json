@@ -1,0 +1,25 @@
+{
+  "schema": "pharn-supervisor/1",
+  "round": 1,
+  "triage_sha256": "301af98f6bc4029eeb3aa472dda3225d0796736578e229b9c433360c51457600",
+  "decision": "stop",
+  "reason": "The approved SPEC Constraint asks for a permanent unit test per acceptance criterion, but CONTRIBUTING bars ac-* files at merge and tests that pin English wording or a release number, so AC-11 to AC-13 cannot meet it as written; only a person can narrow the Constraint or accept the deviation, and an amend-spec would change an existing Constraint, which that decision does not allow.",
+  "risks": [
+    {
+      "id": "G1-1",
+      "reason": "A literal U+FEFF in the plan sketch would fail the repo lint and AC-13 if copied; a small plan fix, but it travels with the stop since the plan needs a revision anyway."
+    },
+    {
+      "id": "G1-2",
+      "reason": "The SPEC Constraint cannot be met for AC-11 to AC-13 without breaking CONTRIBUTING, and resolving it is a scope call for a person, so the run stops here."
+    },
+    {
+      "id": "G1-3",
+      "reason": "No step or owner removes the ac-* files before a push, so root CI could run tests that need src/phargus node_modules; this depends on how the person resolves the test-placement conflict in G1-2."
+    },
+    {
+      "id": "G1-4",
+      "reason": "A failing cleanup in the finally block could replace the original capture failure and hide the cause the SPEC wants named; minor, but it should be fixed in the plan the person approves."
+    }
+  ]
+}

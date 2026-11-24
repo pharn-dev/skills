@@ -68,6 +68,22 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
+- `phargus` 0.1.1: ordinary input problems no longer cost a recording. A
+  leading UTF-8 byte order mark no longer makes the first record invalid. A line
+  over 1 MiB counts as one invalid record and reading continues, instead of
+  failing the whole file; `collect` still fails on it as corrupt data, and SSE
+  capture drops the rest of that message. With `--allow-logs`, a JSON object is
+  a corrupt Phargus record only when it carries a Phargus field of the right
+  type (a numeric `timestamp` or `start`, an object `eventLoop`,
+  `type: "span"`, a string `ruleId` or an event envelope), so winston, pino and
+  `{"type":"http"}` lines count as ignored logs. A capture manifest whose
+  `quality.invalidRecords` or `quality.ignoredLogs` is missing or not a
+  non-negative integer is refused as an unsupported capture manifest, instead
+  of printing a `null` counter. A capture that fails before its first event
+  removes the `events.ndjson` and `manifest.json` it reserved, so a retry into
+  the same `--out` works, and the error names the network cause
+  (`fetch failed: ECONNREFUSED`, `ENOTFOUND` or `unexpected redirect`)
+  (CORE-240).
 - Repository (no plugin version change): CONTRIBUTING and the rulesets README
   describe the rules GitHub enforces. CONTRIBUTING "CI gates" said "the first
   four" of four bullets run in `ci.yml` and that Validate runs

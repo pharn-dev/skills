@@ -1,0 +1,27 @@
+{
+  "schema": "pharn-grill-triage/1",
+  "round": 1,
+  "findings_sha256": "280a2adfdc371b9f240803177afcb47509978128fbd1b32e1aff23478c6cc4b7",
+  "dispositions": [
+    {
+      "id": "G1-1",
+      "disposition": "replan",
+      "reason": "The plan's line-reader sketch (Approach 1 and its prose) holds a literal U+FEFF in the BOM regex, which the repo's no-irregular-whitespace lint rule rejects and a reader cannot see; rewrite both places with the escape form so copying the sketch keeps AC-13's lint green."
+    },
+    {
+      "id": "G1-2",
+      "disposition": "spec",
+      "reason": "The SPEC Constraint wants a permanent unit test for every AC in three named test files, while CONTRIBUTING drops tests that match English in docs or the changelog and bars ac-* files at merge, so AC-11 to AC-13 cannot have a permanent test at that level; the plan cannot settle this and the SPEC must narrow the Constraint (or a human must accept the deviation)."
+    },
+    {
+      "id": "G1-3",
+      "disposition": "replan",
+      "reason": "The plan says the ac-* files must not reach CI but names no step or owner that folds or drops the six .github/scripts/ac-phargus-input-*.test.mjs files before the branch is pushed; add that step, with its owner, so root CI does not run tests that need src/phargus node_modules."
+    },
+    {
+      "id": "G1-4",
+      "disposition": "replan",
+      "reason": "The plan's zero-event cleanup in the finally block does not say what happens when a close or unlink rejects, which would replace the captured failure and lose the cause the SPEC wants named; state that cleanup uses force removal or never replaces the original failure."
+    }
+  ]
+}

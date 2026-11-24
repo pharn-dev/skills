@@ -1,8 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseRecord, quality } from '../runtime/records.mjs';
-import { summarizeEvents, compareSummaries } from '../runtime/summary.mjs';
-import { sample, span, window, conditions } from './fixtures.mjs';
+import { summarizeEvents, summarizeFile, compareSummaries } from '../runtime/summary.mjs';
+import { sample, span, window, ndjson, conditions } from './fixtures.mjs';
+
+const cli = fileURLToPath(new URL('../runtime/phargus.mjs', import.meta.url));
 
 /** @param {unknown[]} values */
 async function summarize(values) {
@@ -150,4 +157,47 @@ test('realistic sampling jitter remains comparable with matching conditions and 
   const result = compareSummaries(before, after);
   assert.equal(result.comparable, true);
   assert.equal(result.verdict, 'requires-goal-assessment');
+});
+
+test('a manifest counter that is not a non-negative integer is refused, never read as null', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'phargus-manifest-'));
+  try {
+    const file = join(directory, 'partial.ndjson');
+    await writeFile(file, ndjson([sample(0), sample(1000)]) + '{"timestamp":\n');
+    /** @param {string} name @param {Record<string, unknown>} counters */
+    const manifest = async (name, counters) => {
+      const path = join(directory, name + '.json');
+      const counted = { truncated: false, gaps: 0, ...counters };
+      await writeFile(
+        path,
+        JSON.stringify({ schemaVersion: 1, termination: 'eof', quality: counted }),
+      );
+      return path;
+    };
+    const valid = await manifest('valid', { invalidRecords: 2, ignoredLogs: 3 });
+    const summary = await summarizeFile(file, { manifest: valid });
+    assert.equal(summary.quality.invalidRecords, 3);
+    assert.equal(summary.quality.ignoredLogs, 3);
+    for (const [name, counters] of Object.entries({
+      'm-nan': { invalidRecords: 'n/a', ignoredLogs: 0 },
+      'm-missing': { ignoredLogs: 0 },
+      'm-null': { invalidRecords: 0, ignoredLogs: null },
+      'm-negative': { invalidRecords: -1, ignoredLogs: 0 },
+      'm-fraction': { invalidRecords: 0, ignoredLogs: 1.5 },
+    })) {
+      const path = await manifest(name, counters);
+      await assert.rejects(summarizeFile(file, { manifest: path }), /unsupported capture manifest/);
+      const sides = ['--before', file, '--before-manifest', path];
+      const result = spawnSync(
+        process.execPath,
+        [cli, 'compare', ...sides, '--after', file, '--after-manifest', path],
+        { encoding: 'utf8' },
+      );
+      assert.equal(result.status, 1);
+      assert.equal(result.stdout, '');
+      assert.match(JSON.parse(result.stderr).error.message, /unsupported capture manifest/);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
