@@ -2,15 +2,14 @@
 // the tests. Pure functions over parsed JSON and Markdown text; Node core only, nothing read or written here.
 //
 // pharn-ci's schema/report.v2.json has no enum for message codes: `$defs.message.properties.code` is a string with a
-// pattern, and the known codes are listed in that property's description. reportCodes reads that list.
+// pattern. From 0.12.0 its description points to the code table in docs/output.md instead of listing the codes, so
+// reportCodes reads the codes from that table: the first cell of each row, a code in backticks.
 
-const CODE_RE = /(?<![A-Za-z0-9_])[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+(?![A-Za-z0-9_])/g;
+const CODE_ROW_RE = /^\|\s*`([A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+)`\s*\|/gm;
 
-/** The codes named in the report schema's code description, sorted and de-duplicated. */
-export function reportCodes(schema) {
-  const description = schema?.$defs?.message?.properties?.code?.description;
-  if (typeof description !== "string") throw new TypeError("the schema has no $defs.message.properties.code.description");
-  return [...new Set(description.match(CODE_RE) ?? [])].sort();
+/** The codes in the first column of docs/output.md's code table, sorted and de-duplicated. */
+export function reportCodes(outputMarkdown) {
+  return [...new Set([...outputMarkdown.matchAll(CODE_ROW_RE)].map((m) => m[1]))].sort();
 }
 
 /** Every dotted key path under the schema's nested `properties`, in schema order. */

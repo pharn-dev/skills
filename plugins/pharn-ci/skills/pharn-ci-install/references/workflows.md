@@ -1,14 +1,14 @@
-# Workflow and config templates (pharn-ci 0.11.0)
+# Workflow and config templates (pharn-ci 0.12.0)
 
-From pharn-ci 0.11.0's README, `action.yml` and `examples/workflows/`, at its
-release commit `bd7b36ea07588884418f5002ae74afc35135c400` (tag `v0.11.0`). Copy
+From pharn-ci 0.12.0's README, `docs/action.md`, `action.yml` and `examples/workflows/`, at its
+release commit `a370515e32f8040771ccf4b6f737d3d25f62749f` (tag `v0.12.0`). Copy
 the pins exactly; they are the only ones this skill writes.
 
 ## Pins
 
 | Action | Pin |
 | ------ | --- |
-| pharn-ci | `pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400 # v0.11.0` |
+| pharn-ci | `pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f # v0.12.0` |
 | checkout | `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1` |
 | Node | `actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0` |
 | Python | `actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0` |
@@ -89,7 +89,7 @@ jobs:
       - run: npm ci
       - run: npm run test:coverage
       - id: pharn-ci
-        uses: pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400 # v0.11.0
+        uses: pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f # v0.12.0
         timeout-minutes: 5
         with:
           test-integrity: warn # or block; never in .pharn/ci.yml
@@ -145,7 +145,7 @@ only:
 ```yaml
       - id: pharn-ci
         if: (github.event_name == 'pull_request' || github.event_name == 'merge_group') && matrix.node == 24
-        uses: pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400 # v0.11.0
+        uses: pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f # v0.12.0
         timeout-minutes: 5
         with:
           test-integrity: warn
@@ -208,7 +208,7 @@ jobs:
           path: |
             coverage/lcov.info
             pr-number
-      - uses: pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400 # v0.11.0
+      - uses: pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f # v0.12.0
         timeout-minutes: 5
         with:
           comment: false
@@ -249,7 +249,7 @@ jobs:
         env:
           PR_FILE: ${{ runner.temp }}/pharn-ci-input/pr-number
         run: echo "number=$(tr -dc '0-9' < "$PR_FILE" | head -c 10)" >> "$GITHUB_OUTPUT"
-      - uses: pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400 # v0.11.0
+      - uses: pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f # v0.12.0
         timeout-minutes: 5
         with:
           coverage-file: ${{ runner.temp }}/pharn-ci-input/coverage/lcov.info
@@ -294,7 +294,7 @@ jobs:
 
 ## Test integrity and the accept label
 
-pharn-ci 0.2.x and later (0.11.0 included) check every PR for changes that weaken the tests: a
+pharn-ci 0.2.x and later (0.12.0 included) check every PR for changes that weaken the tests: a
 test file deleted (TI01), a test removed from a file that stays (TI02), a skip
 added (TI03), `.only`/`fit` added (TI04), a test emptied of its assertions
 (TI05), a test script weakened (TI10), CI no longer running tests (TI11), a
@@ -302,10 +302,13 @@ coverage-ignore comment (TI13), a lower threshold or a new exclusion in
 `.pharn/ci.yml` (TI14), and warnings or notes for weaker assertions, edited
 expected values, bulk snapshot updates, loosened runner settings, mocked
 modules under test, lint suppressions and, from 0.11.0, assertions that always
-pass (TI06 to TI09, TI12, TI15 to TI17). Each
+pass (TI06 to TI09, TI12, TI15 to TI17; 0.12.0 no longer emits TI15). From
+0.12.0, in `test-integrity: block`, a test file pharn-ci could not read fails
+the check too (`TEST_INTEGRITY_INDEX_UNAVAILABLE`), so a Python project needs
+`python3` 3.8 or newer on the runner. Each
 finding asks for a reviewer to look; most have an ordinary reason. From
-0.7.0 a PR that changes JS or TS source without a test file that imports it
-also gets one `TESTS_NOT_EXERCISING_CHANGES` warning, in every mode and never a
+0.7.0 a PR that changes JS or TS source (from 0.12.0 also Python) without a
+test file that imports it also gets one `TESTS_NOT_EXERCISING_CHANGES` warning, in every mode and never a
 failure, so a setup PR that adds source shows it.
 
 - **`test-integrity: warn`** (the default, and what this skill writes): the
@@ -369,7 +372,7 @@ input out.
       - run: npm test -- --reporters=default --reporters=jest-junit   # writes junit.xml
       - id: pharn-ci
         if: ${{ !cancelled() }}   # also after a failed test step
-        uses: pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400 # v0.11.0
+        uses: pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f # v0.12.0
         timeout-minutes: 5
         with:
           test-integrity: warn
@@ -509,14 +512,15 @@ versions it crosses:
 | 0.7.0 | PI01 is an error by default: a PR that adds a zero-width character, a bidi override or isolate, a tag character or a stray byte order mark now fails the check where it passed (test files, `fixtures/`, `__fixtures__/` and `testdata/` are exempt). A PR that changes JS/TS source without a test importing it gets a `warn` verdict where it got `pass` (`TESTS_NOT_EXERCISING_CHANGES`); it never fails the check. |
 | 0.8.0 | Dependency safety runs by default (`dependencies: auto`) and D04 and D05 are errors: a PR that changes a manifest's dependencies without its lockfile, or adds a git, URL or local-file dependency, now fails the check where it passed. `dependencies: never` gets the old behaviour back. |
 | 0.11.0 | A PR that adds an assertion that always passes gets a `warn` verdict where it got `pass` (`TEST_INTEGRITY_TI17`); it never fails the check unless an org policy sets TI17 to `block`. An exclusion or coverage-file glob longer than 1,024 characters now fails the run. With no diff, `DIFF_UNAVAILABLE` is reported first, so a run under a threshold or `test-integrity: block` fails on it even when the coverage file is also missing. PI01 now flags tag characters after a black flag emoji unless they spell a subdivision flag. With an org policy that sets `forbidden_permissions`, `allowed_mcp_servers` or `forbidden_mcp_servers` at block, a shallow checkout or `pr-number` run now fails with `POLICY_SETTINGS_INVALID`. |
+| 0.12.0 | Breaking: a PR that edits `.pharn/ci.yml` (or the `config` input's file) is checked with the config at the merge base, and the edit applies after merge; on a shallow checkout that copy cannot be read and `CONFIG_CHANGED_IN_DIFF` fails the run under a threshold or in `block` (use `fetch-depth: 0`, as these templates do). Under a threshold, a PR that adds or edits a tracked coverage report (`COVERAGE_FILE_TRACKED`), or changes a covered file the diff shows as binary, now fails. In `test-integrity: block`, a test file pharn-ci could not read now fails the check (`TEST_INTEGRITY_INDEX_UNAVAILABLE`, which the accept label lowers), and TI01, TI03, TI05, TI09 and TI10 catch more. Dependency safety reads more lockfile and manifest spellings and fails on a file it cannot read (`DEPENDENCY_CHECK_INCOMPLETE`), and an instruction or Markdown file cut for size fails the injection scan (`INJECTION_TEXT_TRUNCATED`). A PR that changes Python source without a test importing it gets a `warn` (`TESTS_NOT_EXERCISING_CHANGES`). |
 
 Between those rows nothing changes a verdict: 0.9.0 added the `fix` objects
 to the report and says verdicts, inputs and the comment are unchanged, 0.9.1
 changes only how the release is published, and 0.10.0 adds the opt-in
 `dependency-allowed-hosts` input (see
-[Private registries](#private-registries)). A pin of 0.11.0 or later crosses
-none. Name only the rows the pin crosses (a `# v0.5.0` pin crosses all four, a
-`# v0.9.1` pin only the last). A pin older than 0.5.0 crosses all four as well; for what 0.2.0 to 0.4.0
+[Private registries](#private-registries)). A pin of 0.12.0 or later crosses
+none. Name only the rows the pin crosses (a `# v0.5.0` pin crosses all five, a
+`# v0.9.1` pin the last two, a `# v0.11.0` pin only the last). A pin older than 0.5.0 crosses all five as well; for what 0.2.0 to 0.4.0
 added (test integrity, the secret scan, the opt-in org policy and upload), see
 the Test integrity and Org policy sections.
 

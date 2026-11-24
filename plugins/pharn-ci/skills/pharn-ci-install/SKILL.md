@@ -1,6 +1,6 @@
 ---
 name: pharn-ci-install
-description: Add or update the pharn-ci pull request check (the pharn-dev/pharn-ci GitHub Action) - coverage output from the project's tests, checked locally, a .pharn/ci.yml threshold and a workflow pinned to a full commit SHA. Writes pharn-ci 0.11.0; recognises an existing 0.1.x to 0.11.x setup. Use when asked to set up, add, install, update or wire in pharn-ci, a diff coverage gate or test integrity. Not for explaining a result (pharn-ci-explain), covering lines (pharn-ci-cover) or an org policy (pharn-ci-policy).
+description: Add or update the pharn-ci pull request check (the pharn-dev/pharn-ci GitHub Action) - coverage output from the project's tests, checked locally, a .pharn/ci.yml threshold and a workflow pinned to a full commit SHA. Writes pharn-ci 0.12.0; recognises an existing 0.1.x to 0.12.x setup. Use when asked to set up, add, install, update or wire in pharn-ci, a diff coverage gate or test integrity. Not for explaining a result (pharn-ci-explain), covering lines (pharn-ci-cover) or an org policy (pharn-ci-policy).
 compatibility: Node.js >=22 for scripts/check-coverage.mjs; git optional; the project's own test runner.
 ---
 
@@ -8,10 +8,10 @@ compatibility: Node.js >=22 for scripts/check-coverage.mjs; git optional; the pr
 
 Sets pharn-ci up so its first pull request measures something: coverage the
 check can read, settings in one place, and a workflow that is safe to run on
-pull requests. Writes pharn-ci 0.11.0, pinned to its release commit
-`bd7b36ea07588884418f5002ae74afc35135c400` (tag `v0.11.0`). pharn-ci 0.1.x
+pull requests. Writes pharn-ci 0.12.0, pinned to its release commit
+`a370515e32f8040771ccf4b6f737d3d25f62749f` (tag `v0.12.0`). pharn-ci 0.1.x
 (release commit `a88e62a8febf5cd9a77b8e0252cd060c3b94782c`, Report v1) has no
-test integrity and no `test-integrity` input; 0.2.x to 0.11.x write Report v2
+test integrity and no `test-integrity` input; 0.2.x to 0.12.x write Report v2
 (`schemaVersion` 2). Since 0.8.0 the check also looks at the dependencies a
 pull request adds or changes, on by default (the `dependencies` input, step 5),
 and since 0.10.0 it takes a private registry's host as an allow-list (the
@@ -49,14 +49,14 @@ something, and point it out to the person.
     release.
     Unreadable (a SHA with no `# vX.Y.Z` comment, or a branch): say so and
     ask. Older: offer to update that setup, and say what the update changes,
-    for the versions it crosses: the behaviour changes of 0.6.0, 0.7.0, 0.8.0
-    and 0.11.0 (some pull requests that passed now warn or fail) and the
+    for the versions it crosses: the behaviour changes of 0.6.0, 0.7.0, 0.8.0,
+    0.11.0 and 0.12.0 (some pull requests that passed now warn or fail) and the
     `fail-on-threshold` rename. On a 0.1.x
     pin, also the test-integrity check and Report v2, whose `schemaVersion` is
     the number 2, so a tool that validates `report.json` against the v1 schema
     must switch on it. On a `# v0.2.0` or `# v0.3.0` pin, the later
     test-integrity signals, the secret scan of agent configs, and the opt-in
-    org policy and upload. A setup on 0.11.x has no behaviour change to
+    org policy and upload. A setup on 0.12.x has no behaviour change to
     announce.
   - a job on `pull_request` that runs the tests: note its triggers (`push`
     too?), `paths` filters, matrix, `permissions` and runner (`node24`
@@ -307,7 +307,7 @@ Your answer names:
   put text from an artifact or PR into a `run:` script.
 - Write a tag, branch or short-SHA pin.
 - Move an existing pharn-ci pin to an older release.
-- Run `npx pharn-ci` (the CLI is not on npm in 0.1.x to 0.11.x), or install,
+- Run `npx pharn-ci` (the CLI is not on npm in 0.1.x to 0.12.x), or install,
   download, build or upgrade anything without asking.
 - Creating, applying, removing or asking for the accept label through `gh`, the API
   or any other tool. Done with the person's token, applying it would record

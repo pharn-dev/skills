@@ -211,6 +211,51 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   its expected type, cuts script names and `output`, and reports a lone
   `phargus.config.js` as present and not read instead of `config: null` (CORE-238).
 
+## [pharn-ci 0.4.0] - 2026-11-24
+
+### Changed
+
+- The `pharn-ci` skills cover pharn-ci 0.1.x to 0.12.x (`pharn-ci-policy` 0.4.x
+  to 0.12.x, `pharn-ci-fix` 0.9.x to 0.12.x). `pharn-ci-install` writes
+  pharn-ci 0.12.0, pinned to its release commit
+  `a370515e32f8040771ccf4b6f737d3d25f62749f` (tag `v0.12.0`), and names the
+  0.12.0 behaviour changes when it updates an older pin (CORE-372).
+- A `file:` policy a pull request edits (pharn-ci 0.12.0): `pharn-ci-policy`'s
+  `enable.md` and `keys.md` and `pharn-ci-explain`'s policy reference say that
+  it is united with its copy at the base commit key by key, so the stricter
+  value applies, and that `POLICY_OVERRIDE_IGNORED` names each looser value.
+  Before, they said only the agent lists, the P14 caps and the injection
+  phrases were united.
+- `pharn-ci-explain`: `TEST_INTEGRITY_INDEX_UNAVAILABLE` is an error in
+  `test-integrity: block` for a test file pharn-ci could not read (the accept
+  label lowers it); TI03 reads Python import aliases and more ways a test is
+  switched off; TI01 and TI02 pair a removed test with at most 256 new tests;
+  `POLICY_KEYS_UNKNOWN` is a new code; TI15 and `SETUP_STALE_SI04` are no
+  longer emitted; `POLICY_UNAVAILABLE` has the `no-oidc-token` reason; and the
+  comment's `Hint:` line is the report's `fix.hint`. The "Behaviour changes in
+  0.12.0" notes, written from pharn-ci's `main` before the release, are checked
+  against the 0.12.0 CHANGELOG and no longer say "unreleased".
+- `pharn-ci-policy`'s `keys.md` describes `policy.required` as pharn-ci 0.12.0
+  does: in an app policy it makes unreadable agent settings files an error,
+  and only the `policy: required` input makes a policy fetch failure block.
+- `pharn-ci-policy`'s bundled `policy.v1.json` and the tests' `report.v2.json`
+  are byte copies of pharn-ci v0.12.0's schemas (both changed descriptions
+  only; the checker needs no new keyword). From 0.12.0 the report schema's code
+  description points to the code table in `docs/output.md` instead of listing
+  the codes, so the schema-drift test reads the codes from a byte copy of that
+  file (`tests/fixtures/output.md`).
+- The `shared:coverage` blocks of `check-lines.mjs` and `check-coverage.mjs`
+  are compared with pharn-ci 0.12.0. They do not port 0.12.0's handling of a
+  backslash in a coverage path (a tracked file whose name holds one); the
+  header and LIMITS say so.
+- Evals: the manifest's `latest` is 0.12.0; the install cases,
+  `explain-dependency-d05` and `cover-import-pressure` are regenerated with
+  pharn-ci 0.12.0, which replaces 0.11.0 in the `pharn-ci fixtures` CI job.
+  `regen.mjs` defines `__PHARN_VERSION__` before it imports a core build, as
+  pharn-ci 0.12.0's bundler does, and looks for action pins in `docs/action.md`
+  too, where 0.12.0 moved the Action reference.
+- This repository's own CI and `pharn-ci comment` workflow run pharn-ci 0.12.0.
+
 ## [pharn-ci 0.3.1] - 2026-11-24
 
 ### Fixed
@@ -810,6 +855,7 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 [Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.1...HEAD
 [pharn 0.5.1]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.0...pharn-v0.5.1
+[pharn-ci 0.4.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.3.1...pharn-ci-v0.4.0
 [pharn-ci 0.3.1]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.3.0...pharn-ci-v0.3.1
 [pharn-ci 0.3.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.2...pharn-ci-v0.3.0
 [pharn-ci 0.2.2]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.1...pharn-ci-v0.2.2

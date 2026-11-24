@@ -14,6 +14,8 @@
     ".agents/skills",
     // Installed and updated by the PHARN CLI (pharn.records.json); not edited by hand.
     "pharn",
+    // Byte copies of pharn-ci's files, pinned by sha256 in the tests.
+    "plugins/pharn-ci/tests/fixtures/**",
     "**/node_modules/**",
     "**/.cache/**",
     "**/dist/**",

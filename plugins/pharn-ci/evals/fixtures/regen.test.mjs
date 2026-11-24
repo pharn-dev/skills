@@ -1,7 +1,8 @@
 // Tests the whole-file grader escaper and the heredoc rules of regen.mjs. Node core only:
 //   node --test plugins/pharn-ci/evals/fixtures/regen.test.mjs
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -12,6 +13,7 @@ import {
   latestPin,
   parseArgs,
   parsePharnCiArg,
+  pharnCiPinSources,
   pinGrader,
   pinProblems,
   readHeredoc,
@@ -130,6 +132,21 @@ test("pins are read from text and checked against pharn-ci's own", () => {
   assert.match(pinProblems(reference, [`actions/checkout@${other} # v7.0.1`], preTag).join(), /# v0\.2\.0-pre/);
   assert.deepEqual(pinProblems("no pins here", [], manifest), ["the pin reference lists no pins"]);
   assert.throws(() => pinProblems(reference, [], { ...manifest, latest: "9.9.9" }), /manifest\.latest/);
+});
+
+test("pin sources are pharn-ci's README, docs/action.md and the example workflows", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "pharn-ci-pins-"));
+  try {
+    mkdirSync(path.join(dir, "docs"));
+    mkdirSync(path.join(dir, "examples/workflows"), { recursive: true });
+    writeFileSync(path.join(dir, "README.md"), "readme");
+    writeFileSync(path.join(dir, "docs/action.md"), "action");
+    writeFileSync(path.join(dir, "examples/workflows/jest.yml"), "jest");
+    writeFileSync(path.join(dir, "examples/workflows/notes.txt"), "not a workflow");
+    assert.deepEqual(pharnCiPinSources(dir), ["readme", "action", "jest"]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("pin graders hold the manifest's latest commit, so a release is one edit there", () => {
