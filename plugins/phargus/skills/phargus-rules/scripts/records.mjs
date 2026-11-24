@@ -9,6 +9,14 @@ export function object(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+/** Longest recording or project text a helper prints; a longer value is cut and ends with '…'. */
+export const TEXT_LIMIT = 200;
+
+/** @param {string} value */
+export function shorten(value) {
+  return value.length > TEXT_LIMIT ? value.slice(0, TEXT_LIMIT) + '…' : value;
+}
+
 /** @param {unknown} value @param {string} key @returns {unknown} */
 export function at(value, key) {
   for (const part of key.split('.')) {
@@ -203,7 +211,7 @@ export async function* fileEvents(path, status, options = {}) {
 }
 
 /** @param {unknown} value @returns {value is number} */
-function positiveInteger(value) {
+export function positiveInteger(value) {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
 }
 

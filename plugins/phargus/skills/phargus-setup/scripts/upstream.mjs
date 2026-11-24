@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { object } from './records.mjs';
+import { object, positiveInteger, shorten } from './records.mjs';
 
 export const contract = {
   commit: '819a795875fc547e7daeccc0f0b50846ba642286',
@@ -119,12 +119,26 @@ export async function doctor(project, packageName) {
     await readFile(join(upstream.root, 'package.json'), 'utf8'),
   );
   /** @type {unknown} */ let config;
+  let scriptConfig = false;
   try {
     config = JSON.parse(await readFile(join(upstream.root, 'phargus.config.json'), 'utf8'));
   } catch (error) {
     if (/** @type {NodeJS.ErrnoException} */ (error).code !== 'ENOENT') throw error;
+    // Only note that a script config exists; it is never read or imported.
+    scriptConfig = await access(join(upstream.root, 'phargus.config.js')).then(
+      () => true,
+      () => false,
+    );
   }
   const safeConfig = object(config) ? config : null;
+  /** @type {Record<string, unknown> | null} */ let reportedConfig = null;
+  if (safeConfig) {
+    reportedConfig = {};
+    if (typeof safeConfig.output === 'string') reportedConfig.output = shorten(safeConfig.output);
+    if (positiveInteger(safeConfig.intervalMs)) reportedConfig.intervalMs = safeConfig.intervalMs;
+    if (positiveInteger(safeConfig.queueBound)) reportedConfig.queueBound = safeConfig.queueBound;
+    if (typeof safeConfig.enabled === 'boolean') reportedConfig.enabled = safeConfig.enabled;
+  } else if (scriptConfig) reportedConfig = { file: 'phargus.config.js', read: false };
   return {
     schemaVersion: 1,
     command: 'doctor',
@@ -141,17 +155,13 @@ export async function doctor(project, packageName) {
     },
     application: object(application)
       ? {
-          type: application.type ?? 'commonjs',
-          scriptNames: object(application.scripts) ? Object.keys(application.scripts) : [],
+          type: application.type === 'module' ? 'module' : 'commonjs',
+          scriptNames: object(application.scripts)
+            ? Object.keys(application.scripts).map(shorten)
+            : [],
         }
       : {},
-    config: safeConfig
-      ? Object.fromEntries(
-          ['output', 'intervalMs', 'queueBound', 'enabled']
-            .filter((key) => Object.hasOwn(safeConfig, key))
-            .map((key) => [key, safeConfig[key]]),
-        )
-      : null,
+    config: reportedConfig,
     exports: paths,
   };
 }

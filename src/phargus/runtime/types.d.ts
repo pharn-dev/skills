@@ -107,7 +107,8 @@ export type Summary = {
     distinctRoutes: number;
     routesFolded: boolean;
   };
-  quality: Quality;
+  /** shortenedValues counts values cut to 200 characters in this summary; it is not an evidence problem. */
+  quality: Quality & { shortenedValues: number };
   metrics: Record<string, number | null>;
   memory: { first: Record<string, number> | null; last: Record<string, number> | null };
   hotspots: Hotspot[];

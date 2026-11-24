@@ -1,6 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { fileEvents, quality, qualityTracker, object, samplingInterval } from './records.mjs';
+import {
+  fileEvents,
+  quality,
+  qualityTracker,
+  object,
+  samplingInterval,
+  shorten,
+} from './records.mjs';
 
 /** @typedef {import('./types.js').Summary} Summary */
 /** @typedef {import('./types.js').Event} Event */
@@ -34,15 +41,22 @@ const ROUTE_LIMIT = 20;
 // method and path pairs in recording order; later pairs share the reserved (other) id.
 const TRACKED_ROUTE_LIMIT = 10_000;
 const OTHER_ROUTE = '(other)';
+const METHOD_PATTERN = /^[A-Za-z-]{1,32}$/;
+const MEMORY_KEYS = new Set(['heapUsed', 'heapTotal', 'rss', 'external', 'arrayBuffers']);
 
-/** The only place a method and path become a route id. */
-function routeIndex() {
+/**
+ * The only place a method and path become a route id.
+ * @param {(value: string) => string} cut
+ */
+function routeIndex(cut) {
   /** @type {Map<string, number>} */ const ids = new Map();
   /** @type {{method: string, path: string}[]} */ const names = [];
   return {
     names,
     /** @param {string} method @param {string} path */
     id(method, path) {
+      if (!METHOD_PATTERN.test(method)) method = OTHER_ROUTE;
+      path = cut(path);
       const key = JSON.stringify([method, path]);
       const known = ids.get(key);
       if (known !== undefined) return known;
@@ -99,7 +113,14 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
   /** @type {number[]} */ const spanDurations = [];
   /** @type {number[]} */ const spanStatuses = [];
   /** @type {number[]} */ const spanRoutes = [];
-  const routeIds = routeIndex();
+  let shortenedValues = 0;
+  /** @param {string} value */
+  const cut = (value) => {
+    const result = shorten(value);
+    if (result !== value) shortenedValues += 1;
+    return result;
+  };
+  const routeIds = routeIndex(cut);
   /** @type {number[]} */ const spacing = [];
   /** @type {number | undefined} */ let previousTimestamp;
   /** @type {Map<string, Hotspot>} */ const sites = new Map();
@@ -135,15 +156,18 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
         previousTimestamp = record.data.timestamp;
         start = Math.min(start, record.data.timestamp);
         end = Math.max(end, record.data.timestamp + intervalMs);
-        lastRaw = { ...record.data.memory };
+        lastRaw = Object.fromEntries(
+          Object.entries(record.data.memory).filter(([key]) => MEMORY_KEYS.has(key)),
+        );
         firstRaw ??= lastRaw;
-        for (const site of record.data.backpressure.hotspots ?? []) {
-          const previous = sites.get(site.site);
-          sites.set(site.site, {
-            site: site.site,
-            events: (previous?.events ?? 0) + site.events,
-            totalStall: (previous?.totalStall ?? 0) + site.totalStall,
-            maxStall: Math.max(previous?.maxStall ?? 0, site.maxStall),
+        for (const entry of record.data.backpressure.hotspots ?? []) {
+          const site = cut(entry.site);
+          const previous = sites.get(site);
+          sites.set(site, {
+            site,
+            events: (previous?.events ?? 0) + entry.events,
+            totalStall: (previous?.totalStall ?? 0) + entry.totalStall,
+            maxStall: Math.max(previous?.maxStall ?? 0, entry.maxStall),
           });
         }
         fold(metrics, 'heapUsedMaxBytes', record.data.memory.heapUsed);
@@ -240,7 +264,7 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
       distinctRoutes,
       routesFolded,
     },
-    quality: status,
+    quality: { ...status, shortenedValues },
     metrics: {
       ...metrics,
       eventLoopMeanNs: mean,

@@ -150,8 +150,10 @@ const EXPECTED_0_1_1 =
 test('AC-4: a 50-pair summary is byte-identical to phargus 0.1.1 apart from routesFolded', async () => {
   const result = await summarize(fiftyPairRecording());
   const { routesFolded, ...requests } = result.requests;
+  const { shortenedValues, ...quality } = result.quality;
   assert.equal(routesFolded, false);
-  assert.equal(JSON.stringify({ ...result, requests }), EXPECTED_0_1_1);
+  assert.equal(shortenedValues, 0);
+  assert.equal(JSON.stringify({ ...result, requests, quality }), EXPECTED_0_1_1);
 });
 
 // AC-5 replays the fixture scenarios of summary-routes, summary-regressions and event-limits.

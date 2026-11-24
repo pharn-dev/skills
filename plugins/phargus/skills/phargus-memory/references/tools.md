@@ -45,7 +45,12 @@ are capture locations, not result destinations.
 An inconclusive comparison is a valid result, not a command failure.
 
 Doctor lists script names and the known agent configuration fields, without echoing
-inline script credentials or arbitrary config values. Inspect the application's own
+inline script credentials or arbitrary config values. application.type is module or
+commonjs; from phargus.config.json it reports output only as a string, intervalMs and
+queueBound only as positive integers and enabled only as a boolean, and leaves out any
+other value. Script names and output are cut to 200 characters followed by …. When only
+phargus.config.js exists, config is { file: phargus.config.js, read: false }: doctor does
+not run it. Inspect the application's own
 package.json locally when selecting its start command.
 
 Raw sample interval precedence: explicit --interval-ms, then the intervalMs a capture

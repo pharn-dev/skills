@@ -160,6 +160,17 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   new `requests.routesFolded` is `true`, and `requests.distinctRoutes` is then a
   lower bound. Whole-recording counts and request percentiles stay exact, and
   file reads still have no default event cap (CORE-234).
+- `phargus` 0.1.1: `summarize` and `doctor` print only bounded, validated text
+  from a recording or project. A crafted recording of six samples and one span
+  produced 502,494 bytes of output, with an extra `memory` key, a 200,044-character
+  hotspot site, a 300,003-character path and a method holding an escape sequence.
+  `memory.first` and `memory.last` now keep only the five numeric fields; a path or
+  site longer than 200 characters is cut and ends with `…` before routes and
+  hotspots are grouped, and the new `quality.shortenedValues` counts the cut values;
+  a method that is not a short token is reported as `(other)`. `doctor` reports
+  `application.type` only as `module` or `commonjs`, each config value only with
+  its expected type, cuts script names and `output`, and reports a lone
+  `phargus.config.js` as present and not read instead of `config: null` (CORE-238).
 
 ## [pharn-ci 0.2.1] - 2026-11-23
 
