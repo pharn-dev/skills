@@ -126,7 +126,11 @@ jobs:
 When a job already runs the tests on `pull_request`, extend it. These edits
 only:
 
-1. Its `actions/checkout` step gets `fetch-depth: 0`.
+1. Its `actions/checkout` step gets `fetch-depth: 0` and
+   `persist-credentials: false`, so the pull request's test code cannot read
+   the token edit 3 gives `pull-requests: write`. When a later step in the job
+   pushes, tags or otherwise needs git credentials, do not set
+   `persist-credentials: false`: say so and ask.
 2. Its test command writes coverage, in the same run: `npm test` becomes
    `npm run test:coverage` (or the runner's coverage flags). The tests run
    once.
