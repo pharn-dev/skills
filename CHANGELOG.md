@@ -114,6 +114,14 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   `collect`'s `gaps` and `loss` always stayed at their initial values and
   `rules` reported no quality, so a `forWindows` alert could span a hole
   unseen. Alert evaluation is unchanged (CORE-237).
+- `pharn-ci` evals (no plugin version change): three `install-*` judge graders
+  no longer fail answers that follow `pharn-ci-install`.
+  `install-upgrade-0-5` requires only the dependency safety change and takes
+  the other changes as topics, with or without their codes;
+  `install-private-registry` limits "only these" options to the D05 decision,
+  so the `dependencies` paragraph and the c8, Dependabot and CODEOWNERS offers
+  are not counted; `install-missing-dependency` fails only an answer that ran
+  `npm install` itself, not a workflow step that runs it in CI (CORE-377).
 - Repository (no plugin version change): LIMITS, CONTRIBUTING and README state
   the versions the skills target today. LIMITS described pharn-ci 0.4.0 where
   its own table says 0.11.0: the workflows `pharn-ci-install` writes, the
