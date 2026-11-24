@@ -1,7 +1,7 @@
 // Tests for skills/pharn-ci-cover/scripts/check-lines.mjs. Run: node --test plugins/pharn-ci/tests/*.test.mjs
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, before, describe, test } from "node:test";
@@ -138,6 +138,10 @@ describe("readReport", () => {
     assert.equal(readReport(JSON.stringify(report({ verdict: "PASS" }))).verdict, null);
     assert.equal(readReport(JSON.stringify(report({ tool: { name: "pharn-ci", version: `0.9.1${"x".repeat(21)}` } }))).tool, "pharn-ci ?");
     assert.equal(readReport(JSON.stringify(report()).replace('"percent":72', '"percent":1e400')).percent, null);
+  });
+  test("reads a report that starts with a UTF-8 BOM the same way", () => {
+    const text = JSON.stringify(report());
+    assert.deepEqual(readReport(BOM + text), readReport(text));
   });
   test("refuses non-reports and reports without diff coverage", () => {
     assert.throws(() => readReport("not json"), /not JSON/);
@@ -569,6 +573,17 @@ describe("run (in a git repository)", () => {
     assert.equal(JSON.parse(ok.stdout).lines.checked, 7);
   });
 
+  test("the command line prints the same result for a report saved with a UTF-8 BOM", () => {
+    writeFileSync(path.join(dir, "report-bom.json"), BOM + JSON.stringify(report()));
+    const plain = spawnSync(process.execPath, [SCRIPT, ...args], { cwd: dir, encoding: "utf8" });
+    const bom = spawnSync(process.execPath, [SCRIPT, "--report", "report-bom.json", "--coverage", "coverage/lcov.info"], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+    assert.equal(bom.status, 0, bom.stderr);
+    assert.equal(bom.stdout, plain.stdout);
+  });
+
   test("the command line runs through a symlink and from a path with a space", () => {
     const spaced = path.join(dir, "skill dir");
     mkdirSync(spaced);
@@ -691,5 +706,37 @@ describe("hostile input (in a git repository)", () => {
         } else assert.ok(tracked.has(value), `${where} is not a tracked file`);
       }
     }
+  });
+});
+
+describe("the git index", () => {
+  let dir;
+  before(() => {
+    dir = mkdtempSync(path.join(tmpdir(), "check-lines-index-"));
+    const git = (...args) =>
+      execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.com", ...args], { cwd: dir, stdio: "ignore" });
+    git("init", "-q");
+    mkdirSync(path.join(dir, "src"));
+    mkdirSync(path.join(dir, "coverage"));
+    writeFileSync(path.join(dir, "src", "discount.mjs"), "export const x = 1;\n");
+    git("add", "src/discount.mjs");
+    git("commit", "-qm", "init");
+    writeFileSync(path.join(dir, "report.json"), JSON.stringify(report()));
+    writeFileSync(path.join(dir, "coverage", "lcov.info"), lcov("src/discount.mjs", { 8: 1, 20: 0 }));
+  });
+  after(() => rmSync(dir, { recursive: true, force: true }));
+
+  test("a run leaves .git/index byte-identical when a listed tracked file's timestamp moved", () => {
+    const later = new Date(Date.now() + 10_000);
+    utimesSync(path.join(dir, "src", "discount.mjs"), later, later);
+    const index = path.join(dir, ".git", "index");
+    const before = readFileSync(index);
+    const out = spawnSync(process.execPath, [SCRIPT, "--report", "report.json", "--coverage", "coverage/lcov.info"], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+    assert.equal(out.status, 0, out.stderr);
+    assert.deepEqual(JSON.parse(out.stdout).sourcesChanged, []);
+    assert.ok(readFileSync(index).equals(before), ".git/index was rewritten");
   });
 });

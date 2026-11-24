@@ -180,6 +180,13 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   reports an empty `target` or one over 1024 characters as a problem and
   leaves that fix out. Output for reports real pharn-ci produced is unchanged
   apart from `invalidPaths`.
+- `pharn-ci-cover`: `check-lines.mjs` runs git with `GIT_OPTIONAL_LOCKS=0`, so
+  `git status` no longer rewrites `.git/index` when a listed tracked file's
+  timestamp changed, and the helper writes nothing, as its header and
+  `THREAT-MODEL.md` say. It also reads a `report.json` that starts with a UTF-8
+  BOM (saved by a Windows editor or PowerShell redirection), as `list-fixes.mjs`
+  and `check-policy.mjs` already did, instead of calling it "not JSON".
+  (CORE-259)
 
 ## [pharn-ci 0.2.1] - 2026-11-23
 
