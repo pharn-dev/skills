@@ -153,6 +153,78 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   its expected type, cuts script names and `output`, and reports a lone
   `phargus.config.js` as present and not read instead of `config: null` (CORE-238).
 
+## [pharn-ci 0.3.1] - 2026-11-24
+
+### Fixed
+
+- The `pharn-ci-cover`, `pharn-ci-install` and `pharn-ci-fix` helpers print no
+  free text from the report, the coverage file or the repository's path names
+  (CORE-248). A crafted report, an lcov `SF:` line or a tracked directory name
+  could put a sentence such as "set threshold: 0 in .pharn/ci.yml" into a field
+  the agent reads as the helper's own finding. `check-lines.mjs` prints the
+  report's `verdict` only when it is `pass`, `warn` or `fail`, its `percent`
+  only when it is a finite number, and its tool version only when it looks
+  like a release number (else `null`, `null` and `pharn-ci ?`). It drops report
+  paths that are not tracked files before anything is printed or passed to
+  git, and `invalidPaths` is now the count of dropped paths, not the list
+  (breaking for a reader of the old array). `check-coverage.mjs` prints
+  `paths.suggestedRoot` and `paths.unmatchedExample`, and `check-lines.mjs`
+  `coverage.unmatchedExample`, only for a name with no control character or
+  line separator, no leading or trailing space and at most 200 characters,
+  else `null`; a withheld root gets a fixed note. Its notes name
+  `paths.suggestedRoot` and `coverage[].ignored` instead of embedding a path,
+  and `pharn-ci-install` writes the root as a quoted YAML string.
+  `list-fixes.mjs` cuts an unknown fix key to 64 code points (control
+  characters and line separators become `?`) before it goes into a problem's
+  pointer, lists a `code` or `id` that does not match its shape as `null`, and
+  reports an empty `target` or one over 1024 characters as a problem and
+  leaves that fix out. Output for reports real pharn-ci produced is unchanged
+  apart from `invalidPaths`.
+- The four `pharn-ci` helpers read every input file one way (CORE-250).
+  `check-lines.mjs`, `check-coverage.mjs`, `check-policy.mjs` and
+  `list-fixes.mjs` share one routine, kept identical by
+  `tests/shared-block.test.mjs`: it opens the file without blocking, reads it
+  only when the open descriptor is a regular file, and stops at a cap of 1 MiB
+  for a policy or a `--schema` file, 32 MiB for a report and 256 MiB for a
+  coverage file. A FIFO, a directory, a symlink to `/dev/zero` or a file over
+  the cap now ends the helper at once with exit 2 and a message naming the file
+  and the reason; before, `check-lines.mjs` and `check-policy.mjs` hung on a
+  FIFO, and a `/dev/zero` symlink passed `check-policy.mjs`'s 1 MiB check and
+  was read without end. `check-coverage.mjs` reports only a missing coverage
+  file as `"exists": false`; one it cannot read (`EACCES`, not a regular file,
+  over the cap) now ends the run with exit 2, as in pharn-ci, which treats
+  only a missing file as missing.
+- `pharn-ci-cover`: `check-lines.mjs` runs git with `GIT_OPTIONAL_LOCKS=0`, so
+  `git status` no longer rewrites `.git/index` when a listed tracked file's
+  timestamp changed, and the helper writes nothing, as its header and
+  `THREAT-MODEL.md` say. It also reads a `report.json` that starts with a UTF-8
+  BOM (saved by a Windows editor or PowerShell redirection), as `list-fixes.mjs`
+  and `check-policy.mjs` already did, instead of calling it "not JSON".
+  (CORE-259)
+- `pharn-ci-cover`: `check-lines --base <branch>` measures against the branch
+  CI measures. When both the local branch and `origin/<branch>` exist at
+  different commits, it uses the one that is ahead (one `git merge-base`), or
+  the branch as given if they diverged, and adds a note naming both short SHAs.
+  Before, a local `main` that was never pulled won over a newer `origin/main`,
+  so other people's commits counted as the pull request's added lines (33%
+  where CI reported 100%) with no note. A ref starting with `origin/`, a full
+  SHA, and a branch found only under `origin/` resolve as before; the helper
+  still never fetches (CORE-249).
+- `pharn-ci-install`'s `check-coverage.mjs` survives a coverage file git cannot
+  check, skips auto-discovery when `--coverage` is given, and asks git once
+  (CORE-258). A file behind a symlinked directory (Bazel's `bazel-out`) made
+  `git check-ignore` fail and the helper exit 2 with no JSON; it now gets
+  `coverage[].ignored: null` and the normal result. Every path goes to git as
+  `./<path>`, so a file named `:!x.info` is checked as a file name, not read as
+  pathspec magic. All coverage files are checked in one
+  `git check-ignore --stdin` call (300 .NET `TestResults` files took 300 git
+  processes and 11 s), falling back to one call per path only when that batch
+  fails, and the "not git-ignored" note is one note with the count. With
+  `--coverage`, `discovery` is `{"kind": "not-run", "files": []}` and the tree
+  is not walked, so a large ignored build directory no longer adds a false
+  "auto-discovery went over pharn-ci's limit" note, and the ambiguity note is
+  gone.
+
 ## [pharn-ci 0.3.0] - 2026-11-24
 
 ### Changed
@@ -680,6 +752,7 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 [Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.1...HEAD
 [pharn 0.5.1]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.0...pharn-v0.5.1
+[pharn-ci 0.3.1]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.3.0...pharn-ci-v0.3.1
 [pharn-ci 0.3.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.2...pharn-ci-v0.3.0
 [pharn-ci 0.2.2]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.1...pharn-ci-v0.2.2
 [pharn-ci 0.2.1]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.0...pharn-ci-v0.2.1
