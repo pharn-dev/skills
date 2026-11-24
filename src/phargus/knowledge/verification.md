@@ -7,10 +7,11 @@ post-change trace alone cannot establish improvement.
 
 Use compare with both manifests. A smaller observed latency under a different request
 rate is not a controlled comparison. Missing conditions, missing metrics, dropped data,
-counter resets, gaps or truncation result in an inconclusive comparison. Live capture
-stops at 10,000 events by default, so for a high-rate service pass a larger --max-events
-or a shorter --duration-ms. SSE also has unknown loss, so use raw capture for a
-definitive before/after verification.
+counter resets, gaps or truncation result in an inconclusive comparison. A late sample
+explained by its own stall (quality.stalledSamples) is not a gap and does not make it
+inconclusive. Live capture stops at 10,000 events by default, so for a high-rate service
+pass a larger --max-events or a shorter --duration-ms. SSE also has unknown loss, so use
+raw capture for a definitive before/after verification.
 
 When comparable, evaluate differences against the stated goal, and inspect collateral
 changes in RSS, heap, GC and backpressure. The helper reports deltas; it does not invent
@@ -26,9 +27,10 @@ unchanged or inconclusive), collateral effects and the experiment needed if unre
 Keep both data artifacts so the developer can reproduce the conclusion.
 
 The compare helper checks the actual runtime duration against both the other recording
-and declared durationMs. Raw sample count times the helper's sampling interval must also
-cover the declared duration, and the declared intervalMs must match the interval used by
-the helper, as must the median observed sample spacing. A relative tolerance of 5%
+and declared durationMs. Raw sample count times the helper's sampling interval, plus
+quality.stalledMs, must also cover the declared duration and match the other recording,
+and the declared intervalMs must match the interval used by the helper, as must the
+median observed sample spacing. A relative tolerance of 5%
 permits minor scheduling jitter; larger differences or materially different sample
 counts produce an inconclusive result. Identical copied condition files do not
 establish comparable recorded coverage. Request evidence outside

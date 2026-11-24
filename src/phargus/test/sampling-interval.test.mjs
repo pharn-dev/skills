@@ -83,7 +83,8 @@ test('interval precedence is flag, recorded manifest interval, declared conditio
       source: 'default',
     });
   await withDirectory(async (directory) => {
-    const half = [0, 500, 1000, 1500];
+    // Stamped at the end of each 500 ms interval: together they measured 0 to 2000.
+    const half = [500, 1000, 1500, 2000];
     const declared = await recording(directory, 'declared', half, {
       ...conditions,
       intervalMs: 500,

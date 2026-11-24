@@ -8,6 +8,7 @@ import {
   qualityTracker,
   object,
   samplingInterval,
+  sampleInterval,
 } from './records.mjs';
 
 /** @typedef {import('./types.js').Event} Event */
@@ -16,11 +17,11 @@ import {
 // Live capture is bounded by the network and memory; file reads have no default event limit.
 export const LIVE_MAX_EVENTS = 10_000;
 
-/** @param {Event} record */
-export function eventEnd(record) {
+/** @param {Event} record @param {number} intervalMs */
+export function eventEnd(record, intervalMs) {
   switch (record.event) {
     case 'sample':
-      return record.data.timestamp;
+      return sampleInterval(record.data.timestamp, intervalMs).endMs;
     case 'window':
       return record.data.end;
     case 'span':
@@ -99,7 +100,8 @@ export async function* sseEvents(source, manifest, options) {
           continue;
         }
         received += 1;
-        if (eventEnd(record) <= connectedAt) manifest.historyEvents += 1;
+        if (eventEnd(record, manifest.intervalMs ?? 1000) <= connectedAt)
+          manifest.historyEvents += 1;
         else manifest.observedEvents += 1;
         yield record;
         if (received >= options.maxEvents) {

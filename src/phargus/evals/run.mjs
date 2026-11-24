@@ -217,8 +217,10 @@ async function fixtures(project, id) {
       join(project, 'input.ndjson'),
       ndjson([
         ...raw,
+        // Samples stamped 0 to 5000 measured -1000 to 5000. Each span starts 500 ms before a
+        // sample timestamp so the last one ends inside the period; startTimeMs cannot be negative.
         ...points.map((time) =>
-          span(time, time >= 2000 && time <= 4000 ? 400_000_000 : 10_000_000),
+          span(Math.max(0, time - 500), time >= 2000 && time <= 4000 ? 400_000_000 : 10_000_000),
         ),
       ]),
     );

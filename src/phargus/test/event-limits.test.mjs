@@ -26,12 +26,13 @@ async function withDirectory(run) {
 }
 
 // 60 s at 200 req/s: 60 one-second samples and 12,000 spans, beyond the live 10,000 limit.
+// Each sample is stamped at the end of the second it measured, so 0 to 60 s is covered.
 /** @param {string} directory @param {string} name */
 async function recording(directory, name) {
   const file = join(directory, name + '.ndjson');
   const manifest = join(directory, name + '.manifest.json');
   const records = [];
-  for (let i = 0; i < 60; i += 1) records.push({ event: 'sample', data: sample(i * 1000) });
+  for (let i = 1; i <= 60; i += 1) records.push({ event: 'sample', data: sample(i * 1000) });
   for (let i = 0; i < 12_000; i += 1) records.push({ event: 'span', data: span(i * 5, 1_000_000) });
   await writeFile(file, ndjson(records));
   await writeFile(

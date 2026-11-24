@@ -6,6 +6,7 @@ import {
   qualityTracker,
   object,
   samplingInterval,
+  sampleInterval,
   shorten,
 } from './records.mjs';
 
@@ -154,8 +155,9 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
         if (previousTimestamp !== undefined && record.data.timestamp > previousTimestamp)
           spacing.push(record.data.timestamp - previousTimestamp);
         previousTimestamp = record.data.timestamp;
-        start = Math.min(start, record.data.timestamp);
-        end = Math.max(end, record.data.timestamp + intervalMs);
+        const interval = sampleInterval(record.data.timestamp, intervalMs);
+        start = Math.min(start, interval.startMs);
+        end = Math.max(end, interval.endMs);
         lastRaw = Object.fromEntries(
           Object.entries(record.data.memory).filter(([key]) => MEMORY_KEYS.has(key)),
         );
@@ -218,13 +220,16 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
   const durationMs = Number.isFinite(start) ? Math.max(0, end - start) : 0;
   // Dashboard spans and windows have independent retention. Align requests only after
   // all records have established the runtime interval, regardless of arrival order.
+  // Timestamps are whole milliseconds while durationNs is not: a span drained at the last
+  // tick can end a fraction of a millisecond after it, so compare its end in milliseconds.
   /** @type {number[]} */ const durations = [];
   let errors = 0;
   /** @type {Map<number, {durations: number[], errors: number}>} */ const groups = new Map();
   for (let i = 0; i < spanStarts.length; i++) {
     const startMs = spanStarts[i];
     const durationNs = spanDurations[i];
-    if (!(startMs >= start && startMs < end && startMs + durationNs / 1_000_000 <= end)) continue;
+    const endMs = Math.floor(startMs + durationNs / 1_000_000);
+    if (!(startMs >= start && startMs <= end && endMs <= end)) continue;
     const failed = spanStatuses[i] >= 500;
     durations.push(durationNs);
     if (failed) errors += 1;
@@ -349,6 +354,12 @@ function matchesCoverage(observed, expected) {
   return Math.abs(observed - expected) <= Math.max(observed, expected) * COVERAGE_TOLERANCE;
 }
 
+/** Time covered by raw samples: each sample covers one interval, plus the time its stalls delayed. @param {Summary} summary */
+function sampleCoverageMs(summary) {
+  const { sampleCount, samplingIntervalMs } = summary.coverage;
+  return sampleCount * (samplingIntervalMs ?? 0) + summary.quality.stalledMs;
+}
+
 /** @param {Summary} summary */
 function coverageProblems(summary) {
   /** @type {string[]} */ const reasons = [];
@@ -368,10 +379,7 @@ function coverageProblems(summary) {
     if (
       summary.coverage.format === 'samples' &&
       summary.coverage.samplingIntervalMs !== null &&
-      !matchesCoverage(
-        summary.coverage.sampleCount * summary.coverage.samplingIntervalMs,
-        expectedDuration,
-      )
+      !matchesCoverage(sampleCoverageMs(summary), expectedDuration)
     )
       reasons.push('recorded sample coverage differs from declared durationMs');
   }
@@ -402,7 +410,7 @@ export function compareSummaries(before, after) {
   if (
     before.coverage.format === 'samples' &&
     after.coverage.format === 'samples' &&
-    !matchesCoverage(before.coverage.sampleCount, after.coverage.sampleCount)
+    !matchesCoverage(sampleCoverageMs(before), sampleCoverageMs(after))
   )
     reasons.push('different recorded sample coverage');
   const keys = [
