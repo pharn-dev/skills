@@ -214,13 +214,28 @@ export function classifyLine(line) {
 /**
  * Streams a whole file unless maxEvents is given: a file is already bounded and summarizing
  * it is fast, so a default cap would only truncate evidence. Live SSE keeps its own limit.
- * @param {string} path @param {Quality} status @param {{maxEvents?: number, allowLogs?: boolean}} [options]
+ * An aborted options.signal ends the read quietly; the caller records why it stopped. Each wait
+ * for a line is raced against the signal: a read blocked on a pipe whose writer is silent does
+ * not settle when the stream is destroyed, only when the writer writes or closes.
+ * @param {string} path @param {Quality} status @param {{maxEvents?: number, allowLogs?: boolean, signal?: AbortSignal}} [options]
  */
 export async function* fileEvents(path, status, options = {}) {
   const stream = createReadStream(path, { highWaterMark: 64 * 1024 });
+  const { signal } = options;
+  const iterator = lines(stream);
+  /** @type {Promise<undefined> | undefined} */
+  const aborted = signal
+    ? new Promise((resolve) => {
+        if (signal.aborted) resolve(undefined);
+        else signal.addEventListener('abort', () => resolve(undefined), { once: true });
+      })
+    : undefined;
   let count = 0;
   try {
-    for await (const line of lines(stream)) {
+    for (;;) {
+      const next = await (aborted ? Promise.race([iterator.next(), aborted]) : iterator.next());
+      if (!next || next.done || signal?.aborted) break;
+      const line = next.value;
       const classified = classifyLine(line);
       if (classified.kind === 'empty') continue;
       if (classified.kind !== 'record') {
