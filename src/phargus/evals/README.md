@@ -10,7 +10,7 @@ claude selects one client; --case ID reruns a case after a supported correction.
 --timeout-ms controls a per-trial bound (default 180000). --run-id names the run (default:
 the start time). The report (report.json), raw results and transcripts remain under ignored
 evals/results/<run>/. Authentication/model availability failures are explicit blocked
-cases, not passes. A client failure stops its subsequent repeated attempts.
+cases, not passes. After one, that client's remaining cases are recorded as blocked.
 
 Codex trials run in its workspace-write sandbox with network access. Claude trials run
 every Bash command in Claude Code's OS sandbox (passed with --settings): writes are
