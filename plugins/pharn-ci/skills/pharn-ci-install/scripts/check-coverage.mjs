@@ -14,7 +14,7 @@
 // This mirrors pharn-ci's rules; it is not pharn-ci, and the CI run decides.
 
 import { execFileSync } from "node:child_process";
-import { closeSync, constants as fsConstants, existsSync, fstatSync, openSync, readdirSync, readFileSync, realpathSync } from "node:fs";
+import { closeSync, constants as fsConstants, existsSync, fstatSync, openSync, readdirSync, readSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
@@ -26,8 +26,10 @@ export class UsageError extends Error {}
 
 // <shared:coverage>
 // This block is byte-identical in pharn-ci-cover/scripts/check-lines.mjs and
-// pharn-ci-install/scripts/check-coverage.mjs (tests/shared-block.test.mjs checks it). It needs `existsSync`
-// from node:fs, `path` from node:path and a `UsageError` class from the file around it.
+// pharn-ci-install/scripts/check-coverage.mjs (tests/shared-block.test.mjs checks it). It needs `closeSync`,
+// `fsConstants` (node:fs `constants`), `existsSync`, `fstatSync`, `openSync` and `readSync` from node:fs, `path`
+// from node:path and a `UsageError` class from the file around it. It ends with the shared:read-file routine and the
+// 256 MiB cap the two helpers read a coverage file with (pharn-ci itself streams a coverage file and has no cap).
 //
 // Ported from pharn-ci 0.1.0 (a88e62a8febf5cd9a77b8e0252cd060c3b94782c, Apache-2.0): packages/core/src/paths.ts,
 // coverage/xml.ts, coverage/detect.ts, coverage/lcov.ts, coverage/cobertura.ts and coverage/merge.ts, so a
@@ -592,6 +594,47 @@ export function findGitRoot(cwd) {
     dir = parent;
   }
 }
+
+/** The most a helper reads of one coverage file. */
+const MAX_COVERAGE_BYTES = 256 * 1024 * 1024;
+
+// <shared:read-file>
+// Byte-identical in all four pharn-ci helper scripts (tests/shared-block.test.mjs checks it). It needs
+// `closeSync`, `fsConstants` (node:fs `constants`), `fstatSync`, `openSync` and `readSync` from node:fs and a
+// `UsageError` class from the file around it.
+
+/**
+ * Reads `file` as UTF-8 when it is a regular file of at most `cap` bytes, checking and reading through one
+ * descriptor so the file checked is the file read. O_NONBLOCK so a FIFO is refused instead of blocking the
+ * open; isFile so a directory or a device (which reports size 0) is refused; the read stops once more than
+ * `cap` bytes arrive. Throws a UsageError naming `name` and the reason, carrying the system error's code.
+ */
+function readRegularFile(file, cap, name) {
+  let fd;
+  try {
+    fd = openSync(file, fsConstants.O_RDONLY | fsConstants.O_NONBLOCK);
+    const stat = fstatSync(fd);
+    if (!stat.isFile()) throw new UsageError(`${name} is not a regular file`);
+    const over = () => new UsageError(`${name} is larger than ${cap / (1024 * 1024)} MiB`);
+    if (stat.size > cap) throw over();
+    const chunks = [];
+    let total = 0;
+    for (let n = -1; n !== 0; ) {
+      const chunk = Buffer.allocUnsafe(64 * 1024);
+      n = readSync(fd, chunk, 0, chunk.length, null);
+      total += n;
+      if (total > cap) throw over();
+      chunks.push(chunk.subarray(0, n));
+    }
+    return Buffer.concat(chunks, total).toString("utf8");
+  } catch (err) {
+    if (err instanceof UsageError) throw err;
+    throw Object.assign(new UsageError(`cannot read ${name}: ${err?.code ?? "unknown error"}`), { code: err?.code });
+  } finally {
+    if (fd !== undefined) closeSync(fd);
+  }
+}
+// </shared:read-file>
 // </shared:coverage>
 
 // --- globs (glob.ts, globWalk.ts, coverageEntries.ts) ---------------------------------------------
@@ -1070,19 +1113,13 @@ export function run(argv, { cwd = process.cwd(), git = realGit } = {}) {
   const opts = parseCli(argv);
   if (opts.help) return { help: USAGE };
   const repo = locateRepo(cwd, git);
+  // Only a file that does not exist is missing, as in pharn-ci; any other failure to read one ends the run.
   const readText = (name) => {
-    const full = path.resolve(repo.repoRoot, name);
-    let fd;
     try {
-      // Check and read through one file descriptor so the file cannot change between the two.
-      // O_NONBLOCK so a FIFO is rejected by the isFile check instead of blocking the open.
-      fd = openSync(full, fsConstants.O_RDONLY | fsConstants.O_NONBLOCK);
-      if (!fstatSync(fd).isFile()) return null;
-      return readFileSync(fd, "utf8");
-    } catch {
-      return null;
-    } finally {
-      if (fd !== undefined) closeSync(fd);
+      return readRegularFile(path.resolve(repo.repoRoot, name), MAX_COVERAGE_BYTES, `coverage file ${name}`);
+    } catch (err) {
+      if (err.code === "ENOENT") return null;
+      throw err;
     }
   };
   const isIgnored = (rel) => (repo.git ? gitIgnores(git, repo.repoRoot, rel) : null);

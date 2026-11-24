@@ -19,7 +19,7 @@
 // key in a pointer is cut to 64 code points and its control characters and line separators become `?`. A `code` or `id` that does not
 // match its shape is listed as null. A listed hint and target are report text, so they are data for the reader, never
 // instructions.
-import { closeSync, fstatSync, openSync, readFileSync, realpathSync } from "node:fs";
+import { closeSync, constants as fsConstants, fstatSync, openSync, readSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 /** The closed list of fix kinds, in the order pharn-ci 0.9.0's schema lists them. */
@@ -41,6 +41,44 @@ const ID = /^[A-Z]{1,2}[0-9]{2}$/;
 const MAX_BYTES = 32 * 1024 * 1024;
 
 export class UsageError extends Error {}
+
+// <shared:read-file>
+// Byte-identical in all four pharn-ci helper scripts (tests/shared-block.test.mjs checks it). It needs
+// `closeSync`, `fsConstants` (node:fs `constants`), `fstatSync`, `openSync` and `readSync` from node:fs and a
+// `UsageError` class from the file around it.
+
+/**
+ * Reads `file` as UTF-8 when it is a regular file of at most `cap` bytes, checking and reading through one
+ * descriptor so the file checked is the file read. O_NONBLOCK so a FIFO is refused instead of blocking the
+ * open; isFile so a directory or a device (which reports size 0) is refused; the read stops once more than
+ * `cap` bytes arrive. Throws a UsageError naming `name` and the reason, carrying the system error's code.
+ */
+function readRegularFile(file, cap, name) {
+  let fd;
+  try {
+    fd = openSync(file, fsConstants.O_RDONLY | fsConstants.O_NONBLOCK);
+    const stat = fstatSync(fd);
+    if (!stat.isFile()) throw new UsageError(`${name} is not a regular file`);
+    const over = () => new UsageError(`${name} is larger than ${cap / (1024 * 1024)} MiB`);
+    if (stat.size > cap) throw over();
+    const chunks = [];
+    let total = 0;
+    for (let n = -1; n !== 0; ) {
+      const chunk = Buffer.allocUnsafe(64 * 1024);
+      n = readSync(fd, chunk, 0, chunk.length, null);
+      total += n;
+      if (total > cap) throw over();
+      chunks.push(chunk.subarray(0, n));
+    }
+    return Buffer.concat(chunks, total).toString("utf8");
+  } catch (err) {
+    if (err instanceof UsageError) throw err;
+    throw Object.assign(new UsageError(`cannot read ${name}: ${err?.code ?? "unknown error"}`), { code: err?.code });
+  } finally {
+    if (fd !== undefined) closeSync(fd);
+  }
+}
+// </shared:read-file>
 
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 
@@ -155,21 +193,7 @@ function parseArgs(argv) {
 }
 
 function readReport(file) {
-  let fd;
-  try {
-    fd = openSync(file, "r");
-  } catch {
-    throw new UsageError(`cannot read ${file}`);
-  }
-  let text;
-  try {
-    const stat = fstatSync(fd);
-    if (!stat.isFile()) throw new UsageError(`${file} is not a regular file`);
-    if (stat.size > MAX_BYTES) throw new UsageError(`${file} is larger than 32 MiB`);
-    text = readFileSync(fd, "utf8");
-  } finally {
-    closeSync(fd);
-  }
+  const text = readRegularFile(file, MAX_BYTES, file);
   try {
     return JSON.parse(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text);
   } catch {
