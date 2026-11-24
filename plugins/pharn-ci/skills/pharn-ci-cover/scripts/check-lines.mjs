@@ -617,7 +617,7 @@ export function parseCli(argv) {
 
 /**
  * The report versions this helper reads: Report v1 (pharn-ci 0.1.x, the string "1") and Report v2 (pharn-ci 0.2.x to
- * 0.4.x, the number 2). v2 takes `diffCoverage` from v1 unchanged, and that is all this helper reads.
+ * 0.11.x, the number 2). v2 takes `diffCoverage` from v1 unchanged, and that is all this helper reads.
  */
 export function isKnownSchemaVersion(v) {
   return v === "1" || v === 2;

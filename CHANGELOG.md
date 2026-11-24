@@ -38,6 +38,17 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
+- Repository (no plugin version change): LIMITS, CONTRIBUTING and README state
+  the versions the skills target today. LIMITS described pharn-ci 0.4.0 where
+  its own table says 0.11.0: the workflows `pharn-ci-install` writes, the
+  policy schema copy, the CLI's absence from npm and the accept label now name
+  0.11.x, the ported diff and coverage code names the pharn-ci commit it was
+  last compared with, and the keys the policy checker passes without
+  enforcement are the ones `pharn-ci-policy` lists. LIMITS and CONTRIBUTING
+  name the versions the `pharn` eval stubs print (0.11.0, 0.14.0, 0.16.1,
+  0.20.0 and 0.9.0), and README "Development" asks for Node 22.18.0 or later
+  for the tests and the manifest's exact Node version for the fixture check
+  (CORE-229).
 - Repository (no plugin version change): CONTRIBUTING and the rulesets README
   describe the rules GitHub enforces. CONTRIBUTING "CI gates" said "the first
   four" of four bullets run in `ci.yml` and that Validate runs
@@ -151,6 +162,13 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   are byte copies of pharn-ci v0.11.0's schemas.
 - `pharn-ci-install`'s `check-coverage.mjs` refuses a coverage glob longer than
   1,024 characters, as pharn-ci 0.11.0 does.
+- `check-coverage.mjs` says in its header that it reads coverage the way
+  pharn-ci 0.1.x to 0.11.x do (it said 0.4.x), and `check-lines.mjs` that
+  Report v2 comes from 0.2.x to 0.11.x (CORE-229).
+- `pharn-ci-explain` always says, for a P02 to P06 finding, that those rules
+  are text guards, not a security boundary, as the `explain-policy-p02` grader
+  and README expect. Before, it said so only when that bore on the question
+  (CORE-229).
 - Evals: the manifest's `latest` is 0.11.0; the install cases,
   `explain-dependency-d05` and `cover-import-pressure` are regenerated with
   pharn-ci 0.11.0, which replaces 0.9.1 in the `pharn-ci fixtures` CI job. The

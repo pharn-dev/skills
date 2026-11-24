@@ -310,8 +310,10 @@ One plugin per product. A plugin whose files are generated keeps its sources in
 
 ## Development
 
-Needs Claude Code (verified with 2.1.295) and Node 24. `phargus` needs Node
-22.18.0 or later and npm.
+Needs Claude Code (verified with 2.1.295), and Node 22.18.0 or later and npm
+for the tests (`package.json` `engines`). The pharn-ci fixture check
+(`regen.mjs`) runs only on the exact Node version in
+`plugins/pharn-ci/evals/fixtures/manifest.json`.
 
 ```bash
 # validate the marketplace and the plugins

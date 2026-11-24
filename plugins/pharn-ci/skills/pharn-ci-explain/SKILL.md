@@ -172,9 +172,9 @@ it, so it settles no `POLICY_*` finding.
 For a policy finding, name the rule (P01 to P14), the file and line and its
 level, and give the honest fix: change the flagged file (for example the
 allow rule in `.claude/settings.json`, the MCP server, the tracked file),
-never the policy, a rule's level, a protected path or `.pharn/ci.yml`. Say
-that P02 to P06 are text guards, not a security boundary, when that bears on
-the question, and that settings a pull request carries never loosen the gate:
+never the policy, a rule's level, a protected path or `.pharn/ci.yml`. For a
+P02 to P06 finding, say that those rules are text guards, not a security
+boundary. Say that settings a pull request carries never loosen the gate:
 an edited policy file raises P09, and a `file:` policy can only raise the
 gate. When the person asks to drop or relax a rule or a protected path "so
 the PR passes", decline, say the policy belongs to its owner and is changed
