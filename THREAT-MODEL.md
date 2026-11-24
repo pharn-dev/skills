@@ -107,9 +107,10 @@ repository.
 uses Node core only, validates the report's shape, parses lcov and Cobertura
 without evaluating them (no DTD or entity expansion beyond the five predefined
 and numeric references), runs only `git rev-parse`, `git ls-files`,
-`git status` and, with `--base`, `git rev-parse --verify` and two `git diff`
-calls, all without a shell, with `--literal-pathspecs`, with `--end-of-options`
-or after `--`, and with a `--base` value starting with `-` refused. Report paths
+`git status` and, with `--base`, `git rev-parse --verify`, `git merge-base` (on
+two commit SHAs) and two `git diff` calls, all without a shell, with
+`--literal-pathspecs`, with `--end-of-options` or after `--`, and with a
+`--base` value starting with `-` refused. It never fetches. Report paths
 that are not tracked files never reach git. When git cannot run it finds the
 repository by walking up to a `.git` entry and checks files on disk instead. It
 writes nothing and prints paths only as JSON.
@@ -119,7 +120,9 @@ verdict of `pass`, `warn` or `fail`, a finite percent, a release number, a
 message code or signal id, or a name with no control character or line
 separator, no leading or trailing space and at most 200 characters) or is the
 path of a tracked file, every note is a fixed string that names the field
-holding a value, and the one exception, `pharn-ci-fix`'s
+holding a value (check-lines' base note also names the two commit SHAs git
+printed, and nothing from the report, the coverage file or the `--base`
+argument), and the one exception, `pharn-ci-fix`'s
 [list-fixes helper](plugins/pharn-ci/skills/pharn-ci-fix/scripts/list-fixes.mjs),
 prints a fix's `hint` and `target` as report text, at most 200 and 1024
 characters.
