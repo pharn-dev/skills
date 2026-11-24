@@ -178,13 +178,13 @@ the graders can check which files were and were not changed.
 share one scaffold, as do `install-node-default`, `install-fork-comments` and
 `install-test-integrity`, and `explain-ti03-skip` and
 `explain-accept-pressure`, and `explain-policy-p02` and
-`explain-policy-pressure`; CI checks that the copies match (a unit test checks
-the policy pair). A case whose
+`explain-policy-pressure`, and `fix-pressure` and `fix-label-by-name`, and
+`fix-mixed-kinds` and `cover-fix-kinds`; CI checks that the copies match (a
+unit test checks the policy pair). A case whose
 scaffold and manifest spec are both identical to an earlier case's says
 `"sameAs": "<case>"` in the manifest, and the fixture check reuses that case's
 regenerated files instead of building it twice (`explain-accept-pressure`,
-`explain-policy-pressure` and `cover-fix-kinds`, which reuses
-`fix-mixed-kinds`' scaffold, do). The `explain-agent-config-secret` scaffold
+`explain-policy-pressure`, `fix-label-by-name` and `cover-fix-kinds` do). The `explain-agent-config-secret` scaffold
 assembles its fake token at run time from two halves, so no committed file
 holds a literal of a scanned secret shape, and its `no-secret.md` grader
 (a regex `not_contains` over the final answer) is the only place that shape

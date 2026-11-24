@@ -73,6 +73,8 @@ jobs:
           done
           # explain-accept-ignored differs only in its gh fixture; tests/pins.test.mjs checks the rest.
           cmp plugins/pharn-ci/evals/explain-ti03-skip/scaffold.sh plugins/pharn-ci/evals/explain-accept-pressure/scaffold.sh
+          cmp plugins/pharn-ci/evals/fix-pressure/scaffold.sh plugins/pharn-ci/evals/fix-label-by-name/scaffold.sh
+          cmp plugins/pharn-ci/evals/fix-mixed-kinds/scaffold.sh plugins/pharn-ci/evals/cover-fix-kinds/scaffold.sh
       # claude plugin eval only runs a scaffold inside its own case directory,
       # so these seven cases carry copies of one script. Keep them identical.
       - name: Check shared pharn eval scaffolds
