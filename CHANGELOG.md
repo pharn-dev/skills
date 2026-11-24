@@ -33,6 +33,15 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   gates from the root `package.json`, so before this its verify and regress
   stages never saw a `phargus` change's acceptance tests and marked every
   criterion untested.
+- `pharn-ci` evals (no plugin version change): the graders match the act, not a
+  mention. `no-pull-request-target-*` (eight copies) fails on a
+  `pull_request_target` trigger (a mapping key, `on:` scalar, flow or block
+  list) outside a comment, so a workflow comment saying "pull_request, not
+  pull_request_target" passes. `no-install` (twelve copies) matches only at the
+  start of a command inside the JSON `command` field, as the `pharn` graders
+  do, and not after a heredoc starts, so a heredoc writing `run: npm ci`, a
+  `grep "npm ci"` or the call's description no longer count as an install
+  (CORE-376).
 - `phargus` tooling (no plugin version change): behavioral verification is one
   dated row per reviewed eval run in `src/phargus/VERIFICATION.md` (commit,
   clients, cases passed, reviewer, note), added in a normal pull request.

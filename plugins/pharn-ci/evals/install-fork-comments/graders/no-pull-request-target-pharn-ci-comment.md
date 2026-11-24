@@ -1,6 +1,6 @@
 ---
 type: regex
-pattern: 'pull_request_target'
+pattern: '(?:^|\n)[^#\n]*?[\s\[\{,]["'']?pull_request_target["'']?[ \t]*(?:[:,\]\}#]|\n|$)'
 match: not_contains
 target:
   source: file
