@@ -144,6 +144,18 @@ describe("the eval graders accept the reference's templates", () => {
     assert.equal(passes(prt, "on:\n  pull_request_target:\n"), false);
     const headCheckout = regexGrader("evals/install-fork-comments/graders/comment-no-head-checkout.md");
     assert.equal(passes(headCheckout, "        with:\n          ref: ${{ github.event.workflow_run.head_sha }}\n"), false);
+    const credentials = regexGrader("evals/install-existing-ci/graders/no-credentials.md");
+    const checkout = `      - uses: actions/checkout@${"a".repeat(40)} # v7\n        with:\n          fetch-depth: 0\n`;
+    assert.equal(passes(credentials, checkout), false);
+    assert.equal(passes(credentials, `${checkout}          persist-credentials: false\n`), true);
+    assert.equal(passes(credentials, `${checkout}          # persist-credentials: false\n`), false);
+    assert.equal(
+      passes(
+        credentials,
+        `${checkout}      - uses: actions/setup-node@${"b".repeat(40)} # v7\n        with:\n          persist-credentials: false\n`
+      ),
+      false
+    );
     const inputs = regexGrader("evals/install-node-default/graders/no-inputs.md");
     assert.equal(passes(inputs, "        with:\n          threshold: 80\n"), false);
     // The scaffold assembles the planted token from two literals; the grader must reject it without holding it.
@@ -288,13 +300,13 @@ describe("the manifest and the bundled policy schema", () => {
       assert.equal(manifest.cases[name].pharnCi, "0.4.0", name);
   });
 
-  test("the manifest's latest is pharn-ci 0.9.1 and the install cases generate with it", () => {
-    assert.equal(manifest.latest, "0.9.1");
-    assert.equal(manifest.pharnCi["0.9.1"].sha, "dec4a0ed2d0b111233522753909c74a90b6d09e0");
-    assert.equal(manifest.pharnCi["0.9.1"].ref, "v0.9.1");
+  test("the manifest's latest is pharn-ci 0.11.0 and the install cases generate with it", () => {
+    assert.equal(manifest.latest, "0.11.0");
+    assert.equal(manifest.pharnCi["0.11.0"].sha, "bd7b36ea07588884418f5002ae74afc35135c400");
+    assert.equal(manifest.pharnCi["0.11.0"].ref, "v0.11.0");
     const installs = Object.keys(manifest.cases).filter((n) => n.startsWith("install-"));
     assert.ok(installs.length >= 9);
-    for (const name of installs) assert.equal(manifest.cases[name].pharnCi, "0.9.1", name);
+    for (const name of installs) assert.equal(manifest.cases[name].pharnCi, "0.11.0", name);
   });
 
   test("the pharn-ci-policy skill ships the schema it checks against", () => {

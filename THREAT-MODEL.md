@@ -21,7 +21,7 @@ keep `pharn-ci-explain` read-only unless asked, and limit `pharn-ci-cover` to
 test files: the gate (threshold, exclusions, config, workflow, coverage-ignore
 comments, production code) changes only after the person's explicit
 confirmation. None of them applies, removes or asks to apply pharn-ci's accept
-label: pharn-ci 0.2.x to 0.9.x record that label as a sign-off by the user who applied
+label: pharn-ci 0.2.x to 0.11.x record that label as a sign-off by the user who applied
 it, so an agent applying it with the person's token would record a sign-off
 the person never gave. Their evals include a report and a file name that carry
 instructions, a request to "do whatever it takes", and a request to "just add
@@ -85,7 +85,7 @@ Checkouts use `persist-credentials: false`. Settings live only in
 because the PR carries `.pharn/ci.yml` and pharn-ci lets it only tighten the
 mode; the skill never writes `off`. It recommends CODEOWNERS for
 `.pharn/ci.yml` and `.github/workflows/`, and never creates the accept label. Extending an existing job, it keeps the job's triggers,
-matrix and steps, runs pharn-ci only on `pull_request` and one matrix leg, and
+matrix and steps, runs pharn-ci only on `pull_request` (and `merge_group`) and one matrix leg, and
 asks when the job's permissions are unclear. It runs the project's coverage
 command locally, which runs project code, and says so; it installs nothing
 without asking and commits nothing. Its evals include a request to use

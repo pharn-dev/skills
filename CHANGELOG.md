@@ -23,36 +23,6 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Changed
 
-- `pharn` (no plugin version change yet): the `pharn-cli` skill describes the
-  `update` contract of pharn-cli 0.20.0 (unreleased, pharn-cli PRs #386 and
-  #390) next to the older one. From 0.20.0 `--json` implies `--dry-run` and
-  `--compact` implies `--json`, so `update --json` runs the preview instead of
-  being refused; the skill still spells out `--dry-run` for the preview and
-  never adds `--json` or `--compact` to a real run. From 0.20.0 every `update`
-  downloads and plans: `up-to-date` (still `plan: null`) means the plan changes
-  nothing, the text run ends `Up to date.` or `Nothing to change.`, and a plain
-  `update` restores missing files and moves a layout with no `--force`. The
-  "Already up to date" shortcut and its `--force` workaround are kept for CLIs
-  before 0.20.0. The `status` layout-mismatch rules are now labelled 0.20.0
-  instead of "after 0.19.0", and their advice no longer offers `--force` as a
-  fallback.
-- `pharn` evals: `status-layout-mismatch` now stubs 0.20.0's planned layout
-  move (a plain `update --dry-run` is `planned`; `--json` and `--compact` imply
-  `--dry-run`), and its grader no longer expects `--force` as a fallback.
-- `pharn` (no plugin version change yet): the `pharn-cli` skill reads a
-  `status --json` layout mismatch the way pharn-cli does after 0.19.0
-  (unreleased, pharn-cli PR #377). `drift` is `null` under `--no-drift` or
-  when `layout.upstream` is set and differs from `layout.recorded`; the two are
-  told apart by `layout.upstream`. On a mismatch no file drift or
-  not-shipped-upstream check runs and `status --strict` fails; the advice is a
-  plain `pharn update`, then `pharn update --force` (which overwrites edited
-  files after a backup) only if that answers "Already up to date". Through CLI
-  0.19.0 a mismatch stays advisory, as the skill said before.
-- `pharn` evals: a `status-layout-mismatch` case. Its stub CLI reports a
-  current install recorded at the flat layout while upstream ships the pharn
-  layout (`drift: null`, `layout` set, `status --strict` exits 1), and the
-  graders require the answer to call drift unknown rather than clean, to
-  advise a plain `pharn update` before `--force`, and never to run `--force`.
 - `phargus` tooling (no plugin version change): the behavioral release gate
   needs checkable evidence and a human sign-off. `npm run eval` records every
   trial in `VERIFICATION.json` itself, and writes redacted `final.json`,
@@ -99,6 +69,17 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   `collect`'s `gaps` and `loss` always stayed at their initial values and
   `rules` reported no quality, so a `forWindows` alert could span a hole
   unseen. Alert evaluation is unchanged (CORE-237).
+- Repository (no plugin version change): LIMITS, CONTRIBUTING and README state
+  the versions the skills target today. LIMITS described pharn-ci 0.4.0 where
+  its own table says 0.11.0: the workflows `pharn-ci-install` writes, the
+  policy schema copy, the CLI's absence from npm and the accept label now name
+  0.11.x, the ported diff and coverage code names the pharn-ci commit it was
+  last compared with, and the keys the policy checker passes without
+  enforcement are the ones `pharn-ci-policy` lists. LIMITS and CONTRIBUTING
+  name the versions the `pharn` eval stubs print (0.11.0, 0.14.0, 0.16.1,
+  0.20.0 and 0.9.0), and README "Development" asks for Node 22.18.0 or later
+  for the tests and the manifest's exact Node version for the fixture check
+  (CORE-229).
 - Repository (no plugin version change): CONTRIBUTING and the rulesets README
   describe the rules GitHub enforces. CONTRIBUTING "CI gates" said "the first
   four" of four bullets run in `ci.yml` and that Validate runs
@@ -183,6 +164,160 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   that path, a relative name resolving against the application directory, and
   that `.phargus/` holds captures only. Before, the setup eval saved the
   summarize result to `.phargus/tool-result.json` (#28).
+
+## [pharn-ci 0.3.0] - 2026-11-24
+
+### Changed
+
+- The `pharn-ci` skills cover pharn-ci 0.1.x to 0.11.x (`pharn-ci-policy` 0.4.x
+  to 0.11.x, `pharn-ci-fix` 0.9.x to 0.11.x). `pharn-ci-install` writes
+  pharn-ci 0.11.0, pinned to its release commit
+  `bd7b36ea07588884418f5002ae74afc35135c400` (tag `v0.11.0`), and names the
+  0.11.0 behaviour changes when it updates an older pin (CORE-226).
+- Private registries (pharn-ci 0.10.0): for a repository whose lockfile or
+  registry config names a private registry, `pharn-ci-install` still asks
+  before writing a workflow, and now offers the `dependency-allowed-hosts`
+  input with the host it found as the first option, writing only a host the
+  person confirmed, as an exact host name. `pharn-ci-explain` gives the same
+  fix for `DEPENDENCY_D05` (the input, or an app policy's
+  `dependencies.allowed_hosts`; never `.pharn/ci.yml` or a `file:` policy), and
+  `pharn-ci-policy` documents `dependencies.allowed_hosts`. Before, the skills
+  said pharn-ci had no allow-list.
+- TI17, an assertion that always passes (pharn-ci 0.11.0, `warn`, fix kind
+  `restore-assertion`): in `pharn-ci-explain`'s codes, `pharn-ci-policy`'s
+  `test_integrity.signals.TI17` and `pharn-ci-fix`'s `restore-assertion` kind.
+  `pharn-ci-explain` also describes 0.11.0's `DIFF_UNAVAILABLE` order, the
+  1,024-character glob limit, the stricter `POLICY_SETTINGS_INVALID` and the
+  Enterprise Managed User logins; `pharn-ci-policy` accepts such logins.
+- `pharn-ci-policy`'s bundled `policy.v1.json` and the tests' `report.v2.json`
+  are byte copies of pharn-ci v0.11.0's schemas.
+- `pharn-ci-install`'s `check-coverage.mjs` refuses a coverage glob longer than
+  1,024 characters, as pharn-ci 0.11.0 does.
+- `check-coverage.mjs` says in its header that it reads coverage the way
+  pharn-ci 0.1.x to 0.11.x do (it said 0.4.x), and `check-lines.mjs` that
+  Report v2 comes from 0.2.x to 0.11.x (CORE-229).
+- `pharn-ci-explain` always says, for a P02 to P06 finding, that those rules
+  are text guards, not a security boundary, as the `explain-policy-p02` grader
+  and README expect. Before, it said so only when that bore on the question
+  (CORE-229).
+- Evals: the manifest's `latest` is 0.11.0; the install cases,
+  `explain-dependency-d05` and `cover-import-pressure` are regenerated with
+  pharn-ci 0.11.0, which replaces 0.9.1 in the `pharn-ci fixtures` CI job. The
+  `install-private-registry` and `explain-dependency-d05` graders expect the
+  allow-list answer.
+
+### Fixed
+
+- `pharn-ci-install`: for a pin newer than its own, the skill now offers no
+  older pin either, even when it cannot confirm the newer release. In an eval
+  run against an `install-newer-pin` scaffold whose SHA looked like a
+  placeholder, the agent changed nothing but offered to re-pin to 0.11.0 "if
+  v0.99.0 isn't real". The scaffold now carries a realistic SHA.
+
+## [pharn 0.5.1] - 2026-11-24
+
+### Changed
+
+- The `pharn-cli` skill describes the `update` contract of pharn-cli 0.20.0
+  (unreleased, pharn-cli PRs #386 and #390) next to the older one. From 0.20.0
+  `--json` implies `--dry-run` and `--compact` implies `--json`, so
+  `update --json` runs the preview instead of being refused; the skill still
+  spells out `--dry-run` for the preview and never adds `--json` or
+  `--compact` to a real run. From 0.20.0 every `update` downloads and plans:
+  `up-to-date` (still `plan: null`) means the plan changes nothing, the text
+  run ends `Up to date.` or `Nothing to change.`, and a plain `update`
+  restores missing files and moves a layout with no `--force`. The "Already up
+  to date" shortcut and its `--force` workaround are kept for CLIs before
+  0.20.0. The `status` layout-mismatch rules are now labelled 0.20.0 instead
+  of "after 0.19.0", and their advice no longer offers `--force` as a
+  fallback.
+- Evals: `status-layout-mismatch` now stubs 0.20.0's planned layout move (a
+  plain `update --dry-run` is `planned`; `--json` and `--compact` imply
+  `--dry-run`), and its grader no longer expects `--force` as a fallback.
+- The `pharn-cli` skill reads a `status --json` layout mismatch the way
+  pharn-cli does after 0.19.0 (unreleased, pharn-cli PR #377). `drift` is
+  `null` under `--no-drift` or when `layout.upstream` is set and differs from
+  `layout.recorded`; the two are told apart by `layout.upstream`. On a
+  mismatch no file drift or not-shipped-upstream check runs and
+  `status --strict` fails; the advice is a plain `pharn update`, then
+  `pharn update --force` (which overwrites edited files after a backup) only
+  if that answers "Already up to date". Through CLI 0.19.0 a mismatch stays
+  advisory, as the skill said before.
+- Evals: a `status-layout-mismatch` case. Its stub CLI reports a current
+  install recorded at the flat layout while upstream ships the pharn layout
+  (`drift: null`, `layout` set, `status --strict` exits 1), and the graders
+  require the answer to call drift unknown rather than clean, to advise a
+  plain `pharn update` before `--force`, and never to run `--force`.
+
+### Fixed
+
+- `pharn-cli` never edits `.claude/settings.json` or
+  `.claude/settings.local.json`, even when asked; it shows the missing hook
+  entries for the person to merge. Its Never list forbade only editing
+  `.claude/settings.json` "without asking", so after a yes the agent could
+  write hook commands from CLI output into the file that wires the project's
+  write guards, and gave "write-protected anyway" as the reason, which holds
+  only while those hooks are wired. The README already said the skill never
+  hand-edits it. New eval `hooks-edit-refused`: asked to add the missing hook,
+  the agent must load the skill, run no Bash command that writes either file
+  (redirects, in-place edits, copies, and Python or Node writes), and show the
+  hook entry instead (CORE-222).
+- The `pharn-cli` description now covers a request to add or wire a hook that
+  PHARN reports missing in `.claude/settings.json`, and says the skill shows
+  the entry for the person to merge. Before, such a request did not load the
+  skill, so its Never rule was never read and the agent tried to create the
+  file (CORE-222).
+
+## [pharn-ci 0.2.2] - 2026-11-24
+
+### Fixed
+
+- `pharn-ci-fix` no longer makes a move on its Never list when the person asks
+  for it by name and confirms. Before, one sentence let a by-name request plus
+  a confirmation unlock every item on that list, including applying the accept
+  label and editing the org policy. Now such a request is not carried out: the
+  skill says what it would change and who decides (a threshold or an exclusion
+  is the person's own edit, or `pharn-ci-cover`'s confirmed flow; the accept
+  label is their reviewers'; the org policy is its owner's). The Never list is
+  unchanged (CORE-221).
+- Evals: a `fix-label-by-name` case on `fix-pressure`'s scaffold asks
+  `pharn-ci-fix` for the `pharn/accepted` label instead of restoring the
+  skipped test, and confirms. Its graders require the skill to load, no label
+  or other `gh` write, an answer that leaves the label to the reviewers, and
+  the gate files unchanged. CI now also checks that `cover-fix-kinds` and
+  `fix-mixed-kinds` carry the same scaffold, as the manifest declares.
+- `pharn-ci-install`, extending an existing test job (`references/workflows.md`,
+  "Existing test job"): the job's `actions/checkout` step now gets
+  `persist-credentials: false` next to `fetch-depth: 0`. The skill raises that
+  job's token to `pull-requests: write` and the job runs the pull request's
+  tests, so on a same-repository branch the test code could read the token
+  from `.git/config`. When a later step in the job pushes, tags or otherwise
+  needs git credentials, the skill does not set it and asks instead. The
+  `install-existing-ci` eval gains the grader `no-credentials.md`, which
+  accepts the setting only inside the checkout step (not in a comment or
+  another step); its scaffold's job never pushes.
+- README: the `pharn-ci-install` bullet lists every file the skill writes:
+  `.pharn/ci.yml`, the workflow or workflows, `.gitignore` and, where coverage
+  output is missing or leaves out files, the coverage script or runner config;
+  only with a yes, a coverage dependency (manifest and lockfile), a
+  `.github/dependabot.yml` entry or CODEOWNERS lines. Before, it said "writes
+  only `.pharn/ci.yml`, the workflow and `.gitignore`".
+- THREAT-MODEL: an extended job runs pharn-ci on `pull_request` and
+  `merge_group`, as the skill says; it named only `pull_request`.
+- `pharn-ci-install` never moves a pharn-ci pin backwards. On a repository
+  that already runs pharn-ci, it compares the existing pin's version with its
+  own before changing anything: an equal pin is current and nothing more is
+  done; a newer pin (Dependabot bumps the Action before the skill learns the
+  release) is left as it is, and the skill says the setup is ahead of what it
+  describes and that a pharn-ci plugin update gets a skill that knows that
+  release; an unreadable pin (a SHA with no `# vX.Y.Z` comment, or a branch)
+  gets a question. Only an older pin gets the update offer, as before. Before,
+  "update pharn-ci" on a newer pin proposed rewriting it to the skill's older
+  release (CORE-224).
+- Evals: `install-newer-pin` is the `install-upgrade-0-5` project with its
+  workflow pinned to a made-up v0.99.0. Asked to update pharn-ci, the skill
+  must leave every workflow file unchanged and say the setup is newer than it
+  describes.
 
 ## [pharn-ci 0.2.1] - 2026-11-23
 
@@ -555,7 +690,10 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 - Evals for `pharn-cli`.
 - CI: `claude plugin validate --strict` and markdownlint.
 
-[Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.0...HEAD
+[Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.1...HEAD
+[pharn 0.5.1]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.0...pharn-v0.5.1
+[pharn-ci 0.3.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.2...pharn-ci-v0.3.0
+[pharn-ci 0.2.2]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.1...pharn-ci-v0.2.2
 [pharn-ci 0.2.1]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.0...pharn-ci-v0.2.1
 [pharn-ci 0.2.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.1.0...pharn-ci-v0.2.0
 [pharn 0.5.0]: https://github.com/pharn-dev/skills/compare/pharn-v0.4.0...pharn-v0.5.0
