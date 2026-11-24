@@ -91,7 +91,7 @@ document, or exits 1 with one `<JSON Pointer>: <reason>` line per problem
 (`/version: required key missing`, `/foo: unknown key`,
 `/coverage/threshold: must be a number`). Fix what it names and run it again,
 and quote its final output in your answer. Exit 2 is a usage or input problem
-(an unreadable file, not JSON, over 1 MiB). The checker is advisory: it mirrors
+(an unreadable file, not a regular file, not JSON, over 1 MiB). The checker is advisory: it mirrors
 the schema, and pharn-ci's own validation decides in CI (it does not detect a
 duplicate key, for one).
 

@@ -180,6 +180,20 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   reports an empty `target` or one over 1024 characters as a problem and
   leaves that fix out. Output for reports real pharn-ci produced is unchanged
   apart from `invalidPaths`.
+- The four `pharn-ci` helpers read every input file one way (CORE-250).
+  `check-lines.mjs`, `check-coverage.mjs`, `check-policy.mjs` and
+  `list-fixes.mjs` share one routine, kept identical by
+  `tests/shared-block.test.mjs`: it opens the file without blocking, reads it
+  only when the open descriptor is a regular file, and stops at a cap of 1 MiB
+  for a policy or a `--schema` file, 32 MiB for a report and 256 MiB for a
+  coverage file. A FIFO, a directory, a symlink to `/dev/zero` or a file over
+  the cap now ends the helper at once with exit 2 and a message naming the file
+  and the reason; before, `check-lines.mjs` and `check-policy.mjs` hung on a
+  FIFO, and a `/dev/zero` symlink passed `check-policy.mjs`'s 1 MiB check and
+  was read without end. `check-coverage.mjs` reports only a missing coverage
+  file as `"exists": false`; one it cannot read (`EACCES`, not a regular file,
+  over the cap) now ends the run with exit 2, as in pharn-ci, which treats
+  only a missing file as missing.
 - `pharn-ci-cover`: `check-lines.mjs` runs git with `GIT_OPTIONAL_LOCKS=0`, so
   `git status` no longer rewrites `.git/index` when a listed tracked file's
   timestamp changed, and the helper writes nothing, as its header and

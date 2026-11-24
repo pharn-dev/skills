@@ -73,6 +73,8 @@ helper prints `null` and a note instead, so such a name never reaches
 `.pharn/ci.yml`. It is not
 pharn-ci: it does not read `.pharn/ci.yml`, diff the change or apply
 exclusions, and when git cannot run it matches paths against files on disk.
+It and `check-lines.mjs` refuse a coverage file over 256 MiB; that cap is the
+helpers', not pharn-ci's, which streams a coverage file and sets no size limit.
 When the project's coverage command cannot run locally (a missing dependency,
 no toolchain), the skill writes the setup unverified and says so. The
 workflows it writes target pharn-ci 0.4.0 on GitHub-hosted runners (`node24`

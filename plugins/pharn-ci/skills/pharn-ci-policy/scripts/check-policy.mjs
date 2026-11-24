@@ -16,7 +16,7 @@
 // This is an advisory pre-check: it mirrors the schema, and pharn-ci's own validation decides in CI (a
 // duplicate key, for one, is not detected here). A message names the path and the rule, never a value from the
 // document.
-import { closeSync, fstatSync, openSync, readFileSync, realpathSync } from "node:fs";
+import { closeSync, constants as fsConstants, fstatSync, openSync, readSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -28,6 +28,44 @@ const MAX_DEPTH = 64;
 const MAX_SEGMENT_CODE_POINTS = 64;
 
 export class UsageError extends Error {}
+
+// <shared:read-file>
+// Byte-identical in all four pharn-ci helper scripts (tests/shared-block.test.mjs checks it). It needs
+// `closeSync`, `fsConstants` (node:fs `constants`), `fstatSync`, `openSync` and `readSync` from node:fs and a
+// `UsageError` class from the file around it.
+
+/**
+ * Reads `file` as UTF-8 when it is a regular file of at most `cap` bytes, checking and reading through one
+ * descriptor so the file checked is the file read. O_NONBLOCK so a FIFO is refused instead of blocking the
+ * open; isFile so a directory or a device (which reports size 0) is refused; the read stops once more than
+ * `cap` bytes arrive. Throws a UsageError naming `name` and the reason, carrying the system error's code.
+ */
+function readRegularFile(file, cap, name) {
+  let fd;
+  try {
+    fd = openSync(file, fsConstants.O_RDONLY | fsConstants.O_NONBLOCK);
+    const stat = fstatSync(fd);
+    if (!stat.isFile()) throw new UsageError(`${name} is not a regular file`);
+    const over = () => new UsageError(`${name} is larger than ${cap / (1024 * 1024)} MiB`);
+    if (stat.size > cap) throw over();
+    const chunks = [];
+    let total = 0;
+    for (let n = -1; n !== 0; ) {
+      const chunk = Buffer.allocUnsafe(64 * 1024);
+      n = readSync(fd, chunk, 0, chunk.length, null);
+      total += n;
+      if (total > cap) throw over();
+      chunks.push(chunk.subarray(0, n));
+    }
+    return Buffer.concat(chunks, total).toString("utf8");
+  } catch (err) {
+    if (err instanceof UsageError) throw err;
+    throw Object.assign(new UsageError(`cannot read ${name}: ${err?.code ?? "unknown error"}`), { code: err?.code });
+  } finally {
+    if (fd !== undefined) closeSync(fd);
+  }
+}
+// </shared:read-file>
 
 const ANNOTATIONS = new Set(["$schema", "$id", "title", "description"]);
 const SUPPORTED = new Set([
@@ -96,11 +134,13 @@ const codePoints = (s) => [...s].length;
 
 /** Loads the schema (the bundled policy.v1.json by default), checks that it only uses supported keywords. */
 export function loadSchema(file = DEFAULT_SCHEMA) {
+  const name = `the schema ${path.basename(String(file))}`;
+  const text = readRegularFile(file, MAX_BYTES, name);
   let schema;
   try {
-    schema = JSON.parse(readFileSync(file, "utf8"));
+    schema = JSON.parse(text);
   } catch {
-    throw new UsageError(`cannot read the schema ${path.basename(String(file))} as JSON`);
+    throw new UsageError(`cannot read ${name} as JSON`);
   }
   checkSchema(schema, schema, "#", 0);
   return schema;
@@ -266,30 +306,7 @@ function parseArgs(argv) {
 }
 
 function readPolicy(file) {
-  // One descriptor for the size check and the read, so the file checked is the file read.
-  let fd;
-  try {
-    fd = openSync(file, "r");
-  } catch {
-    throw new UsageError(`cannot read ${file}`);
-  }
-  let text;
-  try {
-    let size;
-    try {
-      size = fstatSync(fd).size;
-    } catch {
-      throw new UsageError(`cannot read ${file}`);
-    }
-    if (size > MAX_BYTES) throw new UsageError(`${file} is over 1 MiB, which pharn-ci refuses for a policy`);
-    try {
-      text = readFileSync(fd, "utf8");
-    } catch {
-      throw new UsageError(`cannot read ${file}`);
-    }
-  } finally {
-    closeSync(fd);
-  }
+  const text = readRegularFile(file, MAX_BYTES, file);
   try {
     return JSON.parse(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text);
   } catch {
