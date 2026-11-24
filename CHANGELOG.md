@@ -209,6 +209,22 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   its expected type, cuts script names and `output`, and reports a lone
   `phargus.config.js` as present and not read instead of `config: null` (CORE-238).
 
+## [pharn-ci 0.4.1] - 2026-11-24
+
+### Changed
+
+- `pharn-ci-explain` looks up each code in `references/codes.md` instead of
+  reading the whole file: it searches for the code, reads the `###` section or
+  table row that names it with the introduction of its `##` family (which
+  carries the mode and accept-label rules), and reads "A code not listed here"
+  for a code the file does not name. `codes.md` is unchanged (CORE-264).
+
+### Fixed
+
+- Evals: `regen.mjs` prints `<case>: ok` only for a case that is up to date. A
+  case it found out of date prints `out of date` under `--check` and `updated`
+  under `--write`; before, every case printed `ok` (CORE-264).
+
 ## [pharn-ci 0.4.0] - 2026-11-24
 
 ### Changed
@@ -853,6 +869,7 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 [Unreleased]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.1...HEAD
 [pharn 0.5.1]: https://github.com/pharn-dev/skills/compare/pharn-v0.5.0...pharn-v0.5.1
+[pharn-ci 0.4.1]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.4.0...pharn-ci-v0.4.1
 [pharn-ci 0.4.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.3.1...pharn-ci-v0.4.0
 [pharn-ci 0.3.1]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.3.0...pharn-ci-v0.3.1
 [pharn-ci 0.3.0]: https://github.com/pharn-dev/skills/compare/pharn-ci-v0.2.2...pharn-ci-v0.3.0

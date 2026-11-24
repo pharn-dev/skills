@@ -519,6 +519,30 @@ export function checkoutProblems(manifest, given) {
   return problems;
 }
 
+/**
+ * Brings case `name`'s files under `dir` in line with `want` (path -> content) and removes its
+ * `stale` graders under --write; under --check records each difference in `diffs` instead.
+ * Returns "ok" when nothing differed, else "updated" (--write) or "out of date" (--check).
+ */
+export function syncCase(name, dir, want, stale, mode, diffs) {
+  let changed = false;
+  for (const [rel, content] of want) {
+    const file = path.join(dir, rel);
+    const current = readTextIfExists(file);
+    if (current === content) continue;
+    changed = true;
+    if (mode === "write") writeFileSync(file, content);
+    else diffs.push(current === null ? `missing ${name}/${rel}` : lineDiff(`${name}/${rel}`, current, content));
+  }
+  for (const f of stale) {
+    changed = true;
+    if (mode === "write") unlinkSync(path.join(dir, "graders", f));
+    else diffs.push(`stale ${name}/graders/${f}`);
+  }
+  if (!changed) return "ok";
+  return mode === "write" ? "updated" : "out of date";
+}
+
 export async function main(argv) {
   const { mode, pharnCi } = parseArgs(argv);
   const manifest = JSON.parse(readFileSync(path.join(FIXTURES, "manifest.json"), "utf8"));
@@ -542,18 +566,7 @@ export async function main(argv) {
     const want = new Map([["scaffold.sh", scaffold], ...[...graders].map(([f, c]) => [`graders/${f}`, c])]);
     const graderDir = path.join(EVALS, name, "graders");
     const stale = readdirSync(graderDir).filter((f) => /^unchanged-.*\.md$/.test(f) && !graders.has(f));
-    for (const [rel, content] of want) {
-      const file = path.join(EVALS, name, rel);
-      const current = readTextIfExists(file);
-      if (current === content) continue;
-      if (mode === "write") writeFileSync(file, content);
-      else diffs.push(current === null ? `missing ${name}/${rel}` : lineDiff(`${name}/${rel}`, current, content));
-    }
-    for (const f of stale) {
-      if (mode === "write") unlinkSync(path.join(graderDir, f));
-      else diffs.push(`stale ${name}/graders/${f}`);
-    }
-    console.error(`${name}: ok`);
+    console.error(`${name}: ${syncCase(name, path.join(EVALS, name), want, stale, mode, diffs)}`);
   }
   if (diffs.length > 0) {
     console.log(diffs.join("\n\n"));
