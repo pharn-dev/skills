@@ -142,6 +142,14 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   the `pharn` plugin is at 0.5.0, so the next `pharn` release would have failed
   it. A plugin version bump with its CHANGELOG heading no longer breaks a test
   (CORE-260).
+- `pharn` evals (no plugin version change): `gitignore-only-update`'s report
+  grader no longer needs `git status`. It passed only if the answer said
+  `.gitignore` shows as modified, but on macOS the eval sandbox cannot run
+  `/usr/bin/git`, so an honest answer that said `git status --short` could not
+  run failed. It now also accepts an answer that says the CLI changed
+  `.gitignore` and that `git status` could not run; an answer that edited
+  `.gitignore` itself, claims PHARN files were updated or says nothing changed
+  still fails (CORE-378).
 - Repository (no plugin version change): the acceptance tests of wording are
   retired. The remaining 19 `ac-*.test.mjs` files in `plugins/pharn-ci/tests/` and
   `.github/scripts/` (about 2,500 lines) mostly matched English sentences in
