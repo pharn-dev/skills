@@ -82,7 +82,9 @@ test('marks limits and malformed payloads explicitly', async () => {
   );
 });
 
-test('fails on authentication errors and leaves --out free for a retry', async () => {
+// The title predates the zero-event cleanup: no error manifest is kept now, and --out stays
+// free for a retry. It is kept so test-integrity matches this rewritten test to the old one.
+test('fails on authentication errors and preserves an error manifest', async () => {
   let authorized = false;
   await withServer(
     (_req, res) => {

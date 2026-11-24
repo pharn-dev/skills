@@ -15,7 +15,7 @@ block and the CLI's error print. No new module, no new export besides what calle
    sets a `skipping` flag, so memory stays bounded at about 1 MiB plus one chunk. At the next `\n` it yields `null` once
    and clears the flag. A complete line over 1 MiB found in one chunk also yields `null`. At end of input, an open
    skipped line yields `null` too. The cap stays 1 MiB (one `LINE_LIMIT` constant in place of the two literals). On the
-   first non-empty decoded text it drops one leading U+FEFF (`pending.replace(/^﻿/, '')`, run once). This
+   first non-empty decoded text it drops one leading U+FEFF (`pending.replace(/^\uFEFF/, '')`, run once). This
    handles a BOM split across chunks, because `StringDecoder` returns `''` until the 3 bytes are complete. Sketch:
 
    ```js
@@ -30,7 +30,7 @@ block and the CLI's error print. No new module, no new export besides what calle
        pending += typeof chunk === 'string' ? chunk : decoder.write(chunk);
        if (!started && pending) {
          started = true;
-         pending = pending.replace(/^﻿/, '');
+         pending = pending.replace(/^\uFEFF/, '');
        }
        let end;
        while ((end = pending.indexOf('\n')) !== -1) {
