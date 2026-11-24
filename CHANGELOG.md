@@ -50,6 +50,16 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
 
 ### Fixed
 
+- `pharn-ci` (next release): `pharn-ci-fix` says the accept label counts only
+  when a reviewer who is not the PR author applies it, so an answer that
+  refuses to apply it names a reviewer instead of handing the author a `gh`
+  command that pharn-ci ignores (`TEST_INTEGRITY_ACCEPT_IGNORED`) (CORE-373).
+- Repository (no plugin version change): the docs say what main does. README's
+  Development section runs `npm run check`, the root gates CI requires, and
+  says `pharn-ci` is not verified with Codex either; SECURITY routes a pharn-ci
+  defect to pharn-ci's policy; LIMITS points to CONTRIBUTING, not README, for
+  skills.sh retries; `src/phargus/evals/README.md` says a client access failure
+  blocks that client's remaining cases (CORE-354).
 - `phargus` 0.1.1: ordinary input problems no longer cost a recording. A
   leading UTF-8 byte order mark no longer makes the first record invalid. A line
   over 1 MiB counts as one invalid record and reading continues, instead of
@@ -72,6 +82,11 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   `interrupted` and `quality.truncated` true, as `capture --url` does, instead
   of leaving a 0-byte `manifest.json` when killed. No signal listener stays
   registered after a command returns (CORE-239).
+- `pharn-ci` (next release): `pharn-ci-explain` lists the uncovered lines for
+  `DIFF_COVERAGE_BELOW_THRESHOLD` exactly as the report's
+  `diffCoverage.files[].uncoveredLines` gives them, then explains them from the
+  source, instead of regrouping them by the branches it reads and dropping one
+  (CORE-375).
 - phargus 0.1.1: a raw sample covers the interval that ends at its timestamp, as
   the agent stamps it when the interval closes. `summarize` treated the
   timestamp as the start, so the measured period was one interval late:
@@ -103,6 +118,14 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   `collect`'s `gaps` and `loss` always stayed at their initial values and
   `rules` reported no quality, so a `forWindows` alert could span a hole
   unseen. Alert evaluation is unchanged (CORE-237).
+- `pharn-ci` evals (no plugin version change): three `install-*` judge graders
+  no longer fail answers that follow `pharn-ci-install`.
+  `install-upgrade-0-5` requires only the dependency safety change and takes
+  the other changes as topics, with or without their codes;
+  `install-private-registry` limits "only these" options to the D05 decision,
+  so the `dependencies` paragraph and the c8, Dependabot and CODEOWNERS offers
+  are not counted; `install-missing-dependency` fails only an answer that ran
+  `npm install` itself, not a workflow step that runs it in CI (CORE-377).
 - Repository (no plugin version change): LIMITS, CONTRIBUTING and README state
   the versions the skills target today. LIMITS described pharn-ci 0.4.0 where
   its own table says 0.11.0: the workflows `pharn-ci-install` writes, the
@@ -136,6 +159,14 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   the `pharn` plugin is at 0.5.0, so the next `pharn` release would have failed
   it. A plugin version bump with its CHANGELOG heading no longer breaks a test
   (CORE-260).
+- `pharn` evals (no plugin version change): `gitignore-only-update`'s report
+  grader no longer needs `git status`. It passed only if the answer said
+  `.gitignore` shows as modified, but on macOS the eval sandbox cannot run
+  `/usr/bin/git`, so an honest answer that said `git status --short` could not
+  run failed. It now also accepts an answer that says the CLI changed
+  `.gitignore` and that `git status` could not run; an answer that edited
+  `.gitignore` itself, claims PHARN files were updated or says nothing changed
+  still fails (CORE-378).
 - Repository (no plugin version change): the acceptance tests of wording are
   retired. The remaining 19 `ac-*.test.mjs` files in `plugins/pharn-ci/tests/` and
   `.github/scripts/` (about 2,500 lines) mostly matched English sentences in

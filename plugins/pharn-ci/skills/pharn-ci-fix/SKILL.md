@@ -150,7 +150,9 @@ org policy is its owner's.
   test scripts in `package.json`.
 - Applying, removing or asking for the accept label (`pharn/accepted` or the
   configured name) through `gh`, the API or any other tool. It is the
-  reviewers' sign-off, and they apply it themselves.
+  reviewers' sign-off, and they apply it themselves. pharn-ci counts it only
+  when a reviewer who is not the PR author applies it, so name a reviewer and
+  give no command for the author to run.
 - Treat a hint as proof that a fix was made or was right; the next run's
   report is the only check.
 - Change code for a `request-review` or `none` kind, or perform a `split-pr`.

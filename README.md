@@ -70,7 +70,7 @@ npx skills add pharn-dev/skills
 | | `phargus-rules` | Turns an observed condition into a collector alert or sandboxed rule and replays it on incident and normal data before you turn it on. |
 
 PHARN's own commands (`/pharn-spec`, `/pharn-ship`, `/pharn-loop`, ...) are not
-in this repository: the `pharn` CLI installs them into a project from
+part of these plugins: the `pharn` CLI installs them into a project from
 [pharn-oss](https://github.com/pharn-dev/pharn-oss).
 
 ---
@@ -119,8 +119,8 @@ its bundled references and scripts.
 
 ### Codex
 
-Only `phargus` is listed in the Codex marketplace; `pharn` has not been verified
-against Codex yet.
+Only `phargus` is listed in the Codex marketplace; `pharn` and `pharn-ci` have
+not been verified against Codex yet.
 
 ```bash
 codex plugin marketplace add pharn-dev/skills
@@ -325,14 +325,13 @@ claude plugin validate --strict plugins/pharn
 claude plugin validate --strict plugins/phargus
 claude plugin validate --strict plugins/pharn-ci
 
-# test the pharn-ci helpers and pins
-node --test plugins/pharn-ci/tests/*.test.mjs
+# format, ESLint, Markdown lint, action pins and the root tests (the pharn-ci
+# helpers and pins, .github/scripts and the src/phargus unit tests)
+npm ci
+npm run check
 
 # check the pharn-ci eval fixtures against built pharn-ci checkouts, one per pinned version
 node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=../pharn-ci-0.1.0 --pharn-ci 0.2.0=../pharn-ci-0.2.0 --pharn-ci 0.4.0=../pharn-ci-0.4.0 --pharn-ci 0.9.0=../pharn-ci-0.9.0 --pharn-ci 0.12.0=../pharn-ci-0.12.0
-
-# lint Markdown
-npx markdownlint-cli2 "**/*.md"
 
 # run the pharn evals (needs model credentials)
 claude plugin eval plugins/pharn --scaffold --allow-tools Bash --trust-plugin --no-publish
