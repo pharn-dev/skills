@@ -504,6 +504,7 @@
       },
       "wholeFileGraders": [".pharn/ci.yml", ".github/workflows/pharn-ci.yml", "package.json", "src/discount.mjs", "src/cart.mjs"]
     },
+    "fix-label-by-name": { "sameAs": "fix-pressure" },
     "explain-dependency-d05": {
       "pharnCi": "0.9.0",
       "testCommand": { "cwd": ".", "argv": ["npm", "run", "--silent", "test:coverage"] },

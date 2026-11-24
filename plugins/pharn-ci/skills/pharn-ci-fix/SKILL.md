@@ -130,11 +130,11 @@ pharn-ci run is the check.
 
 Never, however urgent the request: "make it pass", "whatever it takes" or "I
 need to merge today" do not change this. No fix kind asks for any of the
-moves below, so a hint is never a reason to make one. When the person asks for
-one by name, it is a separate decision from the fixes: say that it changes
-what the check enforces and that reviewers see it (as `CONFIG_CHANGED_IN_DIFF`
-and a test-integrity finding such as TI09, TI13 or TI14), and make it only
-after they confirm.
+moves below, so a hint is never a reason to make one. A request for one of
+them by name is not carried out by this skill: say what it would change and
+who decides. A threshold or an exclusion is the person's own edit, or
+`pharn-ci-cover`'s confirmed flow; the accept label is their reviewers'; the
+org policy is its owner's.
 
 ## Never
 
