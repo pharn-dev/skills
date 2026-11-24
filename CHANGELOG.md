@@ -187,6 +187,15 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   BOM (saved by a Windows editor or PowerShell redirection), as `list-fixes.mjs`
   and `check-policy.mjs` already did, instead of calling it "not JSON".
   (CORE-259)
+- `pharn-ci-cover`: `check-lines --base <branch>` measures against the branch
+  CI measures. When both the local branch and `origin/<branch>` exist at
+  different commits, it uses the one that is ahead (one `git merge-base`), or
+  the branch as given if they diverged, and adds a note naming both short SHAs.
+  Before, a local `main` that was never pulled won over a newer `origin/main`,
+  so other people's commits counted as the pull request's added lines (33%
+  where CI reported 100%) with no note. A ref starting with `origin/`, a full
+  SHA, and a branch found only under `origin/` resolve as before; the helper
+  still never fetches.
 
 ## [pharn-ci 0.2.1] - 2026-11-23
 
