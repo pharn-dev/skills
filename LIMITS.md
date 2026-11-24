@@ -5,7 +5,7 @@
 | Plugin | Agent coverage | Tool contract and evidence |
 | ------ | -------------- | -------------------------- |
 | `pharn` | Claude Code; development instructions verified with 2.1.295. Codex behavior has not been verified. | The [skill](plugins/pharn/skills/pharn-cli/SKILL.md) targets PHARN CLI 0.10.0+, is best on 0.16.0, describes the 0.14.0 root layout migration and the 0.16.0 `.gitignore` lines, and describes a 0.9.x fallback. Its [evals](plugins/pharn/evals/) use stub CLIs that print 0.11.0-, 0.14.0-, 0.16.1- and unreleased 0.20.0-shaped output, and 0.9.0's older text flow. They do not establish compatibility with every real CLI release. |
-| `pharn-ci` | Claude Code; not yet verified with recorded eval runs. Codex behavior has not been verified. | The [skills](plugins/pharn-ci/skills/) target pharn-ci 0.1.x (Report v1) to 0.11.x (Report v2, test integrity, org policy, agent-config secrets, prompt-injection and dependency checks, fix hints, a private registry allow-list); `pharn-ci-install` writes 0.11.0, pinned to its release commit (tag `v0.11.0`). Their [evals](plugins/pharn-ci/evals/) replay reports, comments and CLI output generated with the real pharn-ci CLI and renderer at the pinned 0.1.0, 0.2.0, 0.4.0, 0.9.0 and 0.11.0 commits, through stub `gh` and `pharn-ci` executables where a case needs them. Accept-label results come from pharn-ci core's own functions applied to the stub's label events. The cases added since pharn-ci 0.1.0 (the 0.4.0 policy and secret cases, the 0.9.x `fix-*`, `explain-dependency-d05`, `cover-fix-kinds`, `cover-import-pressure` and new `install-*` cases, and the cases moved to 0.9.1 and then 0.11.0) are not yet recorded in an eval run. The evals do not exercise a real GitHub API, a real Action run, an app policy served by pharn.dev, an upload, or later pharn-ci releases. |
+| `pharn-ci` | Claude Code; not yet verified with recorded eval runs. Codex behavior has not been verified. | The [skills](plugins/pharn-ci/skills/) target pharn-ci 0.1.x (Report v1) to 0.12.x (Report v2, test integrity, org policy, agent-config secrets, prompt-injection and dependency checks, fix hints, a private registry allow-list); `pharn-ci-install` writes 0.12.0, pinned to its release commit (tag `v0.12.0`). Their [evals](plugins/pharn-ci/evals/) replay reports, comments and CLI output generated with the real pharn-ci CLI and renderer at the pinned 0.1.0, 0.2.0, 0.4.0, 0.9.0 and 0.12.0 commits, through stub `gh` and `pharn-ci` executables where a case needs them. Accept-label results come from pharn-ci core's own functions applied to the stub's label events. The cases added since pharn-ci 0.1.0 (the 0.4.0 policy and secret cases, the 0.9.x `fix-*`, `explain-dependency-d05`, `cover-fix-kinds`, `cover-import-pressure` and new `install-*` cases, and the cases moved to 0.9.1, then 0.11.0 and then 0.12.0) are not yet recorded in an eval run. The evals do not exercise a real GitHub API, a real Action run, an app policy served by pharn.dev, an upload, or later pharn-ci releases. |
 | `phargus` | Targets Codex and Claude Code. No behavioral review is recorded for the current content; the 0.1.0 and predecessor reviews are archived as self-attested. See the [verification record](src/phargus/VERIFICATION.md). | The tested runtime release (tag and commit), the accepted package versions, and the minimum Node version are in [compatibility.json](src/phargus/compatibility.json). CI targets Node 22.18.0 and 24. |
 
 The runtime is `@pharn-dev/phargus`, published on npm. The skills are tested against
@@ -57,9 +57,11 @@ cannot run, it assumes every line the report counted as covered still is.
 Exclusion patterns are not known to it, only the files the report already
 excluded. It reads the diff and the coverage files with code ported from
 pharn-ci 0.1.0 (the unified diff reader, format detection, lcov and Cobertura
-parsing, path and source mapping), last compared with pharn-ci 0.11.0 (commit
-`bd7b36ea07588884418f5002ae74afc35135c400`), which reads git's diffs and
-coverage files the same way. On `pull_request`, CI measures the merge commit: when the base
+parsing, path and source mapping), last compared with pharn-ci 0.12.0 (commit
+`a370515e32f8040771ccf4b6f737d3d25f62749f`), which reads git's diffs and
+coverage files the same way, except a coverage path with a backslash: from
+0.12.0 pharn-ci keeps the backslash as part of the name when that names a
+tracked file, and the helpers read every backslash as a separator. On `pull_request`, CI measures the merge commit: when the base
 changed a listed file after the branch point, CI's line numbers can differ from
 the checkout, which the helper reports (`base.changedFiles`) but cannot
 correct. The CI run's verdict decides. On macOS the eval sandbox cannot run
@@ -79,7 +81,7 @@ It and `check-lines.mjs` refuse a coverage file over 256 MiB; that cap is the
 helpers', not pharn-ci's, which streams a coverage file and sets no size limit.
 When the project's coverage command cannot run locally (a missing dependency,
 no toolchain), the skill writes the setup unverified and says so. The
-workflows it writes target pharn-ci 0.11.0 on GitHub-hosted runners (`node24`
+workflows it writes target pharn-ci 0.12.0 on GitHub-hosted runners (`node24`
 Actions); GitHub Enterprise Server and self-hosted runners need a version that
 runs them. Pins for actions pharn-ci's own docs do not pin (setup-go,
 setup-java, pnpm) come from the repository or are left for the person. The
@@ -97,17 +99,17 @@ Test integrity is explained from the report and the diff. The skills never
 apply, remove or request the accept label, and their evals check that no
 label command runs; whether a real reviewer's label is honoured is decided by
 the pharn-ci Action from GitHub's issue events, which the evals replay through
-a stub. The CLI never reads the label, so a local 0.2.x to 0.11.x run of an
+a stub. The CLI never reads the label, so a local 0.2.x to 0.12.x run of an
 accepted PR still shows its block findings as errors.
 
 `pharn-ci-policy`'s [checker](plugins/pharn-ci/skills/pharn-ci-policy/scripts/check-policy.mjs)
 is an advisory offline pre-check. It validates a policy document against a byte
-copy of pharn-ci 0.11.0's `schema/policy.v1.json`, implementing only the JSON
+copy of pharn-ci 0.12.0's `schema/policy.v1.json`, implementing only the JSON
 Schema keywords that file uses and refusing a schema that uses another one. It
 mirrors the schema, and pharn-ci's own validation decides in CI: it does not
 detect a duplicate key, and it cannot tell whether a policy is a good one. The
 key `agents.require_human_approval` and rule P12 pass the checker and are not
-enforced in 0.4.x to 0.11.x, and some keys apply only from a later release
+enforced in 0.4.x to 0.12.x, and some keys apply only from a later release
 than 0.4.x (P13, P14 and the size caps from 0.6.0, for example); the skill
 says so. It
 does not exercise an app policy served by pharn.dev, and a policy that passes
@@ -117,7 +119,7 @@ itself; `pharn-ci-explain` says so and never edits a policy, lowers a rule or
 repeats a secret value to get a pull request through, but its evals run a
 stub `gh` in one agent client and do not establish that for every client or
 every phrasing of a request.
-The pharn-ci CLI is not on npm in 0.1.x to 0.11.x, so the skills use a CLI only when the
+The pharn-ci CLI is not on npm in 0.1.x to 0.12.x, so the skills use a CLI only when the
 person has one; otherwise they read the report, the PR comment (which cuts long
 lists) or the job log. A single-plugin eval run cannot check that a pharn-ci
 question is routed away from the `pharn` plugin's `pharn-cli` skill.

@@ -1,13 +1,13 @@
 ---
 name: pharn-ci-fix
-description: Act on the fix hints of a pharn-ci 0.9.x to 0.11.x report, where each message and finding carries a `fix` object (add-test, restore-test, revert-config, request-review, none and others). Lists them with a bundled helper, makes the changes an agent may and hands the rest to a person. Use when asked to act on the report's fix hints, fix what pharn-ci reported, or work through its findings by kind. Not for diff coverage below the threshold alone (pharn-ci-cover), or a why question or a report without fix objects (pharn-ci-explain).
+description: Act on the fix hints of a pharn-ci 0.9.x to 0.12.x report, where each message and finding carries a `fix` object (add-test, restore-test, revert-config, request-review, none and others). Lists them with a bundled helper, makes the changes an agent may and hands the rest to a person. Use when asked to act on the report's fix hints, fix what pharn-ci reported, or work through its findings by kind. Not for diff coverage below the threshold alone (pharn-ci-cover), or a why question or a report without fix objects (pharn-ci-explain).
 compatibility: Node.js >=22 for scripts/list-fixes.mjs; git; the project's own test runner.
 ---
 
 # pharn-ci-fix
 
 Works through a pharn-ci report the way its fix hints ask, and no further.
-Written for pharn-ci 0.9.x to 0.11.x: since 0.9.0 every message and every finding of
+Written for pharn-ci 0.9.x to 0.12.x: since 0.9.0 every message and every finding of
 Report v2 carries an optional `fix` object. A report from 0.8.x or earlier has
 none; use `pharn-ci-explain` for it.
 
@@ -47,8 +47,8 @@ the path in single quotes (an embedded `'` written as `'\''`), after
 
 You need the JSON report: the `pharn-ci check --format json` output, or the
 report artifact of the CI run (`gh run download`). The PR comment and the job
-summary carry no `fix` objects; the human `Hint:` text there is not the same
-thing. Save the report to a file outside the tree you change.
+summary carry no `fix` objects (from 0.12.0 their `Hint:` line is the same
+sentence as the `hint`, with no kind or target). Save the report to a file outside the tree you change.
 
 The checkout must be the commit the report measured. Compare `git rev-parse
 HEAD` with the PR head (`gh pr view <pr> --json headRefOid`) when you can. If

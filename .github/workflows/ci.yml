@@ -200,7 +200,7 @@ jobs:
             src/phargus/coverage/lcov.info
       - id: pharn-ci
         if: steps.root-tests.outcome == 'success' && !cancelled() && matrix.node == '24' && github.event_name == 'pull_request'
-        uses: pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400 # v0.11.0
+        uses: pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f # v0.12.0
         timeout-minutes: 5
         with:
           comment: false
@@ -246,8 +246,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: pharn-dev/pharn-ci
-          ref: bd7b36ea07588884418f5002ae74afc35135c400 # v0.11.0
-          path: .cache/pharn-ci-0.11.0
+          ref: a370515e32f8040771ccf4b6f737d3d25f62749f # v0.12.0
+          path: .cache/pharn-ci-0.12.0
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -279,8 +279,8 @@ jobs:
       - name: Build pharn-ci 0.9.0
         working-directory: .cache/pharn-ci-0.9.0
         run: pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build
-      - name: Build pharn-ci 0.11.0
-        working-directory: .cache/pharn-ci-0.11.0
+      - name: Build pharn-ci 0.12.0
+        working-directory: .cache/pharn-ci-0.12.0
         run: pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build
       # The eval scaffolds embed pharn-ci output and whole-file graders; regenerate them
       # from the pinned pharn-ci versions and fail on any difference.
@@ -291,4 +291,4 @@ jobs:
           --pharn-ci 0.2.0=.cache/pharn-ci-0.2.0
           --pharn-ci 0.4.0=.cache/pharn-ci-0.4.0
           --pharn-ci 0.9.0=.cache/pharn-ci-0.9.0
-          --pharn-ci 0.11.0=.cache/pharn-ci-0.11.0
+          --pharn-ci 0.12.0=.cache/pharn-ci-0.12.0

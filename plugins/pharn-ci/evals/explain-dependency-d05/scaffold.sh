@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Builds the cart project with pharn-ci 0.11.0, and PR 21 (feature/internal-pricing): it adds the dependency
+# Builds the cart project with pharn-ci 0.12.0, and PR 21 (feature/internal-pricing): it adds the dependency
 # @acme/pricing to package.json and package-lock.json together, and the lockfile resolves it from the company's
 # private Artifactory registry (artifactory.acme-corp.com). Dependency safety (on by default since pharn-ci 0.8.0)
 # reports DEPENDENCY_D05: a lockfile entry from a URL outside the allowed public registries, an error that fails the
 # check. The manifest and the lockfile change together, so there is no D04. A stub gh CLI at ./bin/gh replays PR 21
-# from bin/gh-fixture.json: its sticky pharn-ci comment (rendered by pharn-ci 0.11.0's own renderer from the report of
+# from bin/gh-fixture.json: its sticky pharn-ci comment (rendered by pharn-ci 0.12.0's own renderer from the report of
 # this tree), its run and its log. The stub needs no network, refuses every write (REST calls with a method, fields
 # or --input; GraphQL mutations; any label, PR or issue edit) and logs each call to .gh-calls.log. `--jq` is applied
 # with jq when jq is on PATH, and ignored otherwise. pharn-ci-report.json (untracked) is the report.json of that run,
-# as the person downloaded it: pharn-ci 0.11.0's own CLI output for this tree.
+# as the person downloaded it: pharn-ci 0.12.0's own CLI output for this tree.
 set -eu
 git init -q -b main .
 commit() { git add -A && git -c user.name=dev -c user.email=dev@example.com commit -qm "$1"; }
@@ -73,7 +73,7 @@ jobs:
           node-version: 24
       - run: npm run test:coverage
       - id: pharn-ci
-        uses: pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400 # v0.11.0
+        uses: pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f # v0.12.0
         timeout-minutes: 5
         with:
           test-integrity: warn
@@ -181,7 +181,7 @@ cat > bin/gh-fixture.json <<'EOF'
    },
    "created_at": "2026-11-08T10:14:40Z",
    "updated_at": "2026-11-08T10:14:40Z",
-   "body": "<!-- pharn-ci -->\n<!-- pharn-ci scope: pharn-ci/pharn-ci -->\n<img src=\"https://raw.githubusercontent.com/pharn-dev/pharn-ci/main/docs/assets/pharn-logo.svg\" alt=\"pharn\" width=\"48\" height=\"48\">\n\n## 🛡️ pharn-ci · ❌ Fail\n\n> [!CAUTION]\n> **Fail** · This change adds no coverable lines; 1 agent setup file found.\n\n| Verdict | Diff coverage | Test integrity | Agent setup |\n| --- | --- | --- | --- |\n| ❌ Fail | no coverable lines | none (warn) | 1 file |\n\n### 🧪 Diff coverage\n\n_No coverable lines changed._\n\n### 🔍 Test integrity\n\nNo test-integrity findings (mode: warn).\n\n### 📦 Dependencies\n\n2 added or changed dependencies checked · registry lookups off\n\n- ❌ **D05** `package-lock.json:12` `@acme/pricing` `1.2.0` — resolved from a URL outside the allowed registries\n  - Hint: Depend on a published registry version instead, or have a person review where the code comes from; a git, URL or local source is not covered by the registry's checks. For a registry your team runs (Artifactory, Nexus, a private PyPI index), name its host in the dependency-allowed-hosts input or the org policy's dependencies.allowed_hosts.\n\n### 💬 Messages (1)\n\n- ℹ️ `NO_COVERABLE_CHANGES` No added lines are tracked by the coverage report; nothing to measure.\n  - Hint: Nothing to do if the change has no code; otherwise check that the coverage report includes the changed files.\n\n### 🤖 Agent setup (1 file)\n\nAgent setup: 1 file · amp, codex, copilot, cursor, jules, opencode, zed\n\n<details>\n<summary>Agent setup files (1)</summary>\n\n| Path | Kind |\n| --- | --- |\n| `AGENTS.md` | agents-md |\n\n</details>\n\n---\n\n<sub>pharn-ci 0.11.0 · report schema v2 · coverage format lcov</sub>\n"
+   "body": "<!-- pharn-ci -->\n<!-- pharn-ci scope: pharn-ci/pharn-ci -->\n<img src=\"https://raw.githubusercontent.com/pharn-dev/pharn-ci/515998146a22a1886341d94236e4138e1777c13a/docs/assets/pharn-logo.svg\" alt=\"pharn\" width=\"48\" height=\"48\">\n\n## 🛡️ pharn-ci · ❌ Fail\n\n> [!CAUTION]\n> **Fail** · This change adds no coverable lines; 1 agent setup file found.\n\n| Verdict | Diff coverage | Test integrity | Agent setup |\n| --- | --- | --- | --- |\n| ❌ Fail | no coverable lines | none (warn) | 1 file |\n\n### 🧪 Diff coverage\n\n_No coverable lines changed._\n\n### 🔍 Test integrity\n\nNo test-integrity findings (mode: warn).\n\n### 📦 Dependencies\n\n2 added or changed dependencies checked · registry lookups off\n\n- ❌ **D05** `package-lock.json:12` `@acme/pricing` `1.2.0` — resolved from a URL outside the allowed registries\n  - Hint: Depend on a published registry version, or name the host of a registry your team runs in the dependency-allowed-hosts input; otherwise remove the dependency.\n\n### 💬 Messages (1)\n\n- ℹ️ `NO_COVERABLE_CHANGES` No added lines are tracked by the coverage report; nothing to measure.\n  - Hint: Check that the coverage report tracks the source files this change edits.\n\n### 🤖 Agent setup (1 file)\n\nAgent setup: 1 file · amp, codex, copilot, cursor, jules, opencode, zed\n\n<details>\n<summary>Agent setup files (1)</summary>\n\n| Path | Kind |\n| --- | --- |\n| `AGENTS.md` | agents-md |\n\n</details>\n\n---\n\n<sub>pharn-ci 0.12.0 · report schema v2 · coverage format lcov</sub>\n"
   }
  ],
  "runs": [
@@ -206,10 +206,10 @@ cat > bin/gh-fixture.json <<'EOF'
    "pharn-ci\tSet up job\t2026-11-08T10:14:05Z Current runner version: 2.330.0",
    "pharn-ci\tRun npm run test:coverage\t2026-11-08T10:14:19Z ℹ tests 1",
    "pharn-ci\tRun npm run test:coverage\t2026-11-08T10:14:19Z ℹ pass 1",
-   "pharn-ci\tRun pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400\t2026-11-08T10:14:38Z coverage: lcov (auto-detected)",
-   "pharn-ci\tRun pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400\t2026-11-08T10:14:39Z created pharn-ci comment",
-   "pharn-ci\tRun pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400\t2026-11-08T10:14:40Z pharn-ci verdict: fail",
-   "pharn-ci\tRun pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400\t2026-11-08T10:14:40Z ##[error]pharn-ci: 1 dependency comes from outside the allowed registries (a git repository, a URL on another host or a local file): `package-lock.json:12`."
+   "pharn-ci\tRun pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f\t2026-11-08T10:14:38Z coverage: lcov (auto-detected)",
+   "pharn-ci\tRun pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f\t2026-11-08T10:14:39Z created pharn-ci comment",
+   "pharn-ci\tRun pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f\t2026-11-08T10:14:40Z pharn-ci verdict: fail",
+   "pharn-ci\tRun pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f\t2026-11-08T10:14:40Z ##[error]pharn-ci: 1 dependency comes from outside the allowed registries (a git repository, a URL on another host or a local file): `package-lock.json:12`."
   ]
  },
  "events": []
@@ -221,7 +221,7 @@ cat > pharn-ci-report.json <<'EOF'
   "schemaVersion": 2,
   "tool": {
     "name": "pharn-ci",
-    "version": "0.11.0"
+    "version": "0.12.0"
   },
   "verdict": "fail",
   "diffCoverage": {
@@ -270,7 +270,7 @@ cat > pharn-ci-report.json <<'EOF'
       "text": "1 dependency comes from outside the allowed registries (a git repository, a URL on another host or a local file): `package-lock.json:12`.",
       "fix": {
         "kind": "remove-dependency",
-        "hint": "Remove the dependency from outside the allowed registries, or use the package's registry release."
+        "hint": "Depend on a published registry version, or name the host of a registry your team runs in the dependency-allowed-hosts input; otherwise remove the dependency."
       }
     }
   ],
@@ -297,7 +297,7 @@ cat > pharn-ci-report.json <<'EOF'
         "fix": {
           "kind": "remove-dependency",
           "target": "package-lock.json:12",
-          "hint": "Remove the dependency from outside the allowed registries, or use the package's registry release."
+          "hint": "Depend on a published registry version, or name the host of a registry your team runs in the dependency-allowed-hosts input; otherwise remove the dependency."
         }
       }
     ]

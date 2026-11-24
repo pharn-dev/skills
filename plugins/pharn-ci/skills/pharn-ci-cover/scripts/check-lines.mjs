@@ -41,8 +41,11 @@ const MAX_REPORT_BYTES = 32 * 1024 * 1024;
 // Ported from pharn-ci 0.1.0 (a88e62a8febf5cd9a77b8e0252cd060c3b94782c, Apache-2.0): packages/core/src/paths.ts,
 // coverage/xml.ts, coverage/detect.ts, coverage/lcov.ts, coverage/cobertura.ts and coverage/merge.ts, so a
 // coverage file is detected, read and mapped to repository paths the way pharn-ci does it. These files are
-// unchanged in pharn-ci 0.11.0 (bd7b36ea07588884418f5002ae74afc35135c400), apart from opt-in scanXml options
-// in coverage/xml.ts that the coverage readers do not use.
+// unchanged in pharn-ci 0.12.0 (a370515e32f8040771ccf4b6f737d3d25f62749f), apart from opt-in scanXml options
+// in coverage/xml.ts that the coverage readers do not use, and the opt-in literalBackslashes option of
+// coverage/lcov.ts and coverage/cobertura.ts (0.12.0, CORE-101), which this block does not port: it reads every
+// backslash in a coverage path as a separator, as pharn-ci before 0.12.0 did, so a tracked file whose name holds
+// a backslash is not matched here.
 
 // --- paths (paths.ts) ---
 
@@ -681,7 +684,7 @@ export function parseCli(argv) {
 
 /**
  * The report versions this helper reads: Report v1 (pharn-ci 0.1.x, the string "1") and Report v2 (pharn-ci 0.2.x to
- * 0.11.x, the number 2). v2 takes `diffCoverage` from v1 unchanged, and that is all this helper reads.
+ * 0.12.x, the number 2). v2 takes `diffCoverage` from v1 unchanged, and that is all this helper reads.
  */
 export function isKnownSchemaVersion(v) {
   return v === "1" || v === 2;

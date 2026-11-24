@@ -1,8 +1,8 @@
-# Policy keys, rules and default levels (pharn-ci 0.4.x to 0.11.x)
+# Policy keys, rules and default levels (pharn-ci 0.4.x to 0.12.x)
 
 Source: pharn-ci v0.4.0 at commit `a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` and
-v0.11.0 at `bd7b36ea07588884418f5002ae74afc35135c400`: `schema/policy.v1.json`
-(the bundled `scripts/policy.v1.json` is a byte copy of v0.11.0's), README ("Org
+v0.12.0 at `a370515e32f8040771ccf4b6f737d3d25f62749f`: `schema/policy.v1.json`
+(the bundled `scripts/policy.v1.json` is a byte copy of v0.12.0's), README and `docs/policy.md` ("Org
 policy", "P13", "P14", "Prompt-injection scan", "Dependency safety", "Flaky
 tests and JUnit results", "Config"), CHANGELOG and `docs/LIMITS.md`. pharn-ci
 0.1.x to 0.3.x read no policy. The schema closes every object
@@ -39,7 +39,7 @@ Each line names a rule, the policy keys that feed it and its default level.
 - P09, the pull request loosens what it is graded by (the policy file, the config, a workflow or an agent settings file): `error`, `warn` or `info` by what changed; no key feeds it.
 - P10, policy unavailable, fed by `policy.required`: `warn` by default, `error` with `policy: required` or `policy.required: true`; its severity cannot be overridden.
 - P11, agent PR changes a protected path, fed by `agents.protected_paths` and `agents.protected_paths_mode`: `error` by default (`block`).
-- P12, meant for `agents.require_human_approval`: not enforced in 0.4.x to 0.11.x; no finding, no level.
+- P12, meant for `agents.require_human_approval`: not enforced in 0.4.x to 0.12.x; no finding, no level.
 - P13, agent self-modification (0.6.0): an agent pull request widens what an agent may do in an agent settings file, an MCP config, a workflow or CODEOWNERS. No key feeds it; it runs under any app or `file:` policy. `error` by default; an app policy can set `policy.rules.P13`, a `file:` policy cannot lower it.
 - P14, agent PR size cap (0.6.0), fed by `agents.max_files` and `agents.max_changed_lines`: `error` by default, and off until the policy sets a cap (there is no default cap).
 
@@ -91,7 +91,7 @@ Feeds the test-integrity signals TI01 to TI17 (the gate, no P rule).
 | Key | Meaning |
 | --- | ------- |
 | `test_integrity.mode` | `block`, `warn` or `off`. The policy can raise the mode above the workflow input and the config (`block > warn > off`). |
-| `test_integrity.signals` | A severity (`block`, `warn`, `info` or `off`) per signal id `TI01` to `TI17`; any other key, `TI18` included, is an error. `TI17` (an assertion that always passes, `warn` by default) is from 0.11.0: an older release rejects the key. |
+| `test_integrity.signals` | A severity (`block`, `warn`, `info` or `off`) per signal id `TI01` to `TI17`; any other key, `TI18` included, is an error. `TI17` (an assertion that always passes, `warn` by default) is from 0.11.0: an older release rejects the key. `TI15` still validates in 0.12.0 but changes nothing, since 0.12.0 emits no TI15. |
 | `test_integrity.accept_label` | The label that signs off test-integrity blocks. Only an app policy may set it; a `file:` policy may not, and `.pharn/ci.yml` never. |
 
 ### `flaky`
@@ -111,7 +111,7 @@ Policy mode settings and rule severities.
 
 | Key | Meaning |
 | --- | ------- |
-| `policy.required` | `true` makes an unavailable policy block the check (P10). Not allowed from a `file:` policy. |
+| `policy.required` | In an app policy, `true` makes agent settings files that could not be read (so P02 to P06 did not run) a `POLICY_SETTINGS_INVALID` error instead of a warning. It does not make a policy that could not be fetched block the check: only the workflow input `policy: required` does that (P10). Not allowed from a `file:` policy (named in `POLICY_OVERRIDE_IGNORED`). pharn-ci 0.12.0's schema and docs state this; earlier docs described it as making an unavailable policy block. |
 | `policy.rules` | A severity per rule id `P01` to `P14`. Applied to P01 to P09 and P11 from 0.4.0, and to P13 and P14 from 0.6.0; P10 cannot be overridden, and P12 is accepted and not enforced. |
 
 ### `agents`
@@ -126,7 +126,7 @@ Agent pull request detection and rules.
 | `agents.protected_paths_mode` | `block` (the default) or `warn`; the stricter of it and `policy.rules.P11` applies. |
 | `agents.max_files` | From 0.6.0, P14: most files an agent PR may change, 1 to 100000. A rename counts once; lockfiles, snapshots, `*.generated.*` files and `coverage.exclude` paths do not count (they do when the PR edits the config or a workflow, unless the exclusions are the app policy's). |
 | `agents.max_changed_lines` | From 0.6.0, P14: most changed lines (added plus removed) an agent PR may have, 1 to 10000000, counted the same way. |
-| `agents.require_human_approval` | Accepted by the schema, not enforced: it is meant for rule P12, which 0.4.x to 0.11.x do not apply. |
+| `agents.require_human_approval` | Accepted by the schema, not enforced: it is meant for rule P12, which 0.4.x to 0.12.x do not apply. |
 
 For a cap the smaller limit wins: a `file:` policy the pull request edits applies
 the smaller of its merge-base and head values for each cap, so it can lower a
@@ -185,7 +185,11 @@ higher threshold, `setup.require: true`, a stricter mode, more `setup.expect`
 tools, higher signal severities, more injection phrases and lower P14 caps.
 Exclusions, a root, an accept label, `policy.required`, `injection.exempt`,
 `dependencies.registries` and `dependencies.allowed_hosts` are not allowed from
-a file.
+a file. From 0.12.0 a pull request that edits the file is checked with the file
+at the base commit united with its copy key by key, so the stricter value
+applies to every key the file may set, and each value the pull request made
+looser is named in `POLICY_OVERRIDE_IGNORED`; 0.4.x to 0.11.x united only the
+agent lists, the P14 caps and the injection phrases.
 
 ## Writing the values
 

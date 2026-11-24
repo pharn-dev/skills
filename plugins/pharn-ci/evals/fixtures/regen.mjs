@@ -4,8 +4,8 @@
 // pharn-ci commit per version line, and each case names the version it was generated with.
 // Node core only.
 //
-//   node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.11.0=<checkout>
-//   node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.11.0=<checkout>
+//   node plugins/pharn-ci/evals/fixtures/regen.mjs --check --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.12.0=<checkout>
+//   node plugins/pharn-ci/evals/fixtures/regen.mjs --write --pharn-ci 0.1.0=<checkout> --pharn-ci 0.2.0=<checkout> --pharn-ci 0.4.0=<checkout> --pharn-ci 0.9.0=<checkout> --pharn-ci 0.12.0=<checkout>
 //
 // Pass one checkout per version in manifest.pharnCi, each at its pinned commit and built first:
 // pnpm install --frozen-lockfile && pnpm --filter @pharn-ci/cli... build
@@ -180,10 +180,12 @@ export function pinProblems(reference, sources, manifest) {
   return problems;
 }
 
-function pharnCiPinSources(pharnCi) {
+/** The texts pinProblems searches: pharn-ci's README, its Action reference (docs/action.md, 0.12.0 moved it out of the README) and its example workflows. */
+export function pharnCiPinSources(pharnCi) {
   const examples = path.join(pharnCi, "examples/workflows");
   return [
     readFileSync(path.join(pharnCi, "README.md"), "utf8"),
+    readFileSync(path.join(pharnCi, "docs/action.md"), "utf8"),
     ...readdirSync(examples)
       .filter((f) => f.endsWith(".yml"))
       .map((f) => readFileSync(path.join(examples, f), "utf8")),
@@ -457,6 +459,8 @@ async function loadTools(pharnCi, version, pin) {
   }
   const cliVersion = run(["node", cli, "--version"], pharnCi).trim();
   if (cliVersion !== pin.cliVersion) throw new RegenError(`pharn-ci ${version}: the CLI prints ${cliVersion}, expected ${pin.cliVersion}`);
+  // From 0.12.0 the core's dist reads the version from __PHARN_VERSION__, which pharn-ci's bundler defines at build time.
+  globalThis.__PHARN_VERSION__ = pin.cliVersion;
   const coreModule = await import(pathToFileURL(core).href);
   return { dir: pharnCi, cli, renderMarkdown: coreModule.renderMarkdown, core: coreModule };
 }

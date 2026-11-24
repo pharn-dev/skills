@@ -1,20 +1,19 @@
-# Message codes (pharn-ci 0.1.x to 0.11.x)
+# Message codes (pharn-ci 0.1.x to 0.12.x)
 
 Source: pharn-ci 0.1.0, pharn-ci 0.2.0 at commit
 `0873ce23f3595a3497325635b7bf3ee93ea77687`, v0.3.0 at
 `ad3b75f9f2b9863806055897e99430b06db7fd1c`, v0.4.0 at
-`a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` and v0.11.0 at
-`bd7b36ea07588884418f5002ae74afc35135c400`: `packages/core/src/report.ts`, the
+`a9314e9fda1ae220e42fa0d7e6ff5c0a04e1d756` and v0.12.0 at
+`a370515e32f8040771ccf4b6f737d3d25f62749f`: `packages/core/src/report.ts`, the
 detectors under `packages/core/src/signals/`, the renderer's hints,
-`packages/core/src/fix/table.ts`, `schema/report.v2.json`, `action.yml`,
-README, CHANGELOG and `docs/LIMITS.md`. The report schema has no enum of
-codes: the `code` field is a string, and its description lists the known
-codes with their levels. Every code that list names at v0.11.0 is in this file.
-Notes marked "from 0.12.0" come from pharn-ci's `main` after v0.11.0
-(unreleased; its CHANGELOG `## [Unreleased]` and the code at that commit) and
-are gathered in
-[Behaviour changes in 0.12.0](#behaviour-changes-in-0120-unreleased); for a
-report whose `tool.version` is earlier, the "earlier" text applies.
+`packages/core/src/fix/table.ts`, `schema/report.v2.json`, `docs/output.md`,
+`action.yml`, README, CHANGELOG and `docs/LIMITS.md`. The report schema has no
+enum of codes: the `code` field is a string; up to 0.11.0 its description
+lists the known codes with their levels, and from 0.12.0 it points to the code
+table in `docs/output.md`. Every code that table names at v0.12.0 is in this
+file. Notes marked "from 0.12.0" are gathered in
+[Behaviour changes in 0.12.0](#behaviour-changes-in-0120); for a report whose
+`tool.version` is earlier, the "earlier" text applies.
 
 Every 0.1.x code keeps its meaning and level in later releases, and no code is
 removed or renamed before 1.0. The
@@ -30,7 +29,9 @@ agent-PR codes (below), and the org policy codes, which are in
 `TESTS_NOT_EXERCISING_CHANGES`; 0.8.0 the
 [dependency safety](#dependency-safety-08x-and-later) and
 [JUnit and flaky](#junit-results-and-flaky-tests-08x-and-later) codes; 0.11.0
-`TEST_INTEGRITY_TI17`. 0.5.0, 0.9.0, 0.9.1 and 0.10.0 add no code. For each
+`TEST_INTEGRITY_TI17`; 0.12.0 `POLICY_KEYS_UNKNOWN` ([policy.md](policy.md))
+and stops emitting `TEST_INTEGRITY_TI15` and `SETUP_STALE_SI04`, which stay
+in the schema. 0.5.0, 0.9.0, 0.9.1 and 0.10.0 add no code. For each
 code: its level, what causes it, what to look at in the repository, and the
 fix. "Threshold set" means
 `diffCoverage.threshold` (or the workflow's `threshold`, `coverage.threshold`,
@@ -114,13 +115,13 @@ first, and name the release that made the difference.
   (`handle_shortcode`) is now a valid login, so such an author no longer counts
   as an agent PR for that reason, and such a reviewer's accept label counts.
 
-## Behaviour changes in 0.12.0 (unreleased)
+## Behaviour changes in 0.12.0
 
-pharn-ci 0.12.0 is not released yet (the latest release is v0.11.0); these
-changes are on its `main`. They make some checks fail where they passed
-before, add no message code and change no report field. When `tool.version`
-is 0.12.0 or later, read the "from 0.12.0" notes under each code; for an
-earlier version, the "earlier" text.
+pharn-ci 0.12.0 (v0.12.0, released 2026-11-24) makes some checks fail where
+they passed before. It adds one message code (`POLICY_KEYS_UNKNOWN`), stops
+emitting two (`TEST_INTEGRITY_TI15`, `SETUP_STALE_SI04`) and changes no report
+field. When `tool.version` is 0.12.0 or later, read the "from 0.12.0" notes
+under each code; for an earlier version, the "earlier" text.
 
 - **The config a pull request edits is read at the merge base (breaking).**
   A change to `.pharn/ci.yml` (or the `config` input's file) applies after
@@ -148,6 +149,42 @@ earlier version, the "earlier" text.
   of being dropped from diff coverage.
 - **`TESTS_NOT_EXERCISING_CHANGES` covers Python** source files too, so a
   Python pull request can go from `pass` to `warn`.
+- **A test file pharn-ci could not read fails `test-integrity: block`:** each
+  such file is a per-file `TEST_INTEGRITY_INDEX_UNAVAILABLE` error that the
+  accept label lowers to a warning (mode `warn` is unchanged). See
+  `TEST_INTEGRITY_INDEX_UNAVAILABLE` under
+  [Test integrity](#test-integrity-02x-and-later).
+- **Test integrity reads more:** TI03 sees a test switched off without a
+  `.skip` in its name (an options object, an empty `.each([])`, a new `if`
+  guard; in Python an empty `parametrize`, `del test_x`,
+  `raise unittest.SkipTest`, a module-level `importorskip`) and reads Python
+  import aliases (`import pytest as pt`); TI01 counts a test file renamed to a
+  name no test pattern matches and softens a deletion only when the package's
+  code is gone too; TI05 and TI06 no longer excuse a test under `skipIf` or
+  `runIf`; TI09 and TI10 catch more narrowings; a test file git shows as
+  binary is no longer skipped. TI01 and TI02 pair a removed test with at most
+  256 new tests, so on a very large change a renamed or moved test can be
+  reported. Two honest edits no longer fail: report flags added to a workflow
+  test command (TI11) and a one-line coverage hint in a new file (TI13, now
+  `warn`).
+- **A `file:` policy the pull request edits is united with its merge-base
+  copy** key by key, so the stricter value applies to every key a file may
+  set, and each looser value is named in `POLICY_OVERRIDE_IGNORED`
+  ([policy.md](policy.md)).
+- **Policy messages:** `POLICY_KEYS_UNKNOWN` (warn) names keys of a served
+  policy this version does not know, where the whole policy used to be
+  dropped; a failed OIDC token request is a `POLICY_UNAVAILABLE` warning
+  (`no-oidc-token`); P09 no longer reports an edit that complies or only
+  supplies a required rule; `POLICY_OVERRIDE_IGNORED` no longer names the
+  layer a setting came from.
+- **Dependency safety reads more spellings:** a `uv.lock` sdist or wheel URL,
+  pnpm lockfile spacing, requirements options by any prefix pip accepts,
+  `package.json` overrides and resolutions, and every `pyproject.toml`
+  spelling, including `[build-system] requires` and index URLs. A pull request
+  that adds or changes such an entry can now get D05 or D04, and a file
+  written in a form the package manager would refuse is an unread error.
+- **Hints:** the comment's `Hint:` line is now the same sentence as the
+  report's `fix.hint`.
 
 ## Diff coverage
 
@@ -434,6 +471,12 @@ the lines it changes). `line` is `null`; the `detail` says which case it is.
 - `info` when the same change deletes a source file of the same name,
   deletes other files of the test's package, or adds a test file of the same
   name that defines tests (a migration). These are the usual honest cases.
+- From 0.12.0: a rename to a name no test file pattern matches counts even
+  inside a `test`, `tests` or `__tests__` directory; the package case is
+  `info` only when the change deletes the package's JS/TS or Python source and
+  none is left; and a deleted test whose renamed copy lies past the 256 new
+  tests the pairing compares stays at the mode's level (the accept label
+  clears it when it was in fact moved).
 - Look at: `git diff --name-status <base>...HEAD` for what else was deleted
   or added, and whether the removed cases live on elsewhere.
 - Fix: restore the tests, or say in the PR why they go so a reviewer can
@@ -449,7 +492,10 @@ name in another touched file clears it only when that test holds the removed
 test's body. A test renamed in place, replaced by an `it.each` table or moved
 under a new name with a close body is not removed. The finding sits at the
 base path and base line, and at most 20 findings per file are listed (the text
-says how many were left out).
+says how many were left out). From 0.12.0 each removed test is compared with
+at most 256 not-yet-paired new tests, in head order: below 256 new tests the
+pairs are as before, and on a larger change a renamed or moved test whose
+match lies past the bound is reported (the accept label clears it in `block`).
 
 - Level: `block` in mode `block`, `warn` in mode `warn` (the default), and
   `warn` in every mode but `off` for a test whose name is computed.
@@ -476,6 +522,16 @@ Go `t.Skip(`, `t.Skipf(`, `t.SkipNow(`.
   adds. A reason string does not change the level.
 - A skip that was already there (an edit or a move) never fires;
   `skipIf(false)` and `runIf(true)` never fire.
+- From 0.12.0 it also reads a skip written without `.skip`: JS/TS
+  `{ skip: true }` (or `todo`, `fails`) in an options object and an empty
+  `.each([])` table block like `it.skip`, and a test newly put under an `if`
+  is a conditional skip (`warn`); Python an empty `parametrize`, a later `def`
+  of the same name, `del test_x`, `test_x.__test__ = False` and
+  `raise unittest.SkipTest` (unconditional), a `def` newly under an `if`
+  (`warn`), and a module-level `pytest.importorskip` (`warn`). It resolves
+  Python import aliases (`import pytest as pt`, then `@pt.mark.skip`) from the
+  Python index; a file with more than 1000 aliases, or an alias over 500
+  characters, is refused as `too-large` (an error in `block`).
 - The usual honest case: the test fails in CI and is skipped to unblock the
   PR. Find out why it fails (the CI log of the run before the skip, the
   test's history). Fix: fix the test or the code, or keep the skip with a
@@ -645,7 +701,7 @@ setting already applies to the run that reports it.
 
 ### `TEST_INTEGRITY_TI15` (info)
 
-0.3.0. A condition added to a JS/TS or Python source file (`===`, `!==`, `==`,
+0.3.0 to 0.11.x; 0.12.0 no longer emits it (0 of 30 sampled findings were right), and a policy's `test_integrity.signals.TI15` still validates and changes nothing. A condition added to a JS/TS or Python source file (`===`, `!==`, `==`,
 `!=`, a `case` label or a Python `in (...)` group) compares with a string or
 number literal that a test file in the same change also adds, so the code may
 special-case the test. It is `info` in every mode: it never blocks or warns
@@ -684,7 +740,7 @@ and `warn` and never blocks unless an org policy sets
 - Fix (`restore-assertion`): put back an assertion that can fail in place of
   the one that always passes.
 
-### `TEST_INTEGRITY_INDEX_UNAVAILABLE` (warn)
+### `TEST_INTEGRITY_INDEX_UNAVAILABLE` (warn; from 0.12.0 error in block for a test file that could not be read)
 
 0.3.0. A touched JS/TS or Python test file could not be compared at the merge
 base and at HEAD, so the signals that compare test text did not check it. The
@@ -694,10 +750,28 @@ did not run because the test text could not be read; or a touched test-config
 file could not be read, so TI09 did not check it. It is `warn` and not given in
 mode `off`; the diff-only signals still run.
 
+- From 0.12.0, in `test-integrity: block`, a test file pharn-ci could not read
+  fails the check: each is a per-file `error` that the accept label lowers to
+  a warning. The cases: a modified or added `.py` test file when the Python
+  index could not run (`python-too-old`, `python-failed`, `timeout`,
+  `output-too-large`, `bad-output`); a `.py` test file whose head `python3`
+  cannot parse (`syntax-error`, Python 2 syntax included, `too-deep`,
+  `too-large`, `parser-threw`); an added `.py` test file for any of these or
+  `python-not-found`; and a modified test file of any language the sources
+  reader dropped as `over-file-cap` or `over-total-cap` on either side, or as
+  `too-large`, `binary` or `unsafe-path` on one side only; a modified JS/TS,
+  Python or Go test file with more than 5000 changed lines fails the same way.
+  `too-large` or `binary` on both sides and `missing` stay warnings, and so
+  does every case in mode `warn`. The whole-run error for a modified `.py`
+  test file with no Python at all (`python-not-found`) stays, and the label
+  never lowers it. Earlier releases (0.5.0 to 0.11.x) made it an error in
+  `block` only when TI02 and TI05, or TI09, did not run at all.
 - Look at: the files the text names. A Python test file needs `python3` (or
   `python`) on the job's `PATH`.
 - Fix: put a Python 3.8 or newer on `PATH` in the workflow, split a file that is
-  too large, and review the named files by hand meanwhile.
+  too large, fix the syntax of a file `python3` cannot parse, and review the
+  named files by hand meanwhile. Applying the accept label is the reviewers'
+  call, never the fix you lead with.
 
 ### `TEST_INTEGRITY_ACCEPTED` (info)
 
@@ -854,7 +928,7 @@ them fails the check.
 | `SETUP_STALE_SI01` | warn | A command in an inline code span or shell block names a script the root `package.json` does not define (`npm run x`, `pnpm x`, `yarn x`, `bun run x`) or a target the root `Makefile` does not define (`make x`). Package-manager commands (`install`, `test`, `exec`, ...) and dependency binaries are not scripts. |
 | `SETUP_STALE_SI02` | warn | A path in an inline code span (a token with a `/` or a known file extension) is not a tracked file or directory, from the root, from the file's directory, or as the end of a tracked path. |
 | `SETUP_STALE_SI03` | warn | A file the instructions tell the agent to read, by a relative Markdown link or a Claude-style `@path` import, is not tracked. |
-| `SETUP_STALE_SI04` | info | An instruction file last committed more than 90 days before HEAD's commit names a file this change edits. It needs the history (`fetch-depth: 0`): on a shallow checkout every file looks new. Fix: check that the old instruction still describes the edited file. |
+| `SETUP_STALE_SI04` | info | An instruction file last committed more than 90 days before HEAD's commit names a file this change edits. 0.7.x to 0.11.x only: 0.12.0 no longer emits it. It needs the history (`fetch-depth: 0`): on a shallow checkout every file looks new. Fix: check that the old instruction still describes the edited file. |
 
 ## Prompt-injection scan (0.7.x and later)
 

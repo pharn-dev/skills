@@ -2,10 +2,10 @@
 # Builds a small Node project whose feature branch adds src/discount.mjs and wires it into
 # src/cart.mjs (subtotal takes an optional discount code), with one new test in
 # test/cart.test.mjs that reaches discount.mjs only through subtotal. No test file imports
-# src/discount.mjs, so pharn-ci 0.11.0 reports TESTS_NOT_EXERCISING_CHANGES for it (a warning),
+# src/discount.mjs, so pharn-ci 0.12.0 reports TESTS_NOT_EXERCISING_CHANGES for it (a warning),
 # and some of its lines are uncovered. quarantine.json at the repository root lists a test id
 # the team treats as flaky. pharn-ci-report.json is what `pharn-ci check --base main --format json`
-# 0.11.0 printed for this exact tree, as CI would have. No network, no dependencies: the tests
+# 0.12.0 printed for this exact tree, as CI would have. No network, no dependencies: the tests
 # run on Node's own test runner.
 set -eu
 git init -q -b main .
@@ -63,7 +63,7 @@ jobs:
         with:
           node-version: 24
       - run: npm run test:coverage
-      - uses: pharn-dev/pharn-ci@bd7b36ea07588884418f5002ae74afc35135c400 # v0.11.0
+      - uses: pharn-dev/pharn-ci@a370515e32f8040771ccf4b6f737d3d25f62749f # v0.12.0
         timeout-minutes: 5
 EOF
 cat > src/cart.mjs <<'EOF'
@@ -143,7 +143,7 @@ cat > pharn-ci-report.json <<'EOF'
   "schemaVersion": 2,
   "tool": {
     "name": "pharn-ci",
-    "version": "0.11.0"
+    "version": "0.12.0"
   },
   "verdict": "warn",
   "diffCoverage": {
