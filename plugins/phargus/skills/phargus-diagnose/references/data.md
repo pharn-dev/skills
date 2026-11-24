@@ -51,9 +51,14 @@ is historical, not a loss rate. A counter decrease starts a new segment; never s
 it into a negative rate. Unknown counters are unknown, not zero. Separate files/processes
 are separate measurements; the wire format has no reliable process identity.
 
-The helper reports invalid records, ignored logs, truncation, schedule gaps and counter
-resets. A schedule gap can also result from a blocked loop; it is not proof of dropped
-records. Empty histograms can report zero. An absent span is not proof that no request ran.
+The helper reports invalid records, ignored logs, truncation, schedule gaps, stalled
+samples and counter resets. A late raw sample whose lateness (spacing minus the interval)
+is more than half an interval, but at most its own eventLoop.max (in ms) plus half an
+interval, is a stalled sample: it is counted in quality.stalledSamples and its lateness
+is added to quality.stalledMs. A repeated or backwards timestamp, or a late sample its
+stall does not explain, is a gap, and a gap is not proof of dropped records. Sample
+coverage counts stalledMs as covered time. Window records keep the contiguity rule.
+Empty histograms can report zero. An absent span is not proof that no request ran.
 Counters do not expose every source of missing traces, and the collector's ring buffers
 can have evicted earlier records. A zero loss delta is not a guarantee of tracing coverage.
 

@@ -1,0 +1,103 @@
+{
+  "schema": "ac-tests-lock/6",
+  "feature": "phargus-stalled-sample-not-gap",
+  "mode": "test-first",
+  "spec": {
+    "spec_id": "phargus-stalled-sample-not-gap",
+    "spec_content_hash": "192f319bce36ed34bed988afe17cf0a7917f9651822dd768c4df6f45e524a0d8"
+  },
+  "mapping": {
+    "path": "pharn/features/phargus-stalled-sample-not-gap/AC-TESTS.md",
+    "sha256": "1fd9244bb10710c7ff1f393577573fff1c47c15df3d3ac19c06cccd336779e7a"
+  },
+  "files": [
+    {
+      "path": "src/phargus/test/stalled-samples.test.mjs",
+      "sha256": "039681dea8b27ee6ad76c4ecda6b9a4fb7ea2a6a2f5e5e46c9040dc6a5d9267c"
+    }
+  ],
+  "bootstrap": null,
+  "red_run": {
+    "stamp_sha256": "e53da97f95d9c03bd3fd38f0b539a2ac334f26cebb09d39db5192b4230bd801e",
+    "files_sha256": "1c847e269dc72cab1f4c835718ad9b79c91ab388664eccdf49a304e38b76d5ef",
+    "gates": [
+      {
+        "gate": "test",
+        "results_sha256": "5813c759fdf284ffa4f0d64dbd9cccb99b6c2ce887aa5e33e2a39c0c9147f79e"
+      }
+    ],
+    "acs": [
+      {
+        "id": "AC-1",
+        "tests": [
+          "src/phargus/test/stalled-samples.test.mjs::AC-1: a fresh quality record has no stalled samples and no stalled time",
+          "src/phargus/test/stalled-samples.test.mjs::AC-1: a late raw sample explained by its own stall is a stalled sample, not a gap",
+          "src/phargus/test/stalled-samples.test.mjs::AC-1: a late raw sample its stall does not explain is a gap",
+          "src/phargus/test/stalled-samples.test.mjs::AC-1: a raw sample at most half an interval late changes no counter",
+          "src/phargus/test/stalled-samples.test.mjs::AC-1: a timestamp at or before its predecessor is a gap whatever its stall",
+          "src/phargus/test/stalled-samples.test.mjs::AC-1: window records with a hole are still a gap and never stalled"
+        ]
+      },
+      {
+        "id": "AC-2",
+        "tests": [
+          "src/phargus/test/stalled-samples.test.mjs::AC-2: one tick delayed by its own stall still compares against on-time samples",
+          "src/phargus/test/stalled-samples.test.mjs::AC-2: sample coverage counts stalled time against durationMs and the other side"
+        ]
+      },
+      {
+        "id": "AC-3",
+        "tests": [
+          "src/phargus/test/stalled-samples.test.mjs::AC-3: Quality declares numeric stalledSamples and stalledMs and generated copies match",
+          "src/phargus/test/stalled-samples.test.mjs::AC-3: the knowledge names the stalled counters and states the stalled-sample rule"
+        ]
+      }
+    ]
+  },
+  "test_infra": {
+    "levels": [
+      "integration",
+      "unit"
+    ],
+    "gates": [
+      {
+        "id": "test",
+        "script": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./.github/scripts/pharn-test-reporter.mjs --test-reporter-destination=stdout .github/scripts/*.test.mjs plugins/pharn-ci/tests/*.test.mjs plugins/pharn-ci/evals/fixtures/*.test.mjs",
+        "pre": null,
+        "post": null,
+        "results": "pharn-json"
+      }
+    ],
+    "chained": [],
+    "configs": [],
+    "script_files": [
+      {
+        "path": ".github/scripts/pharn-test-reporter.mjs",
+        "sha256": "0f6e7369360cc8d7621476f349dc5d3fb08ce968906304f8e6ee2f4ad2ea7058"
+      }
+    ],
+    "jest": null,
+    "exclude": [],
+    "other_gates": [
+      {
+        "id": "format:check",
+        "script": "prettier --check .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint",
+        "script": "eslint .",
+        "pre": null,
+        "post": null
+      },
+      {
+        "id": "lint:md",
+        "script": "markdownlint-cli2",
+        "pre": null,
+        "post": null
+      }
+    ],
+    "other_chained": []
+  }
+}

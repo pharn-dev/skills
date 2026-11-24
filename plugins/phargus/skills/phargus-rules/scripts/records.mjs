@@ -128,6 +128,8 @@ export function quality() {
     ignoredLogs: 0,
     truncated: false,
     gaps: 0,
+    stalledSamples: 0,
+    stalledMs: 0,
     loss: { known: false, initial: null, delta: { samples: 0, spans: 0 }, resets: 0 },
   };
 }
@@ -229,7 +231,10 @@ export function samplingInterval(explicit, conditions, recorded) {
   return { intervalMs: 1000, source: 'default' };
 }
 
-/** @param {Quality} status @param {number} intervalMs */
+/**
+ * A raw sample that is late but explained by its own eventLoop.max is stalled, not a gap.
+ * @param {Quality} status @param {number} intervalMs
+ */
 export function qualityTracker(status, intervalMs) {
   /** @type {{samples: number, spans: number} | undefined} */ let previousLoss;
   /** @type {number | undefined} */ let previousSample;
@@ -242,11 +247,18 @@ export function qualityTracker(status, intervalMs) {
       if (record.event === 'sample') {
         samples += 1;
         const { timestamp, dropped } = record.data;
-        if (
-          previousSample !== undefined &&
-          (timestamp <= previousSample || timestamp - previousSample > intervalMs * 1.5)
-        )
-          status.gaps += 1;
+        if (previousSample !== undefined) {
+          const lateness = timestamp - previousSample - intervalMs;
+          if (timestamp <= previousSample) status.gaps += 1;
+          else if (lateness > intervalMs * 0.5) {
+            // eventLoop.max is in nanoseconds; lateness is in milliseconds.
+            if (lateness > record.data.eventLoop.max / 1e6 + intervalMs * 0.5) status.gaps += 1;
+            else {
+              status.stalledSamples += 1;
+              status.stalledMs = Math.min(Number.MAX_SAFE_INTEGER, status.stalledMs + lateness);
+            }
+          }
+        }
         previousSample = timestamp;
         if (dropped) {
           withLoss += 1;
