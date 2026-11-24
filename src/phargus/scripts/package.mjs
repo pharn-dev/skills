@@ -3,7 +3,6 @@ import { cp, mkdir, mkdtemp, readdir, rm, readFile, writeFile, utimes } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { root, catalog, author, generate, pluginPath } from './generate.mjs';
-import { evaluationGate } from './eval-gate.mjs';
 
 const check = process.argv.includes('--check');
 await generate(true);
@@ -24,16 +23,10 @@ async function normalizeTimes(path) {
 try {
   const plugin = join(temporary, catalog.name);
   await mkdir(plugin);
-  // The plugin archive is the installable plugin directory plus release evidence.
+  // The plugin archive is the installable plugin directory plus the release documents.
   await cp(pluginPath, plugin, { recursive: true });
-  for (const path of ['README.md', 'compatibility.json', 'VERIFICATION.md', 'VERIFICATION.json'])
+  for (const path of ['README.md', 'compatibility.json', 'VERIFICATION.md'])
     await cp(join(root, path), join(plugin, path));
-  // Historical records only: per-run trial evidence (verification/<run>/) stays in the
-  // repository, where VERIFICATION.json's paths and hashes resolve, and out of the archive.
-  await mkdir(join(plugin, 'verification'));
-  for (const entry of await readdir(join(root, 'verification'), { withFileTypes: true }))
-    if (entry.isFile() && !entry.name.startsWith('.'))
-      await cp(join(root, 'verification', entry.name), join(plugin, 'verification', entry.name));
   const cli = join(plugin, 'skills', 'phargus-diagnose', 'scripts', 'phargus.mjs');
   const help = JSON.parse(
     execFileSync(process.execPath, [cli, '--help'], { cwd: temporary, encoding: 'utf8' }),
@@ -78,7 +71,6 @@ try {
           author,
           compatibility: JSON.parse(await readFile(join(root, 'compatibility.json'), 'utf8')),
           artifacts: artifacts.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
-          behavioralGate: await evaluationGate(),
         },
         null,
         2,

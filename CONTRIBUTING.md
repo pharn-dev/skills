@@ -106,13 +106,9 @@ instructions, runtime helpers, references, or other behavior-affecting content,
 run the applicable evals locally before merging (see [Evals](#evals)) and put
 the scores and review results in the PR. Documentation and repository-configuration
 changes that leave behavior unchanged do not require new model trials.
-For `phargus`, the eval runner records every trial in
-`src/phargus/VERIFICATION.json` and writes redacted evidence to
-`src/phargus/verification/<run>/`; commit both. A maintainer then signs each
-trial off with `npm run review:evals` under their GitHub handle. Never edit
-`VERIFICATION.json` by hand. `npm run check:evals` fails until every case in both
-clients has an accepted trial for the shipped content (see
-[src/phargus/VERIFICATION.md](src/phargus/VERIFICATION.md)).
+For `phargus`, `npm run eval` writes its report to the git-ignored
+`src/phargus/evals/results/<run>/`; after reviewing a run, the reviewer adds one
+dated row to [src/phargus/VERIFICATION.md](src/phargus/VERIFICATION.md).
 
 `npm test` also loads `.github/scripts/pharn-test-reporter.mjs` next to the
 `spec` reporter. It writes PHARN's `pharn-json` per-test results to
@@ -235,8 +231,7 @@ To move the pharn-ci skills to a new pharn-ci release:
    skills' text against the release's changelog.
 
 `phargus` evals run in Codex and in Claude Code from `src/phargus`
-(`npm run eval`, then `npm run review:evals` per trial, then
-`npm run check:evals`); see
+(`npm run eval`); see
 [src/phargus/evals/README.md](src/phargus/evals/README.md).
 
 ## Releasing
@@ -249,16 +244,8 @@ Each plugin is versioned and released on its own; tags are `<plugin>-vX.Y.Z`
    with a link reference to the tag. For `phargus`, bump `version` in
    `src/phargus/catalog.json` and `package.json`, then run `npm run build`; for
    `pharn` or `pharn-ci`, edit its `.claude-plugin/plugin.json`.
-2. For `phargus`, before the release:
-   1. `npm run prepare:integration`, then `npm run eval` for all sixteen trials.
-      The runner writes the trials to `VERIFICATION.json` and redacted evidence
-      to `verification/<run>/`. Check the evidence for anything private.
-   2. The maintainer reviews each trial against `src/phargus/evals/README.md`
-      and records the decision with `npm run review:evals -- --run <run>
-      --client <client> --case <case> --reviewer <github-handle> --accept`
-      (or `--reject --note "..."`, then rerun that case).
-   3. Commit `VERIFICATION.json` and `verification/<run>/`, summarize the review in
-      `VERIFICATION.md`, and confirm `npm run check:evals` passes.
+2. For `phargus`, before the release: run the evals, review them, and add the
+   row to `src/phargus/VERIFICATION.md` (see "Adding a row" there).
 3. After merging, tag the merge commit on `main` and publish one GitHub release
    per tag whose notes are that plugin's changelog section.
 
