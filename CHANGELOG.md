@@ -80,6 +80,16 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   compared in whole milliseconds, so a span drained at the last tick is still
   contained. `capture` and `summarize` share one definition of a sample's
   interval, and `knowledge/data.md` states the rule (CORE-235).
+- phargus 0.1.1: a raw sample delayed by a synchronous stall, and explained by
+  its own `eventLoop.max`, now counts in `quality.stalledSamples` and
+  `quality.stalledMs` instead of `quality.gaps`. A sample whose lateness is more
+  than half an interval but at most its own `eventLoop.max` plus half an
+  interval is stalled; a repeated or backwards timestamp, or a late sample its
+  stall does not explain, is still a gap. Sample coverage counts the stalled
+  time, so a recording with a stalled tick is neither short of the declared
+  `durationMs` nor of the other recording. Before, such a recording made
+  `compare` answer `inconclusive` ("measurement gaps"). Window records are
+  unchanged (CORE-236).
 - Repository (no plugin version change): CONTRIBUTING and the rulesets README
   describe the rules GitHub enforces. CONTRIBUTING "CI gates" said "the first
   four" of four bullets run in `ci.yml` and that Validate runs

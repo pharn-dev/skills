@@ -303,6 +303,12 @@ function matchesCoverage(observed, expected) {
   return Math.abs(observed - expected) <= Math.max(observed, expected) * COVERAGE_TOLERANCE;
 }
 
+/** Time covered by raw samples: each sample covers one interval, plus the time its stalls delayed. @param {Summary} summary */
+function sampleCoverageMs(summary) {
+  const { sampleCount, samplingIntervalMs } = summary.coverage;
+  return sampleCount * (samplingIntervalMs ?? 0) + summary.quality.stalledMs;
+}
+
 /** @param {Summary} summary */
 function coverageProblems(summary) {
   /** @type {string[]} */ const reasons = [];
@@ -322,10 +328,7 @@ function coverageProblems(summary) {
     if (
       summary.coverage.format === 'samples' &&
       summary.coverage.samplingIntervalMs !== null &&
-      !matchesCoverage(
-        summary.coverage.sampleCount * summary.coverage.samplingIntervalMs,
-        expectedDuration,
-      )
+      !matchesCoverage(sampleCoverageMs(summary), expectedDuration)
     )
       reasons.push('recorded sample coverage differs from declared durationMs');
   }
@@ -356,7 +359,7 @@ export function compareSummaries(before, after) {
   if (
     before.coverage.format === 'samples' &&
     after.coverage.format === 'samples' &&
-    !matchesCoverage(before.coverage.sampleCount, after.coverage.sampleCount)
+    !matchesCoverage(sampleCoverageMs(before), sampleCoverageMs(after))
   )
     reasons.push('different recorded sample coverage');
   const keys = [
