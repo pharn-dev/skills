@@ -173,8 +173,9 @@ export function classifyLine(line) {
 }
 
 /**
- * Streams a whole file unless maxEvents is given: a file is already bounded and summarizing
- * it is fast, so a default cap would only truncate evidence. Live SSE keeps its own limit.
+ * Streams a whole file unless maxEvents is given: a default cap would truncate evidence, so
+ * the summary keeps bounded per-span state instead (numbers only, with tracked routes capped
+ * in summary.mjs). Live SSE keeps its own limit.
  * @param {string} path @param {Quality} status @param {{maxEvents?: number, allowLogs?: boolean}} [options]
  */
 export async function* fileEvents(path, status, options = {}) {

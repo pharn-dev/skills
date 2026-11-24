@@ -152,6 +152,14 @@ plugin and its version, and its tag is `<plugin>-vX.Y.Z`, for example
   that path, a relative name resolving against the application directory, and
   that `.phargus/` holds captures only. Before, the setup eval saved the
   summarize result to `.phargus/tool-result.json` (#28).
+- `phargus` 0.1.1: `summarize --file` and `compare` no longer run out of memory
+  on a large recording. A 1.1 GB recording of 5,000,000 spans with unique paths
+  aborted with a V8 heap out-of-memory crash (exit 134) and printed no JSON. A
+  summary now keeps only numbers per span, and the route table tracks at most
+  10,000 routes: spans of later routes are counted in one `(other)` route, the
+  new `requests.routesFolded` is `true`, and `requests.distinctRoutes` is then a
+  lower bound. Whole-recording counts and request percentiles stay exact, and
+  file reads still have no default event cap (CORE-234).
 
 ## [pharn-ci 0.2.1] - 2026-11-23
 

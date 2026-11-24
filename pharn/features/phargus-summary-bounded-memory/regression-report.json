@@ -1,0 +1,119 @@
+{
+  "base": "2f9380a24b29f708bf2f94f0fd7c97671b6e4f84",
+  "inside": [
+    "CHANGELOG.md",
+    "plugins/phargus/skills/phargus-diagnose/references/data.md",
+    "plugins/phargus/skills/phargus-diagnose/references/tools.md",
+    "plugins/phargus/skills/phargus-diagnose/scripts/records.mjs",
+    "plugins/phargus/skills/phargus-diagnose/scripts/summary.mjs",
+    "plugins/phargus/skills/phargus-diagnose/scripts/types.d.ts",
+    "plugins/phargus/skills/phargus-memory/references/data.md",
+    "plugins/phargus/skills/phargus-memory/references/tools.md",
+    "plugins/phargus/skills/phargus-memory/scripts/records.mjs",
+    "plugins/phargus/skills/phargus-memory/scripts/summary.mjs",
+    "plugins/phargus/skills/phargus-memory/scripts/types.d.ts",
+    "plugins/phargus/skills/phargus-rules/references/data.md",
+    "plugins/phargus/skills/phargus-rules/references/tools.md",
+    "plugins/phargus/skills/phargus-rules/scripts/records.mjs",
+    "plugins/phargus/skills/phargus-rules/scripts/summary.mjs",
+    "plugins/phargus/skills/phargus-rules/scripts/types.d.ts",
+    "plugins/phargus/skills/phargus-setup/references/data.md",
+    "plugins/phargus/skills/phargus-setup/references/tools.md",
+    "plugins/phargus/skills/phargus-setup/scripts/records.mjs",
+    "plugins/phargus/skills/phargus-setup/scripts/summary.mjs",
+    "plugins/phargus/skills/phargus-setup/scripts/types.d.ts",
+    "plugins/phargus/skills/phargus-verify/references/data.md",
+    "plugins/phargus/skills/phargus-verify/references/tools.md",
+    "plugins/phargus/skills/phargus-verify/scripts/records.mjs",
+    "plugins/phargus/skills/phargus-verify/scripts/summary.mjs",
+    "plugins/phargus/skills/phargus-verify/scripts/types.d.ts",
+    "src/phargus/knowledge/data.md",
+    "src/phargus/knowledge/tools.md",
+    "src/phargus/runtime/records.mjs",
+    "src/phargus/runtime/summary.mjs",
+    "src/phargus/runtime/types.d.ts",
+    "pharn/features/phargus-summary-bounded-memory/AC-TESTS.lock.json",
+    "pharn/features/phargus-summary-bounded-memory/AC-TESTS.md",
+    "pharn/features/phargus-summary-bounded-memory/BUILD.md",
+    "pharn/features/phargus-summary-bounded-memory/GRILL.md",
+    "pharn/features/phargus-summary-bounded-memory/PLAN.md",
+    "pharn/features/phargus-summary-bounded-memory/SPEC.md",
+    "pharn/features/phargus-summary-bounded-memory/grill-findings.json",
+    "pharn/features/phargus-summary-bounded-memory/grill-triage.json",
+    "src/phargus/test/route-cap-docs.test.mjs",
+    "src/phargus/test/summary-bounded-memory.test.mjs",
+    "src/phargus/test/summary-route-cap.test.mjs"
+  ],
+  "outside_gates": {
+    "test": {
+      "base": 0,
+      "head": 0
+    }
+  },
+  "regressions": [],
+  "pre_existing": [],
+  "verdict": "no-regressions",
+  "gate_run": {
+    "base": {
+      "stamp_sha256": "2fedcd872768b4877d13f6ebd45516d044817412b331b70c58ea17711ae997d9",
+      "source": "discover",
+      "fingerprint": {
+        "algo": "worktree-fingerprint/3+sha256+entry-feature-dir",
+        "final": "14dc43c318d5f55b927d6acfacab369d28eb546427519bb83c4c5162dcd4edde"
+      }
+    },
+    "head": {
+      "stamp_sha256": "b9c5b79002c32d218ba86c5a5b3061d9967207bf89cbb1c40a20046375dada7e",
+      "source": "discover",
+      "fingerprint": {
+        "algo": "worktree-fingerprint/3+sha256",
+        "final": "db058955baabbe0ead3b7e9018b2ad32eab8c34baec910972570d8c53512513d"
+      }
+    }
+  },
+  "base_evidence": {
+    "reused": false,
+    "miss": "no-record",
+    "requirement_sha256": "1e9d62ba63c4e6e00df81ffe8f6efe786155bd874fd4b2996d0c8258b4d5eb09",
+    "recorded": false,
+    "source": "entry",
+    "entry": {
+      "used": true,
+      "miss": null,
+      "offer_sha256": "bf8056c87fc4f4a65e5470552caa5ffb14984d81197ec084409749cab9cfcf83",
+      "entry_stamp_sha256": "46954916287068c6915f4a84de640969d4e5a0346eea6d11a0676f83f63f0d91",
+      "base": "2f9380a24b29f708bf2f94f0fd7c97671b6e4f84",
+      "run": {
+        "command": "pharn-loop",
+        "marker_sha256": "4bd67ec0c282504e81ebba0d5176846c7ce921aeb9863eae816af72a7c5f1eac"
+      },
+      "reused_ids": [
+        "test"
+      ],
+      "no_files_ids": [],
+      "ignored_ids": [
+        "lint",
+        "format:check",
+        "lint:md",
+        "test"
+      ]
+    }
+  },
+  "pre_run_snapshot": {
+    "status": "applied",
+    "unchanged": []
+  },
+  "head_install": {
+    "state": "clean",
+    "why": null,
+    "family": "npm",
+    "lockfile": "package-lock.json",
+    "counts": {
+      "changed": 0,
+      "missing": 0,
+      "extraneous": 0,
+      "missing_unchecked": 166
+    }
+  },
+  "base_source": "explicit"
+}

@@ -105,6 +105,7 @@ export type Summary = {
     selection: 'fully-contained-in-runtime-period';
     routes: Route[];
     distinctRoutes: number;
+    routesFolded: boolean;
   };
   quality: Quality;
   metrics: Record<string, number | null>;

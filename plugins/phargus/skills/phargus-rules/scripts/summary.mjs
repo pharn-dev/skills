@@ -30,21 +30,39 @@ function median(values) {
 
 const ROUTE_LIMIT = 20;
 
-/** @param {{method: string, path: string, durationNs: number, statusCode: number}[]} spans */
-function routeBreakdown(spans) {
-  /** @type {Map<string, {method: string, path: string, durations: number[], errors: number}>} */
-  const groups = new Map();
-  for (const span of spans) {
-    const key = JSON.stringify([span.method, span.path]);
-    let group = groups.get(key);
-    if (!group)
-      groups.set(key, (group = { method: span.method, path: span.path, durations: [], errors: 0 }));
-    group.durations.push(span.durationNs);
-    if (span.statusCode >= 500) group.errors += 1;
-  }
-  /** @type {Route[]} */ const routes = [...groups.values()].map((group) => ({
-    method: group.method,
-    path: group.path,
+// A recording can hold millions of distinct paths. Track the first TRACKED_ROUTE_LIMIT
+// method and path pairs in recording order; later pairs share the reserved (other) id.
+const TRACKED_ROUTE_LIMIT = 10_000;
+const OTHER_ROUTE = '(other)';
+
+/** The only place a method and path become a route id. */
+function routeIndex() {
+  /** @type {Map<string, number>} */ const ids = new Map();
+  /** @type {{method: string, path: string}[]} */ const names = [];
+  return {
+    names,
+    /** @param {string} method @param {string} path */
+    id(method, path) {
+      const key = JSON.stringify([method, path]);
+      const known = ids.get(key);
+      if (known !== undefined) return known;
+      if (names.length >= TRACKED_ROUTE_LIMIT) return TRACKED_ROUTE_LIMIT;
+      const id = names.length;
+      names.push({ method, path });
+      ids.set(key, id);
+      return id;
+    },
+  };
+}
+
+/**
+ * @param {Map<number, {durations: number[], errors: number}>} groups
+ * @param {{method: string, path: string}[]} names
+ */
+function routeBreakdown(groups, names) {
+  /** @type {Route[]} */ const routes = [...groups].map(([id, group]) => ({
+    method: id === TRACKED_ROUTE_LIMIT ? OTHER_ROUTE : names[id].method,
+    path: id === TRACKED_ROUTE_LIMIT ? OTHER_ROUTE : names[id].path,
     count: group.durations.length,
     // Groups are never empty, so percentiles are numbers.
     p50Ns: /** @type {number} */ (percentile(group.durations, 0.5)),
@@ -58,7 +76,11 @@ function routeBreakdown(spans) {
     (a, b) =>
       b.count - a.count || b.p99Ns - a.p99Ns || order(a.method, b.method) || order(a.path, b.path),
   );
-  return { routes: routes.slice(0, ROUTE_LIMIT), distinctRoutes: groups.size };
+  return {
+    routes: routes.slice(0, ROUTE_LIMIT),
+    distinctRoutes: groups.size,
+    routesFolded: groups.has(TRACKED_ROUTE_LIMIT),
+  };
 }
 
 /**
@@ -72,8 +94,12 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
   const counts = { samples: 0, windows: 0, spans: 0, alerts: 0 };
   /** @type {Record<string, number>} */ const raw = {};
   /** @type {Record<string, number>} */ const aggregate = {};
-  /** @type {{startMs: number, endMs: number, durationNs: number, statusCode: number, method: string, path: string}[]} */ const spans =
-    [];
+  // Per span only numbers are kept, in parallel arrays: start (ms), duration (ns), status, route id.
+  /** @type {number[]} */ const spanStarts = [];
+  /** @type {number[]} */ const spanDurations = [];
+  /** @type {number[]} */ const spanStatuses = [];
+  /** @type {number[]} */ const spanRoutes = [];
+  const routeIds = routeIndex();
   /** @type {number[]} */ const spacing = [];
   /** @type {number | undefined} */ let previousTimestamp;
   /** @type {Map<string, Hotspot>} */ const sites = new Map();
@@ -150,14 +176,10 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
       counts.spans += 1;
       const startMs = record.data.startTimeMs;
       const endMs = startMs + record.data.durationNs / 1_000_000;
-      spans.push({
-        startMs,
-        endMs,
-        durationNs: record.data.durationNs,
-        statusCode: record.data.statusCode,
-        method: record.data.method,
-        path: record.data.path,
-      });
+      spanStarts.push(startMs);
+      spanDurations.push(record.data.durationNs);
+      spanStatuses.push(record.data.statusCode);
+      spanRoutes.push(routeIds.id(record.data.method, record.data.path));
       spanStart = Math.min(spanStart, startMs);
       spanEnd = Math.max(spanEnd, endMs);
     } else counts.alerts += 1;
@@ -172,12 +194,22 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
   const durationMs = Number.isFinite(start) ? Math.max(0, end - start) : 0;
   // Dashboard spans and windows have independent retention. Align requests only after
   // all records have established the runtime interval, regardless of arrival order.
-  const selectedSpans = spans.filter(
-    (span) => span.startMs >= start && span.startMs < end && span.endMs <= end,
-  );
-  const durations = selectedSpans.map((span) => span.durationNs);
-  const errors = selectedSpans.filter((span) => span.statusCode >= 500).length;
-  const { routes, distinctRoutes } = routeBreakdown(selectedSpans);
+  /** @type {number[]} */ const durations = [];
+  let errors = 0;
+  /** @type {Map<number, {durations: number[], errors: number}>} */ const groups = new Map();
+  for (let i = 0; i < spanStarts.length; i++) {
+    const startMs = spanStarts[i];
+    const durationNs = spanDurations[i];
+    if (!(startMs >= start && startMs < end && startMs + durationNs / 1_000_000 <= end)) continue;
+    const failed = spanStatuses[i] >= 500;
+    durations.push(durationNs);
+    if (failed) errors += 1;
+    let group = groups.get(spanRoutes[i]);
+    if (!group) groups.set(spanRoutes[i], (group = { durations: [], errors: 0 }));
+    group.durations.push(durationNs);
+    if (failed) group.errors += 1;
+  }
+  const { routes, distinctRoutes, routesFolded } = routeBreakdown(groups, routeIds.names);
   return {
     schemaVersion: 1,
     command: 'summarize',
@@ -201,11 +233,12 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
         endMs: Number.isFinite(spanEnd) ? spanEnd : null,
         durationMs: Number.isFinite(spanStart) ? Math.max(0, spanEnd - spanStart) : 0,
       },
-      inPeriod: selectedSpans.length,
-      outsidePeriod: counts.spans - selectedSpans.length,
+      inPeriod: durations.length,
+      outsidePeriod: counts.spans - durations.length,
       selection: 'fully-contained-in-runtime-period',
       routes,
       distinctRoutes,
+      routesFolded,
     },
     quality: status,
     metrics: {
@@ -215,9 +248,8 @@ export async function summarizeEvents(events, source, status, intervalMs, interv
       arrayBuffersMaxBytes: metrics.arrayBuffersMaxBytes ?? null,
       observedRequestP50Ns: percentile(durations, 0.5),
       observedRequestP99Ns: percentile(durations, 0.99),
-      observedRequestRatePerSecond:
-        durationMs > 0 ? (selectedSpans.length * 1000) / durationMs : null,
-      observedServerErrors: selectedSpans.length ? errors : null,
+      observedRequestRatePerSecond: durationMs > 0 ? (durations.length * 1000) / durationMs : null,
+      observedServerErrors: durations.length ? errors : null,
     },
     memory: {
       first: counts.samples ? firstRaw : firstWindow,

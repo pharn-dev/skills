@@ -24,8 +24,12 @@ request rate use only spans fully contained within the runtime period [startMs, 
 Spans crossing either boundary are excluded. Without runtime data, those request metrics
 are null. Zero observed requests does not establish complete request tracing coverage.
 requests.routes groups the same selected spans by exact method and path (top 20 by
-count, then p99Ns); requests.distinctRoutes is the untruncated number of groups. A route
-with few spans has unstable percentiles; read count before p99Ns.
+count, then p99Ns); requests.distinctRoutes is the number of groups. The helper tracks
+the first 10,000 distinct method and path pairs in recording order; spans of later pairs
+are counted in one route whose method and path are both (other), and requests.routesFolded
+is true. The route table is then partial and requests.distinctRoutes is a lower bound;
+request counts, percentiles, errors and rate still use every selected span. A route with
+few spans has unstable percentiles; read count before p99Ns.
 
 Raw sample period end, gap detection and coverage use the sampling interval: explicit
 flag, else the capture manifest's recorded intervalMs, else declared conditions.intervalMs,

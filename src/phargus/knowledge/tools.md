@@ -61,7 +61,9 @@ labels too to explain the intended change. Summaries reject mixed sample/window 
 align request metrics with runtime coverage; requests reports excluded spans and their
 separate overall period. requests.routes lists up to 20 method+path entries (count,
 p50Ns, p99Ns, maxNs, serverErrors) from the same selected spans, ordered by count then
-p99Ns; requests.distinctRoutes counts every selected pair, so truncation is visible.
+p99Ns; requests.distinctRoutes counts the selected pairs, so truncation is visible. Past
+10,000 tracked pairs, later pairs are counted in one (other) route, requests.routesFolded
+is true and requests.distinctRoutes is a lower bound.
 
 collect --project /app --file /app/.phargus/raw.ndjson --follow serves the collector and
 dashboard until SIGINT/SIGTERM. --duration-ms bounds a diagnostic run; --port 0 selects
