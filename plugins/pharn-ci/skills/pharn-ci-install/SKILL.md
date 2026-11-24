@@ -132,6 +132,10 @@ Follow [references/coverage.md](references/coverage.md) for the runner:
     once committed.
   - `"git": false`: git could not run, so paths were matched against files
     on disk and `tracked`/`ignored` are `null`. Say so.
+  - Exit 2 with a message naming the file and the reason: a coverage file
+    exists but cannot be read (not a regular file, over 256 MiB, or an error
+    such as `EACCES`). Fix that and run it again. A missing file is
+    `COVERAGE_FILE_MISSING`, not exit 2.
 - Act on every code, run it again, and quote the final `codes` in your
   answer.
 

@@ -131,8 +131,13 @@ Their
 [unit tests](plugins/pharn-ci/tests/) run in CI.
 
 **Limit:** the helper's estimate is only as honest as the coverage file it
-reads. It does not detect a forged or hand-edited coverage report, and it reads
-whole files into memory, so a very large hostile file can exhaust it.
+reads. It does not detect a forged or hand-edited coverage report. The four
+pharn-ci helpers read each input file whole into memory, through one routine:
+only a regular file is read (a FIFO, a directory or a device, behind a symlink
+too, is refused at once instead of blocking or being read without end), and
+only up to a cap: 32 MiB for a report, 256 MiB for a coverage file, and 1 MiB
+for a policy or a `--schema` file. A hostile file under its cap can still cost
+that much memory, and more while it is parsed.
 
 ## Diagnostic input, output, and application availability
 

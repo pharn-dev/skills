@@ -46,11 +46,36 @@ const LCOV = "TN:\nSF:src/a.mjs\nDA:1,1\nend_of_record\n";
 
 // Each target reads one file argument: `normal` is what that file holds when it is fine, `cap` the routine's limit for it.
 const TARGETS = [
-  { name: "check-lines --report", script: CHECK_LINES, args: (f) => ["--report", f, "--coverage", "lcov.info"], normal: REPORT_V1, cap: 32 * MiB },
-  { name: "check-lines --coverage", script: CHECK_LINES, args: (f) => ["--report", "report.json", "--coverage", f], normal: LCOV, cap: 256 * MiB },
-  { name: "check-coverage --coverage", script: CHECK_COVERAGE, args: (f) => ["--coverage", f], normal: LCOV, cap: 256 * MiB, missingExists: true },
+  {
+    name: "check-lines --report",
+    script: CHECK_LINES,
+    args: (f) => ["--report", f, "--coverage", "lcov.info"],
+    normal: REPORT_V1,
+    cap: 32 * MiB,
+  },
+  {
+    name: "check-lines --coverage",
+    script: CHECK_LINES,
+    args: (f) => ["--report", "report.json", "--coverage", f],
+    normal: LCOV,
+    cap: 256 * MiB,
+  },
+  {
+    name: "check-coverage --coverage",
+    script: CHECK_COVERAGE,
+    args: (f) => ["--coverage", f],
+    normal: LCOV,
+    cap: 256 * MiB,
+    missingExists: true,
+  },
   { name: "check-policy", script: CHECK_POLICY, args: (f) => [f], normal: '{"version":1}', cap: MiB },
-  { name: "check-policy --schema", script: CHECK_POLICY, args: (f) => ["policy.json", "--schema", f], normal: '{"type":"object"}', cap: MiB },
+  {
+    name: "check-policy --schema",
+    script: CHECK_POLICY,
+    args: (f) => ["policy.json", "--schema", f],
+    normal: '{"type":"object"}',
+    cap: MiB,
+  },
   { name: "list-fixes --report", script: LIST_FIXES, args: (f) => ["--report", f], normal: REPORT_V2, cap: 32 * MiB },
 ];
 
@@ -58,7 +83,12 @@ const TARGETS = [
 const ROWS = [
   { kind: "a FIFO", skip: WINDOWS, make: (dir, file) => execFileSync("mkfifo", [path.join(dir, file)]), reason: /is not a regular file/ },
   { kind: "a directory", make: (dir, file) => mkdirSync(path.join(dir, file)), reason: /is not a regular file/ },
-  { kind: "a symlink to /dev/zero", skip: WINDOWS, make: (dir, file) => symlinkSync("/dev/zero", path.join(dir, file)), reason: /is not a regular file/ },
+  {
+    kind: "a symlink to /dev/zero",
+    skip: WINDOWS,
+    make: (dir, file) => symlinkSync("/dev/zero", path.join(dir, file)),
+    reason: /is not a regular file/,
+  },
   {
     kind: "a file over the cap",
     make: (dir, file, t) => {
